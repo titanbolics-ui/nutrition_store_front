@@ -201,6 +201,37 @@ export default function ProductActions({
     setQuantity((prev) => Math.max(prev - 1, 1))
   }
 
+  // Find the first unselected option to show in button text
+  const getUnselectedOption = useMemo(() => {
+    if (!product.options || product.options.length === 0) {
+      return null
+    }
+    return product.options.find((option) => !options[option.id])
+  }, [product.options, options])
+
+  // Get button text based on state
+  const getButtonText = () => {
+    // If no options exist and no variant selected
+    if (!product.options || product.options.length === 0) {
+      if (!selectedVariant) {
+        return "Select variant"
+      }
+    } else {
+      // If there are options, check if any are unselected
+      if (getUnselectedOption) {
+        return `Select ${getUnselectedOption.title?.toLowerCase() || "option"}`
+      }
+    }
+
+    // If variant is selected and valid but out of stock
+    if (selectedVariant && isValidVariant && !inStock) {
+      return "Out of stock"
+    }
+
+    // Default: Add to cart
+    return "Add to cart"
+  }
+
   return (
     <>
       <div className="flex flex-col gap-y-2" ref={actionsRef}>
@@ -279,11 +310,7 @@ export default function ProductActions({
             isLoading={isAdding}
             data-testid="add-product-button"
           >
-            {!selectedVariant && !options
-              ? "Select variant"
-              : !inStock || !isValidVariant
-              ? "Out of stock"
-              : "Add to cart"}
+            {getButtonText()}
           </Button>
         </div>
         <MobileActions
@@ -299,6 +326,8 @@ export default function ProductActions({
           quantity={quantity}
           increaseQuantity={increaseQuantity}
           decreaseQuantity={decreaseQuantity}
+          isValidVariant={isValidVariant}
+          unselectedOption={getUnselectedOption}
         />
       </div>
     </>

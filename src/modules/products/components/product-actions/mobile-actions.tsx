@@ -24,6 +24,8 @@ type MobileActionsProps = {
   quantity: number
   increaseQuantity: () => void
   decreaseQuantity: () => void
+  isValidVariant?: boolean
+  unselectedOption?: HttpTypes.StoreProductOption | null
 }
 
 const MobileActions: React.FC<MobileActionsProps> = ({
@@ -39,6 +41,8 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   quantity,
   increaseQuantity,
   decreaseQuantity,
+  isValidVariant = true,
+  unselectedOption,
 }) => {
   const { state, open, close } = useToggleState()
 
@@ -150,16 +154,27 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                 </div>
                 <Button
                   onClick={handleAddToCart}
-                  disabled={!inStock || !variant}
+                  disabled={!inStock || !variant || !isValidVariant}
                   className="flex-1"
                   isLoading={isAdding}
                   data-testid="mobile-cart-button"
                 >
-                  {!variant
-                    ? "Select variant"
-                    : !inStock
-                    ? "Out of stock"
-                    : "Add to cart"}
+                  {(() => {
+                    // If there are options and one is unselected
+                    if (unselectedOption) {
+                      return `Select ${unselectedOption.title?.toLowerCase() || "option"}`
+                    }
+                    // If no variant selected
+                    if (!variant) {
+                      return "Select variant"
+                    }
+                    // If variant is selected but out of stock
+                    if (variant && isValidVariant && !inStock) {
+                      return "Out of stock"
+                    }
+                    // Default
+                    return "Add to cart"
+                  })()}
                 </Button>
               </div>
             </div>

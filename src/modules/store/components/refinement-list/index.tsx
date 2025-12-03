@@ -2,16 +2,23 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback } from "react"
+import { HttpTypes } from "@medusajs/types"
 
 import SortProducts, { SortOptions } from "./sort-products"
+import CategoryMenu from "../category-menu"
 
 type RefinementListProps = {
   sortBy: SortOptions
+  categories?: HttpTypes.StoreProductCategory[]
   search?: boolean
-  'data-testid'?: string
+  "data-testid"?: string
 }
 
-const RefinementList = ({ sortBy, 'data-testid': dataTestId }: RefinementListProps) => {
+const RefinementList = ({
+  sortBy,
+  categories,
+  "data-testid": dataTestId,
+}: RefinementListProps) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -33,7 +40,14 @@ const RefinementList = ({ sortBy, 'data-testid': dataTestId }: RefinementListPro
 
   return (
     <div className="flex small:flex-col gap-12 py-4 mb-8 small:px-0 pl-6 small:min-w-[250px] small:ml-[1.675rem]">
-      <SortProducts sortBy={sortBy} setQueryParams={setQueryParams} data-testid={dataTestId} />
+      {categories && categories.length > 0 && (
+        <CategoryMenu categories={categories} />
+      )}
+      <SortProducts
+        sortBy={sortBy}
+        setQueryParams={setQueryParams}
+        data-testid={dataTestId}
+      />
     </div>
   )
 }
