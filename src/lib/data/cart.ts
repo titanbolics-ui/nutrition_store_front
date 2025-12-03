@@ -22,7 +22,8 @@ import { getRegion } from "./regions"
  */
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
-  fields ??= "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+  fields ??=
+    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
 
   if (!id) {
     return null
@@ -40,7 +41,7 @@ export async function retrieveCart(cartId?: string, fields?: string) {
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
       method: "GET",
       query: {
-        fields
+        fields,
       },
       headers,
       next,
@@ -57,7 +58,7 @@ export async function getOrSetCart(countryCode: string) {
     throw new Error(`Region not found for country code: ${countryCode}`)
   }
 
-  let cart = await retrieveCart(undefined, 'id,region_id')
+  let cart = await retrieveCart(undefined, "id,region_id")
 
   const headers = {
     ...(await getAuthHeaders()),
@@ -203,7 +204,7 @@ export async function deleteLineItem(lineId: string) {
   }
 
   await sdk.store.cart
-    .deleteLineItem(cartId, lineId, headers)
+    .deleteLineItem(cartId, lineId, {}, headers)
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
