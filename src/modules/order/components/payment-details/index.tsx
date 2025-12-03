@@ -1,6 +1,6 @@
-import { Container, Heading, Text } from "@medusajs/ui"
+import { Container, Heading, Text, Badge } from "@medusajs/ui"
 
-import { isStripeLike, paymentInfoMap } from "@lib/constants"
+import { isStripeLike, paymentInfoMap, isManual } from "@lib/constants"
 import Divider from "@modules/common/components/divider"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
@@ -11,6 +11,12 @@ type PaymentDetailsProps = {
 
 const PaymentDetails = ({ order }: PaymentDetailsProps) => {
   const payment = order.payment_collections?.[0].payments?.[0]
+  const providerId =
+    payment?.provider_id ||
+    order.payment_collections?.[0]?.payment_sessions?.[0]?.provider_id ||
+    "unknown"
+
+  const isManualPayment = isManual(providerId)
 
   return (
     <div>
@@ -40,14 +46,30 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                   {paymentInfoMap[payment.provider_id].icon}
                 </Container>
                 <Text data-testid="payment-amount">
-                  {isStripeLike(payment.provider_id) && payment.data?.card_last4
-                    ? `**** **** **** ${payment.data.card_last4}`
-                    : `${convertToLocale({
-                        amount: payment.amount,
-                        currency_code: order.currency_code,
-                      })} paid at ${new Date(
-                        payment.created_at ?? ""
-                      ).toLocaleString()}`}
+                  {isStripeLike(providerId) && payment?.data?.card_last4 ? (
+                    `**** **** **** ${payment.data.card_last4}`
+                  ) : isManualPayment ? (
+                    // If this is PayPal or Crypto - show Pending status
+                    <span className="text-orange-600 font-medium flex items-center gap-1">
+                      Pending Verification
+                      <span className="text-ui-fg-subtle font-normal text-xs">
+                        (
+                        {convertToLocale({
+                          amount: order.total,
+                          currency_code: order.currency_code,
+                        })}
+                        )
+                      </span>
+                    </span>
+                  ) : (
+                    // Default (if already paid)
+                    `${convertToLocale({
+                      amount: payment?.amount || order.total,
+                      currency_code: order.currency_code,
+                    })} paid at ${new Date(
+                      payment?.created_at ?? Date.now()
+                    ).toLocaleString()}`
+                  )}
                 </Text>
               </div>
             </div>

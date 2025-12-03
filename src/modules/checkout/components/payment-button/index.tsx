@@ -1,6 +1,6 @@
 "use client"
 
-import { isManual, isStripeLike } from "@lib/constants"
+import { isCryptoManual, isPaypalManual, isStripeLike } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
@@ -25,10 +25,11 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     (cart.shipping_methods?.length ?? 0) < 1
 
   const paymentSession = cart.payment_collection?.payment_sessions?.[0]
+  const providerId = paymentSession?.provider_id
 
   switch (true) {
-    // 1. STRIPE (Залишаємо логіку, але вона не спрацює, поки ти не увімкнеш провайдер)
-    case isStripeLike(paymentSession?.provider_id):
+    // 1. STRIPE
+    case isStripeLike(providerId):
       return (
         <StripePaymentButton
           notReady={notReady}
@@ -37,8 +38,12 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
         />
       )
 
-    // 2. MANUAL / CRYPTO (Основний метод)
-    case isManual(paymentSession?.provider_id):
+    // 2. PAYPAL (SYSTEM DEFAULT)
+    case isPaypalManual(providerId):
+      return <PayPalManualButton notReady={notReady} data-testid={dataTestId} />
+
+    // 3. CRYPTO (BITCOIN)
+    case isCryptoManual(providerId):
       return (
         <CryptoPaymentButton notReady={notReady} data-testid={dataTestId} />
       )
@@ -48,14 +53,12 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   }
 }
 
-// --- КОМПОНЕНТ ДЛЯ КРИПТИ (КОЛИШНІЙ MANUAL) ---
-const CryptoPaymentButton = ({ notReady }: { notReady: boolean }) => {
+// COMPONENT FOR PAYPAL (SYSTEM DEFAULT)
+const PayPalManualButton = ({ notReady }: { notReady: boolean }) => {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const onPaymentCompleted = async () => {
-    // Ця функція просто створює замовлення.
-    // Оплата відбувається "офлайн" (клієнт сам скидає крипту).
     await placeOrder()
       .catch((err) => {
         setErrorMessage(err.message)
@@ -77,7 +80,52 @@ const CryptoPaymentButton = ({ notReady }: { notReady: boolean }) => {
         isLoading={submitting}
         onClick={handlePayment}
         size="large"
-        className="w-full text-base font-bold uppercase tracking-wider" // Додав трохи стилів
+        className="w-full text-base font-bold uppercase tracking-wider bg-blue-600 hover:bg-blue-700 text-white"
+        data-testid="submit-order-button"
+      >
+        Place Order & Pay with PayPal
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="manual-payment-error-message"
+      />
+      {!notReady && (
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          Instructions for PayPal transfer will be sent to your email.
+        </p>
+      )}
+    </>
+  )
+}
+
+// COMPONENT FOR CRYPTO (PREVIOUS MANUAL)
+const CryptoPaymentButton = ({ notReady }: { notReady: boolean }) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const onPaymentCompleted = async () => {
+    await placeOrder()
+      .catch((err) => {
+        setErrorMessage(err.message)
+      })
+      .finally(() => {
+        setSubmitting(false)
+      })
+  }
+
+  const handlePayment = () => {
+    setSubmitting(true)
+    onPaymentCompleted()
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady}
+        isLoading={submitting}
+        onClick={handlePayment}
+        size="large"
+        className="w-full text-base font-bold uppercase tracking-wider"
         data-testid="submit-order-button"
       >
         Place Order & Pay with Bitcoin
@@ -87,7 +135,7 @@ const CryptoPaymentButton = ({ notReady }: { notReady: boolean }) => {
         data-testid="manual-payment-error-message"
       />
 
-      {/* Підказка для користувача під кнопкою */}
+      {/* Hint for the user under the button */}
       {!notReady && (
         <p className="text-xs text-gray-500 mt-2 text-center">
           You will receive the wallet address on the next step.
@@ -97,7 +145,7 @@ const CryptoPaymentButton = ({ notReady }: { notReady: boolean }) => {
   )
 }
 
-// --- STRIPE (Згорнутий, щоб не заважав, але готовий до використання) ---
+// COMPONENT FOR STRIPE
 const StripePaymentButton = ({
   cart,
   notReady,

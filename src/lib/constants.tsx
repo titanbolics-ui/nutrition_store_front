@@ -32,12 +32,16 @@ export const paymentInfoMap: Record<
     icon: <PayPal />,
   },
   pp_system_default: {
-    title: "Manual Payment",
+    title: "Default Test Payment",
     icon: <CreditCard />,
   },
   "pp_crypto-manual_crypto-manual": {
-    title: "Bitcoin / USDT (Anonymous)",
+    title: "Bitcoin",
     icon: <CryptoStackIcon />,
+  },
+  "pp_paypal-manual_paypal-manual": {
+    title: "PayPal (friends & family)",
+    icon: <PayPal />,
   },
   // Add more payment providers here
 }
@@ -52,11 +56,17 @@ export const isStripeLike = (providerId?: string) => {
 export const isPaypal = (providerId?: string) => {
   return providerId?.startsWith("pp_paypal")
 }
+
+export const isPaypalManual = (providerId?: string) => {
+  return providerId?.startsWith("pp_paypal-manual_paypal-manual")
+}
+
+export const isCryptoManual = (providerId?: string) => {
+  return providerId?.startsWith("pp_crypto-manual_crypto-manual")
+}
+
 export const isManual = (providerId?: string) => {
-  return (
-    providerId?.startsWith("pp_system_default") ||
-    providerId?.startsWith("pp_crypto-manual_crypto-manual")
-  )
+  return isPaypalManual(providerId) || isCryptoManual(providerId)
 }
 
 // Add currencies that don't need to be divided by 100

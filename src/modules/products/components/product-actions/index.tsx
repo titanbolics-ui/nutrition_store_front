@@ -38,15 +38,61 @@ export default function ProductActions({
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
+  // State for product quantity (default is 1)
+  const [quantity, setQuantity] = useState(1)
   const countryCode = useParams().countryCode as string
 
-  // If there is only 1 variant, preselect the options
+  // Track if options have been initialized to prevent re-running auto-selection
+  const [optionsInitialized, setOptionsInitialized] = useState(false)
+
+  // Auto-select options: if only 1 variant, preselect all its options
+  // Also auto-select any option that has only one value (even if multiple variants exist)
   useEffect(() => {
-    if (product.variants?.length === 1) {
-      const variantOptions = optionsAsKeymap(product.variants[0].options)
-      setOptions(variantOptions ?? {})
+    // Only run once on mount or when product changes to avoid infinite loops
+    if (optionsInitialized && product.variants?.length === 1) {
+      return
     }
-  }, [product.variants])
+
+    setOptions((prevOptions) => {
+      let newOptions: Record<string, string | undefined> = { ...prevOptions }
+      let hasChanges = false
+
+      // If there is only 1 variant, preselect all its options
+      if (product.variants?.length === 1) {
+        const variantOptions = optionsAsKeymap(product.variants[0].options)
+        // Only update if options are different
+        if (!isEqual(variantOptions ?? {}, prevOptions)) {
+          newOptions = variantOptions ?? {}
+          hasChanges = true
+        }
+        if (hasChanges) {
+          setOptionsInitialized(true)
+        }
+      } else if (
+        product.options &&
+        product.options.length > 0 &&
+        !optionsInitialized
+      ) {
+        // Auto-select option if there's only one option value per option
+        product.options.forEach((option) => {
+          // If option is not selected yet and has only one value, auto-select it
+          if (
+            !newOptions[option.id] &&
+            option.values &&
+            option.values.length === 1
+          ) {
+            newOptions[option.id] = option.values[0].value
+            hasChanges = true
+          }
+        })
+        if (hasChanges) {
+          setOptionsInitialized(true)
+        }
+      }
+
+      return hasChanges ? newOptions : prevOptions
+    })
+  }, [product.variants, product.options, optionsInitialized])
 
   const selectedVariant = useMemo(() => {
     if (!product.variants || product.variants.length === 0) {
@@ -120,7 +166,7 @@ export default function ProductActions({
 
   const inView = useIntersection(actionsRef, "0px")
 
-  // add the selected variant to the cart
+  // Add the selected variant to the cart with specified quantity
   const handleAddToCart = async () => {
     if (!selectedVariant?.id) return null
 
@@ -128,18 +174,39 @@ export default function ProductActions({
 
     await addToCart({
       variantId: selectedVariant.id,
-      quantity: 1,
+      quantity: quantity, // Use quantity from state instead of hardcoded 1
       countryCode,
     })
 
     setIsAdding(false)
   }
 
+  // Increase quantity with respect to inventory limits
+  const increaseQuantity = () => {
+    if (!selectedVariant) {
+      // If no variant selected, allow up to 10 as default
+      setQuantity((prev) => Math.min(prev + 1, 10))
+      return
+    }
+
+    // Respect inventory management if enabled
+    const maxQty = selectedVariant.manage_inventory
+      ? selectedVariant.inventory_quantity || 10
+      : 10
+    setQuantity((prev) => Math.min(prev + 1, maxQty))
+  }
+
+  // Decrease quantity (minimum is 1)
+  const decreaseQuantity = () => {
+    setQuantity((prev) => Math.max(prev - 1, 1))
+  }
+
   return (
     <>
       <div className="flex flex-col gap-y-2" ref={actionsRef}>
         <div>
-          {(product.variants?.length ?? 0) > 1 && (
+          {/* Display options even when there's only one variant (previously hidden) */}
+          {product.options && product.options.length > 0 && (
             <div className="flex flex-col gap-y-4">
               {(product.options || []).map((option) => {
                 return (
@@ -162,26 +229,63 @@ export default function ProductActions({
 
         <ProductPrice product={product} variant={selectedVariant} />
 
-        <Button
-          onClick={handleAddToCart}
-          disabled={
-            !inStock ||
-            !selectedVariant ||
-            !!disabled ||
-            isAdding ||
-            !isValidVariant
-          }
-          variant="primary"
-          className="w-full h-10"
-          isLoading={isAdding}
-          data-testid="add-product-button"
-        >
-          {!selectedVariant && !options
-            ? "Select variant"
-            : !inStock || !isValidVariant
-            ? "Out of stock"
-            : "Add to cart"}
-        </Button>
+        {/* Quantity selector and Add to cart button */}
+        {/* Quantity counter allows selecting quantity before adding to cart */}
+        <div className="flex items-center gap-x-4">
+          <div className="flex items-center border border-ui-border-base rounded-rounded">
+            <button
+              onClick={decreaseQuantity}
+              disabled={quantity <= 1 || !!disabled || isAdding}
+              className="w-10 h-10 flex items-center justify-center text-ui-fg-subtle hover:text-ui-fg-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              type="button"
+              data-testid="decrease-quantity-button"
+            >
+              −
+            </button>
+            <span
+              className="w-12 h-10 flex items-center justify-center text-base-regular"
+              data-testid="quantity-value"
+            >
+              {quantity}
+            </span>
+            <button
+              onClick={increaseQuantity}
+              disabled={
+                !!disabled ||
+                isAdding ||
+                (selectedVariant &&
+                  !!selectedVariant.manage_inventory &&
+                  quantity >= (selectedVariant.inventory_quantity || 0))
+              }
+              className="w-10 h-10 flex items-center justify-center text-ui-fg-subtle hover:text-ui-fg-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              type="button"
+              data-testid="increase-quantity-button"
+            >
+              +
+            </button>
+          </div>
+
+          <Button
+            onClick={handleAddToCart}
+            disabled={
+              !inStock ||
+              !selectedVariant ||
+              !!disabled ||
+              isAdding ||
+              !isValidVariant
+            }
+            variant="primary"
+            className="flex-1 h-10"
+            isLoading={isAdding}
+            data-testid="add-product-button"
+          >
+            {!selectedVariant && !options
+              ? "Select variant"
+              : !inStock || !isValidVariant
+              ? "Out of stock"
+              : "Add to cart"}
+          </Button>
+        </div>
         <MobileActions
           product={product}
           variant={selectedVariant}
@@ -192,6 +296,9 @@ export default function ProductActions({
           isAdding={isAdding}
           show={!inView}
           optionsDisabled={!!disabled || isAdding}
+          quantity={quantity}
+          increaseQuantity={increaseQuantity}
+          decreaseQuantity={decreaseQuantity}
         />
       </div>
     </>

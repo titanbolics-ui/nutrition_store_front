@@ -15,6 +15,12 @@ export default function ProductPrice({
     variantId: variant?.id,
   })
 
+  console.log("variant", variant)
+  console.log("variant?.id", variant?.id)
+  console.log("cheapestPrice", cheapestPrice)
+  console.log("variantPrice", variantPrice)
+  console.log("product", product)
+
   const selectedPrice = variant ? variantPrice : cheapestPrice
 
   if (!selectedPrice) {

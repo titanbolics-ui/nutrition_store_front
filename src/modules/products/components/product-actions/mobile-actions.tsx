@@ -21,6 +21,9 @@ type MobileActionsProps = {
   isAdding?: boolean
   show: boolean
   optionsDisabled: boolean
+  quantity: number
+  increaseQuantity: () => void
+  decreaseQuantity: () => void
 }
 
 const MobileActions: React.FC<MobileActionsProps> = ({
@@ -33,6 +36,9 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   isAdding,
   show,
   optionsDisabled,
+  quantity,
+  increaseQuantity,
+  decreaseQuantity,
 }) => {
   const { state, open, close } = useToggleState()
 
@@ -98,9 +104,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                 <div></div>
               )}
             </div>
-            <div className={clx("grid grid-cols-2 w-full gap-x-4", {
-              "!grid-cols-1": isSimple
-            })}>
+            <div className="flex flex-col w-full gap-y-3">
               {!isSimple && <Button
                 onClick={open}
                 variant="secondary"
@@ -110,25 +114,54 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                 <div className="flex items-center justify-between w-full">
                   <span>
                     {variant
-                      ? Object.values(options).join(" / ")
+                      ? Object.values(options).join(" / ")
                       : "Select Options"}
                   </span>
                   <ChevronDown />
                 </div>
               </Button>}
-              <Button
-                onClick={handleAddToCart}
-                disabled={!inStock || !variant}
-                className="w-full"
-                isLoading={isAdding}
-                data-testid="mobile-cart-button"
-              >
-                {!variant
-                  ? "Select variant"
-                  : !inStock
-                  ? "Out of stock"
-                  : "Add to cart"}
-              </Button>
+              <div className="flex items-center gap-x-4 w-full">
+                <div className="flex items-center border border-ui-border-base rounded-rounded">
+                  <button
+                    onClick={decreaseQuantity}
+                    disabled={quantity <= 1 || optionsDisabled}
+                    className="w-10 h-10 flex items-center justify-center text-ui-fg-subtle hover:text-ui-fg-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    type="button"
+                    data-testid="mobile-decrease-quantity-button"
+                  >
+                    −
+                  </button>
+                  <span className="w-12 h-10 flex items-center justify-center text-base-regular" data-testid="mobile-quantity-value">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={increaseQuantity}
+                    disabled={
+                      optionsDisabled ||
+                      (variant?.manage_inventory && 
+                       quantity >= (variant?.inventory_quantity || 0))
+                    }
+                    className="w-10 h-10 flex items-center justify-center text-ui-fg-subtle hover:text-ui-fg-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    type="button"
+                    data-testid="mobile-increase-quantity-button"
+                  >
+                    +
+                  </button>
+                </div>
+                <Button
+                  onClick={handleAddToCart}
+                  disabled={!inStock || !variant}
+                  className="flex-1"
+                  isLoading={isAdding}
+                  data-testid="mobile-cart-button"
+                >
+                  {!variant
+                    ? "Select variant"
+                    : !inStock
+                    ? "Out of stock"
+                    : "Add to cart"}
+                </Button>
+              </div>
             </div>
           </div>
         </Transition>
@@ -172,7 +205,8 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                     </button>
                   </div>
                   <div className="bg-white px-6 py-12">
-                    {(product.variants?.length ?? 0) > 1 && (
+                    {/* Display options even when there's only one variant (mobile) */}
+                    {product.options && product.options.length > 0 && (
                       <div className="flex flex-col gap-y-6">
                         {(product.options || []).map((option) => {
                           return (
