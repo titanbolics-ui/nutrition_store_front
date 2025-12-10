@@ -8,14 +8,46 @@ type ProductSpecsProps = {
 const ProductSpecs = ({ product }: ProductSpecsProps) => {
   const metadata = product.metadata || {}
 
+  // 1. Конфігурація полів, які ми шукаємо
   const specsConfig = [
     { key: "manufacturer", label: "Manufacturer" },
     { key: "active_ingredient", label: "Active Ingredient" },
     { key: "concentration", label: "Concentration" },
     { key: "form", label: "Form" },
+    { key: "volume", label: "Volume" },
   ]
 
-  const availableSpecs = specsConfig.filter((spec) => metadata[spec.key])
+  // 2. ЛОГІКА ДЛЯ СТАРИХ ТОВАРІВ (Nested specs)
+  // Намагаємося дістати та розпарсити об'єкт 'specs', якщо він є
+  let specs: Record<string, any> = {}
+  const specsRaw = metadata.specs
+
+  try {
+    if (typeof specsRaw === "string") {
+      specs = JSON.parse(specsRaw)
+    } else if (specsRaw && typeof specsRaw === "object") {
+      specs = specsRaw as Record<string, any>
+    }
+  } catch (error) {
+    console.error("Failed to parse specs:", error)
+    specs = {}
+  }
+
+  // 3. ЛОГІКА ДЛЯ НОВИХ ТОВАРІВ (Flat metadata)
+  // Проходимося по нашому конфігу і дивимося, чи є такі ключі прямо в корені metadata.
+  // Якщо є — додаємо їх у об'єкт specs (або перезаписуємо старі).
+  specsConfig.forEach((item) => {
+    // metadata[item.key] шукає metadata.manufacturer, metadata.volume і т.д.
+    const flatValue = metadata[item.key]
+
+    // Перевіряємо, чи значення існує і не пусте
+    if (flatValue !== undefined && flatValue !== null && flatValue !== "") {
+      specs[item.key] = flatValue
+    }
+  })
+
+  // 4. Фільтруємо ті, що мають значення (щоб не виводити пусті рядки)
+  const availableSpecs = specsConfig.filter((spec) => specs[spec.key])
 
   if (availableSpecs.length === 0) return null
 
@@ -30,7 +62,8 @@ const ProductSpecs = ({ product }: ProductSpecsProps) => {
             {spec.label}
           </span>
           <span className="text-ui-fg-subtle text-sm">
-            {metadata[spec.key] as string}
+            {/* Додаємо toString(), про всяк випадок, якщо там число */}
+            {specs[spec.key]?.toString()}
           </span>
         </div>
       ))}

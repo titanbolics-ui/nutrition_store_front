@@ -6,9 +6,9 @@ import { listCollections } from "@lib/data/collections"
 import { getRegion, listRegions } from "@lib/data/regions"
 
 export const metadata: Metadata = {
-  title: "Medusa Next.js Starter Template",
+  title: "Onyx Genetics",
   description:
-    "A performant frontend ecommerce starter template with Next.js 15 and Medusa.",
+    "Premium genetics and breeding solutions.",
 }
 
 export default async function Home(props: {
@@ -25,7 +25,7 @@ export default async function Home(props: {
 
   if (!allRegions || allRegions.length === 0) {
     console.error(
-      "!!! КРИТИЧНО: Next.js не отримав жодного регіону від Бекенду."
+      "!!! КРИТИЧНО: Не отримано жодного регіону від Бекенду."
     )
     console.error(
       "Перевірте, чи запущено бекенд на порту 9000 і чи правильний URL в .env"

@@ -15,7 +15,7 @@ async function getRegionMap(cacheId: string) {
 
   if (!BACKEND_URL) {
     throw new Error(
-      "Middleware.ts: Error fetching regions. Did you set up regions in your Medusa Admin and define a MEDUSA_BACKEND_URL environment variable? Note that the variable is no longer named NEXT_PUBLIC_MEDUSA_BACKEND_URL."
+      "Middleware.ts: Error fetching regions. Did you set up regions in your Admin and define a MEDUSA_BACKEND_URL environment variable? Note that the variable is no longer named NEXT_PUBLIC_MEDUSA_BACKEND_URL."
     )
   }
 
@@ -23,7 +23,7 @@ async function getRegionMap(cacheId: string) {
     !regionMap.keys().next().value ||
     regionMapUpdated < Date.now() - 3600 * 1000
   ) {
-    // Fetch regions from Medusa. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
+    // Fetch regions from backend. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
     let regions: HttpTypes.StoreRegion[] | undefined
 
     try {
@@ -32,7 +32,7 @@ async function getRegionMap(cacheId: string) {
           "x-publishable-api-key": PUBLISHABLE_API_KEY ?? "",
         },
         next: {
-          revalidate: 0, // Disable Next.js caching for this request TODO: adjust as needed
+          revalidate: 0, // Disable caching for this request TODO: adjust as needed
           tags: [`regions-${cacheId}`],
         },
         // cache: "force-cache",
@@ -71,7 +71,7 @@ async function getRegionMap(cacheId: string) {
 
     if (!regions?.length) {
       throw new Error(
-        "No regions found. Please set up regions in your Medusa Admin."
+        "No regions found. Please set up regions in your Admin."
       )
     }
 
@@ -89,7 +89,7 @@ async function getRegionMap(cacheId: string) {
 }
 
 /**
- * Fetches regions from Medusa and sets the region cookie.
+ * Fetches regions from backend and sets the region cookie.
  * @param request
  * @param response
  */
@@ -120,7 +120,7 @@ async function getCountryCode(
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
       console.error(
-        "Middleware.ts: Error getting the country code. Did you set up regions in your Medusa Admin and define a MEDUSA_BACKEND_URL environment variable? Note that the variable is no longer named NEXT_PUBLIC_MEDUSA_BACKEND_URL."
+        "Middleware.ts: Error getting the country code. Did you set up regions in your Admin and define a MEDUSA_BACKEND_URL environment variable? Note that the variable is no longer named NEXT_PUBLIC_MEDUSA_BACKEND_URL."
       )
     }
   }
@@ -176,7 +176,7 @@ export async function middleware(request: NextRequest) {
   } else if (!urlHasCountryCode && !countryCode) {
     // Handle case where no valid country code exists (empty regions)
     return new NextResponse(
-      "No valid regions configured. Please set up regions with countries in your Medusa Admin.",
+      "No valid regions configured. Please set up regions with countries in your Admin.",
       { status: 500 }
     )
   }

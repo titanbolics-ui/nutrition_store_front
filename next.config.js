@@ -3,7 +3,7 @@ const checkEnvVariables = require("./check-env-variables")
 checkEnvVariables()
 
 /**
- * Medusa Cloud-related environment variables
+ * S3 Cloud-related environment variables
  */
 const S3_HOSTNAME = process.env.MEDUSA_CLOUD_S3_HOSTNAME
 const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
@@ -41,6 +41,14 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "medusa-server-testing.s3.us-east-1.amazonaws.com",
+      },
+      {
+        protocol: "https",
+        hostname: "onyxgenetics.com",
+      },
+      {
+        protocol: "https",
+        hostname: "pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev",
       },
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
