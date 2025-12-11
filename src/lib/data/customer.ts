@@ -259,6 +259,7 @@ export const updateCustomerAddress = async (
       return { success: false, error: err.toString() }
     })
 }
+
 export async function resetPasswordRequest(
   _currentState: unknown,
   formData: FormData
@@ -266,22 +267,49 @@ export async function resetPasswordRequest(
   const email = formData.get("email") as string
 
   if (!email) {
-    return "Please enter an email address."
+    return { success: false, error: "Email is required" }
   }
 
   try {
-    // Цей запит тригерить подію customer.password_reset на бекенді
-    await sdk.client.fetch("/store/customers/password-token", {
-      method: "POST",
-      body: {
-        email,
-      },
+    await sdk.auth.resetPassword("customer", "emailpass", {
+      identifier: email,
     })
-    return "success"
+
+    return { success: true, error: null }
   } catch (error: any) {
-    // З міркувань безпеки ми не кажемо "користувача не знайдено",
-    // але для дебагу можна вивести в консоль
     console.error(error)
-    return "success" // Завжди повертаємо успіх, щоб не світити базу мейлів
+    return { success: true, error: null }
+  }
+}
+
+export async function resetPasswordConfirm(
+  _currentState: unknown,
+  formData: FormData
+) {
+  const password = formData.get("password") as string
+  const token = formData.get("token") as string
+  const email = formData.get("email") as string
+
+  if (!password || !token || !email) {
+    return { success: false, error: "Missing required fields" }
+  }
+
+  try {
+    await sdk.auth.updateProvider(
+      "customer",
+      "emailpass",
+      {
+        email: decodeURIComponent(email),
+        password,
+      },
+      token
+    )
+
+    return { success: true, error: null }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || "Failed to reset password",
+    }
   }
 }
