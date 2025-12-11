@@ -1,5 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
-import { Container } from "@medusajs/ui"
+import { Button, Container } from "@medusajs/ui"
 import Checkbox from "@modules/common/components/checkbox"
 import Input from "@modules/common/components/input"
 import { mapKeys } from "lodash"
@@ -45,11 +45,30 @@ const ShippingAddress = ({
     [customer?.addresses, countriesInRegion]
   )
 
+  // Find default shipping address or first available address in region
+  const defaultAddress = useMemo(() => {
+    if (!addressesInRegion || addressesInRegion.length === 0) return null
+    // Try to find default shipping address
+    const defaultShipping = addressesInRegion.find(
+      (a) => (a as any).is_default_shipping
+    )
+    return defaultShipping || addressesInRegion[0]
+  }, [addressesInRegion])
+
+  const handleUseSavedAddress = () => {
+    if (defaultAddress) {
+      setFormAddress(
+        defaultAddress as HttpTypes.StoreCartAddress,
+        customer?.email
+      )
+    }
+  }
+
   const setFormAddress = (
     address?: HttpTypes.StoreCartAddress,
     email?: string
   ) => {
-    address &&
+    if (address) {
       setFormData((prevState: Record<string, any>) => ({
         ...prevState,
         "shipping_address.first_name": address?.first_name || "",
@@ -62,12 +81,14 @@ const ShippingAddress = ({
         "shipping_address.province": address?.province || "",
         "shipping_address.phone": address?.phone || "",
       }))
+    }
 
-    email &&
+    if (email) {
       setFormData((prevState: Record<string, any>) => ({
         ...prevState,
         email: email,
       }))
+    }
   }
 
   useEffect(() => {
@@ -99,15 +120,30 @@ const ShippingAddress = ({
           <p className="text-small-regular">
             {`Hi ${customer.first_name}, do you want to use one of your saved addresses?`}
           </p>
-          <AddressSelect
-            addresses={customer.addresses}
-            addressInput={
-              mapKeys(formData, (_, key) =>
-                key.replace("shipping_address.", "")
-              ) as HttpTypes.StoreCartAddress
-            }
-            onSelect={setFormAddress}
-          />
+          <div className="flex gap-3 items-end">
+            <div className="flex-1">
+              <AddressSelect
+                addresses={customer.addresses}
+                addressInput={
+                  mapKeys(formData, (_, key) =>
+                    key.replace("shipping_address.", "")
+                  ) as HttpTypes.StoreCartAddress
+                }
+                onSelect={setFormAddress}
+              />
+            </div>
+            {defaultAddress && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleUseSavedAddress}
+                className="whitespace-nowrap"
+                data-testid="use-saved-address-button"
+              >
+                Use saved address
+              </Button>
+            )}
+          </div>
         </Container>
       )}
       <div className="grid grid-cols-2 gap-4">
