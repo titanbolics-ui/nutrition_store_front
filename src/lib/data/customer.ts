@@ -259,3 +259,29 @@ export const updateCustomerAddress = async (
       return { success: false, error: err.toString() }
     })
 }
+export async function resetPasswordRequest(
+  _currentState: unknown,
+  formData: FormData
+) {
+  const email = formData.get("email") as string
+
+  if (!email) {
+    return "Please enter an email address."
+  }
+
+  try {
+    // Цей запит тригерить подію customer.password_reset на бекенді
+    await sdk.client.fetch("/store/customers/password-token", {
+      method: "POST",
+      body: {
+        email,
+      },
+    })
+    return "success"
+  } catch (error: any) {
+    // З міркувань безпеки ми не кажемо "користувача не знайдено",
+    // але для дебагу можна вивести в консоль
+    console.error(error)
+    return "success" // Завжди повертаємо успіх, щоб не світити базу мейлів
+  }
+}
