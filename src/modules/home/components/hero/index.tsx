@@ -99,12 +99,16 @@ const Hero = () => {
             </Button>
           </LocalizedClientLink>
 
-          <a href="https://t.me/your_channel" target="_blank" rel="noreferrer">
+          <a
+            href={process.env.NEXT_PUBLIC_WHATSAPP_URL ?? ""}
+            target="_blank"
+            rel="noreferrer"
+          >
             <Button
               variant="secondary"
               className="w-full small:w-auto px-10 py-4 h-14 text-sm font-bold uppercase tracking-widest bg-transparent border border-gray-600 text-white hover:border-white hover:text-black hover:bg-white transition-all duration-300 rounded-none"
             >
-              Join Telegram
+              WhatsApp
             </Button>
           </a>
         </motion.div>
