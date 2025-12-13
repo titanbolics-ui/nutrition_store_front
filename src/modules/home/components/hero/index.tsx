@@ -46,13 +46,13 @@ const Hero = () => {
           initial="hidden"
           animate="visible"
           variants={fadeUp}
-          className="mb-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gray-800 bg-gray-950/50 backdrop-blur-md"
+          className="mb-6 inline-flex items-center gap-2 px-3 small:px-4 py-1 small:py-1.5 rounded-full border border-gray-800 bg-gray-950/50 backdrop-blur-md"
         >
-          <span className="relative flex h-2 w-2">
+          <span className="relative flex h-1.5 w-1.5 small:h-2 small:w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <span className="relative inline-flex rounded-full h-full w-full bg-emerald-500"></span>
           </span>
-          <span className="text-[10px] font-mono font-bold text-gray-300 uppercase tracking-[0.2em]">
+          <span className="text-[8px] small:text-[10px] font-mono font-bold text-gray-300 uppercase tracking-[0.2em]">
             Verified Lab Grade • USA Shipping
           </span>
         </motion.div>
@@ -65,7 +65,7 @@ const Hero = () => {
         >
           <Heading
             level="h1"
-            className="text-5xl small:text-8xl font-black uppercase tracking-tighter leading-[0.9] mb-6"
+            className="text-3xl small:text-5xl medium:text-8xl font-black uppercase tracking-tighter leading-[0.9] mb-6"
           >
             Uncompromised <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-100 via-gray-300 to-gray-500">
@@ -81,10 +81,10 @@ const Hero = () => {
           variants={fadeUp}
           className="max-w-lg mb-10"
         >
-          <h3 className="text-xl font-bold mb-3 text-white tracking-wide drop-shadow-md">
+          <h3 className="text-base small:text-lg medium:text-xl font-bold mb-3 text-white tracking-wide drop-shadow-md">
             PREMIUM GRADE COMPOUNDS.
           </h3>
-          <p className="text-lg text-gray-200 leading-relaxed font-light drop-shadow-md">
+          <p className="text-sm small:text-base medium:text-lg text-gray-200 leading-relaxed font-light drop-shadow-md">
             The highest purity standard available on the market. Rigorously
             tested (HPLC), verified potency, and secure shipping across the US.
           </p>
