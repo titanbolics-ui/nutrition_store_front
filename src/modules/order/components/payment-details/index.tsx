@@ -1,6 +1,11 @@
 import { Container, Heading, Text, Badge } from "@medusajs/ui"
 
-import { isStripeLike, paymentInfoMap, isManual } from "@lib/constants"
+import {
+  isStripeLike,
+  paymentInfoMap,
+  isManual,
+  isCashApp,
+} from "@lib/constants"
 import Divider from "@modules/common/components/divider"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
@@ -48,21 +53,28 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                 <Text data-testid="payment-amount">
                   {isStripeLike(providerId) && payment?.data?.card_last4 ? (
                     `**** **** **** ${payment.data.card_last4}`
-                  ) : isManualPayment ? (
-                    // If this is PayPal or Crypto - show Pending status
-                    <span className="text-orange-600 font-medium flex items-center gap-1">
-                      Pending Verification
+                  ) : isManualPayment || isCashApp(providerId) ? (
+                    <span className="flex flex-col items-start gap-1">
+                      <span className="text-orange-600 font-bold flex items-center gap-1 uppercase text-xs tracking-wide">
+                        ● Awaiting Payment
+                      </span>
+
+                      {isCashApp(providerId) && (
+                        <span className="text-emerald-600 text-[11px] font-medium">
+                          Check your email for Cash App instructions.
+                        </span>
+                      )}
+
                       <span className="text-ui-fg-subtle font-normal text-xs">
-                        (
+                        Amount:{" "}
                         {convertToLocale({
                           amount: order.total,
                           currency_code: order.currency_code,
                         })}
-                        )
                       </span>
                     </span>
                   ) : (
-                    // Default (if already paid)
+                    // Default (Paid)
                     `${convertToLocale({
                       amount: payment?.amount || order.total,
                       currency_code: order.currency_code,

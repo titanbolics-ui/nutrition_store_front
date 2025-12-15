@@ -4,7 +4,7 @@ import React, { useContext, useMemo, type JSX } from "react"
 
 import Radio from "@modules/common/components/radio"
 
-import { isManual } from "@lib/constants"
+import { isCashApp, isManual } from "@lib/constants"
 import SkeletonCardDetails from "@modules/skeletons/components/skeleton-card-details"
 import { CardElement } from "@stripe/react-stripe-js"
 import { StripeCardElementOptions } from "@stripe/stripe-js"
@@ -28,33 +28,84 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
 }) => {
   const isDevelopment = process.env.NODE_ENV === "development"
 
+  const isCashAppProvider = isCashApp(paymentProviderId)
+
   return (
     <RadioGroupOption
       key={paymentProviderId}
       value={paymentProviderId}
       disabled={disabled}
       className={clx(
-        "flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 hover:shadow-borders-interactive-with-active",
+        "flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 transition-all duration-200",
         {
+          // Стилі для звичайних методів
+          "border-ui-border-base hover:shadow-borders-interactive-with-active":
+            !isCashAppProvider,
           "border-ui-border-interactive":
-            selectedPaymentOptionId === paymentProviderId,
+            selectedPaymentOptionId === paymentProviderId && !isCashAppProvider,
+
+          // 🟢 Стилі для CASH APP (Зелені)
+          "border-emerald-200 bg-[#fdfdfd] hover:border-emerald-400 hover:shadow-md":
+            isCashAppProvider,
+          "border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500":
+            isCashAppProvider && selectedPaymentOptionId === paymentProviderId,
         }
       )}
     >
-      <div className="flex items-center justify-between ">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-x-4">
           <Radio checked={selectedPaymentOptionId === paymentProviderId} />
-          <Text className="text-base-regular">
-            {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
-          </Text>
+
+          <div className="flex flex-col">
+            <Text
+              className={clx("text-base-regular flex items-center gap-2", {
+                "font-semibold text-emerald-900": isCashAppProvider,
+              })}
+            >
+              {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
+
+              {/* Бейдж для Cash App */}
+              {isCashAppProvider && (
+                <span className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ml-2">
+                  Fastest
+                </span>
+              )}
+            </Text>
+
+            {/* Підзаголовок для Cash App (видимий завжди) */}
+            {isCashAppProvider && (
+              <Text className="text-[11px] text-gray-500 mt-0.5">
+                Pay instantly via Debit/Credit Card
+              </Text>
+            )}
+          </div>
+
           {isManual(paymentProviderId) && isDevelopment && (
             <PaymentTest className="hidden small:block" />
           )}
         </div>
+
         <span className="justify-self-end text-ui-fg-base">
           {paymentInfoMap[paymentProviderId]?.icon}
         </span>
       </div>
+
+      {/* 🟢 ЗЕЛЕНИЙ БЛОК ІНСТРУКЦІЇ (Тільки коли вибрано Cash App) */}
+      {isCashAppProvider && selectedPaymentOptionId === paymentProviderId && (
+        <div className="mt-3 pt-3 border-t border-emerald-200/50">
+          <div className="bg-white p-3 rounded border border-emerald-100 shadow-sm">
+            <p className="text-[12px] text-emerald-800 font-medium mb-1">
+              ⚡ Quick Instructions:
+            </p>
+            <ul className="list-disc list-inside text-[11px] text-gray-600 space-y-0.5 pl-1">
+              <li>No crypto wallet needed.</li>
+              <li>Buy Bitcoin inside Cash App in 60 seconds.</li>
+              <li>Send to our address (shown on next step).</li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       {isManual(paymentProviderId) && isDevelopment && (
         <PaymentTest className="small:hidden text-[10px]" />
       )}

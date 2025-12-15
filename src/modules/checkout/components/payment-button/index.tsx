@@ -1,6 +1,11 @@
 "use client"
 
-import { isCryptoManual, isPaypalManual, isStripeLike } from "@lib/constants"
+import {
+  isCashApp,
+  isCryptoManual,
+  isPaypalManual,
+  isStripeLike,
+} from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
@@ -46,6 +51,12 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isCryptoManual(providerId):
       return (
         <CryptoPaymentButton notReady={notReady} data-testid={dataTestId} />
+      )
+
+    // 4. CASH APP
+    case isCashApp(providerId):
+      return (
+        <CashAppPaymentButton notReady={notReady} data-testid={dataTestId} />
       )
 
     default:
@@ -139,6 +150,54 @@ const CryptoPaymentButton = ({ notReady }: { notReady: boolean }) => {
       {!notReady && (
         <p className="text-xs text-gray-500 mt-2 text-center">
           You will receive the wallet address on the next step.
+        </p>
+      )}
+    </>
+  )
+}
+
+// COMPONENT FOR CASH APP (STYLED)
+const CashAppPaymentButton = ({ notReady }: { notReady: boolean }) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const onPaymentCompleted = async () => {
+    await placeOrder()
+      .catch((err) => {
+        setErrorMessage(err.message)
+      })
+      .finally(() => {
+        setSubmitting(false)
+      })
+  }
+
+  const handlePayment = () => {
+    setSubmitting(true)
+    onPaymentCompleted()
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady}
+        isLoading={submitting}
+        onClick={handlePayment}
+        size="large"
+        // 👇 ЗЕЛЕНИЙ СТИЛЬ CASH APP
+        className="w-full h-14 text-base font-bold uppercase tracking-wider bg-[#00D632] hover:bg-[#00B82b] text-white border-none transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+        data-testid="submit-order-button"
+      >
+        Place Order & Pay with Cash App
+      </Button>
+
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="manual-payment-error-message"
+      />
+
+      {!notReady && (
+        <p className="text-[11px] text-emerald-700 mt-2 text-center font-medium bg-emerald-50 py-1 px-2 rounded">
+          ⚡ Instant confirmation. Card accepted.
         </p>
       )}
     </>
