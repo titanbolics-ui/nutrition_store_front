@@ -5,6 +5,7 @@ import Ideal from "@modules/common/icons/ideal"
 import Bancontact from "@modules/common/icons/bancontact"
 import PayPal from "@modules/common/icons/paypal"
 import CryptoStackIcon from "@modules/common/icons/crypto"
+import CashApp from "@modules/common/icons/cash-app"
 
 /* Map of payment provider_id to their title and icon. Add in any payment providers you want to use. */
 export const paymentInfoMap: Record<
@@ -43,6 +44,11 @@ export const paymentInfoMap: Record<
     title: "PayPal (friends & family)",
     icon: <PayPal />,
   },
+  "pp_cash-app_cash-app": {
+    title: "Cash App",
+    icon: <CashApp />,
+  },
+
   // Add more payment providers here
 }
 
@@ -63,6 +69,10 @@ export const isPaypalManual = (providerId?: string) => {
 
 export const isCryptoManual = (providerId?: string) => {
   return providerId?.startsWith("pp_crypto-manual_crypto-manual")
+}
+
+export const isCashApp = (providerId?: string) => {
+  return providerId?.startsWith("pp_cash-app_cash-app")
 }
 
 export const isManual = (providerId?: string) => {
