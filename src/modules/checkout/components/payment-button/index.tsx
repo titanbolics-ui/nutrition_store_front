@@ -91,7 +91,7 @@ const PayPalManualButton = ({ notReady }: { notReady: boolean }) => {
         isLoading={submitting}
         onClick={handlePayment}
         size="large"
-        className="w-full text-base font-bold uppercase tracking-wider bg-blue-600 hover:bg-blue-700 text-white"
+        className="w-full text-base font-bold uppercase tracking-wider bg-[#0070BA] hover:bg-[#005A92] text-white"
         data-testid="submit-order-button"
       >
         Place Order & Pay with PayPal
@@ -183,8 +183,8 @@ const CashAppPaymentButton = ({ notReady }: { notReady: boolean }) => {
         isLoading={submitting}
         onClick={handlePayment}
         size="large"
-        // 👇 ЗЕЛЕНИЙ СТИЛЬ CASH APP
-        className="w-full h-14 text-base font-bold uppercase tracking-wider bg-[#00D632] hover:bg-[#00B82b] text-white border-none transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+        // 👇 ЗЕЛЕНИЙ СТИЛЬ CASH APP (м'який зелений)
+        className="w-full h-14 text-base font-bold uppercase tracking-wider bg-[#16A34A] hover:bg-[#15803D] text-white border-none transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
         data-testid="submit-order-button"
       >
         Place Order & Pay with Cash App
@@ -196,7 +196,7 @@ const CashAppPaymentButton = ({ notReady }: { notReady: boolean }) => {
       />
 
       {!notReady && (
-        <p className="text-[11px] text-emerald-700 mt-2 text-center font-medium bg-emerald-50 py-1 px-2 rounded">
+        <p className="text-[11px] text-green-700 mt-2 text-center font-medium bg-green-50 py-1 px-2 rounded">
           ⚡ Instant confirmation. Card accepted.
         </p>
       )}
