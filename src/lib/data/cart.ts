@@ -264,16 +264,40 @@ export async function applyPromotions(codes: string[]) {
     ...(await getAuthHeaders()),
   }
 
-  return sdk.store.cart
+  const response = await sdk.store.cart
     .update(cartId, { promo_codes: codes }, {}, headers)
-    .then(async () => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
+    .catch((err) => {
+      const errorString = err.toString().toLowerCase()
+      const errorMessage = err.message ? err.message.toLowerCase() : ""
 
-      const fulfillmentCacheTag = await getCacheTag("fulfillment")
-      revalidateTag(fulfillmentCacheTag)
+      if (
+        errorString.includes("customer_id") ||
+        errorMessage.includes("customer_id")
+      ) {
+        throw new Error(
+          "Please log in or create an account to use this discount code."
+        )
+      }
+      return medusaError(err)
     })
-    .catch(medusaError)
+
+  if (!response || !response.cart) {
+    return
+  }
+
+  const cart = response.cart
+
+  const codeApplied = cart.promotions?.some(
+    (promo) => promo.code && codes.includes(promo.code)
+  )
+  if (!codeApplied && codes.length > 0) {
+    throw new Error("Discount code is invalid, expired, or limitations apply.")
+  }
+  const cartCacheTag = await getCacheTag("carts")
+  revalidateTag(cartCacheTag)
+
+  const fulfillmentCacheTag = await getCacheTag("fulfillment")
+  revalidateTag(fulfillmentCacheTag)
 }
 
 export async function applyGiftCard(code: string) {
