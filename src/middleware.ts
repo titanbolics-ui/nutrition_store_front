@@ -134,17 +134,8 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/ingest") || pathname.match(/^\/[^/]+\/ingest/)) {
     const url = request.nextUrl.clone()
 
-    // Determine if it's EU or US based on your env
-    const posthogHost =
-      process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com"
-    const isEU = posthogHost.includes("eu.i.posthog.com")
-
-    const hostname = pathname.includes("/ingest/static/")
-      ? isEU
-        ? "eu-assets.i.posthog.com"
-        : "us-assets.i.posthog.com"
-      : isEU
-      ? "eu.i.posthog.com"
+    const hostname = pathname.includes("/static/")
+      ? "us-assets.i.posthog.com"
       : "us.i.posthog.com"
 
     const requestHeaders = new Headers(request.headers)
@@ -218,6 +209,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|images|assets|png|svg|jpg|jpeg|gif|webp|ingest).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|images|assets|png|svg|jpg|jpeg|gif|webp).*)",
+    // Removed 'ingest' from the exclusion list!
   ],
 }
