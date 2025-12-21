@@ -77,18 +77,32 @@ const nextConfig = {
       : "https://us-assets.i.posthog.com"
 
     return [
+      // Rewrites для запитів з countryCode - статика
       {
         source: "/:countryCode/ingest/static/:path*",
         destination: `${posthogAssetsHost}/static/:path*`,
       },
+      // Rewrites для запитів з countryCode - array (для завантаження config.js)
+      {
+        source: "/:countryCode/ingest/array/:path*",
+        destination: `${posthogHost}/array/:path*`,
+      },
+      // Rewrites для запитів з countryCode - всі інші endpoint'и
       {
         source: "/:countryCode/ingest/:path*",
         destination: `${posthogHost}/:path*`,
       },
+      // Rewrites для запитів без countryCode - статика
       {
         source: "/ingest/static/:path*",
         destination: `${posthogAssetsHost}/static/:path*`,
       },
+      // Rewrites для запитів без countryCode - array
+      {
+        source: "/ingest/array/:path*",
+        destination: `${posthogHost}/array/:path*`,
+      },
+      // Rewrites для запитів без countryCode - всі інші endpoint'и
       {
         source: "/ingest/:path*",
         destination: `${posthogHost}/:path*`,

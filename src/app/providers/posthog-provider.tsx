@@ -31,6 +31,9 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           ui_host: uiHost,
           person_profiles: "identified_only",
           capture_pageview: false,
+          // Вимкнути завантаження remote config, якщо він викликає проблеми
+          disable_persistence: false,
+          autocapture: true,
           loaded: (ph) => {
             if (process.env.NODE_ENV === "development" && ph) {
               ph.debug()
