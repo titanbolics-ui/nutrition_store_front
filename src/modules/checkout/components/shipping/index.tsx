@@ -3,6 +3,10 @@
 import { Radio, RadioGroup } from "@headlessui/react"
 import { setShippingMethod } from "@lib/data/cart"
 import { calculatePriceForShippingOption } from "@lib/data/fulfillment"
+import {
+  trackCheckoutStepCompleted,
+  trackShippingMethodSelected,
+} from "@lib/posthog/checkout-tracking"
 import { convertToLocale } from "@lib/util/money"
 import { CheckCircleSolid, Loader } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
@@ -71,11 +75,11 @@ const Shipping: React.FC<ShippingProps> = ({
   const isOpen = searchParams.get("step") === "delivery"
 
   const _shippingMethods = availableShippingMethods?.filter(
-    (sm) => sm.service_zone?.fulfillment_set?.type !== "pickup"
+    (sm) => (sm as any).service_zone?.fulfillment_set?.type !== "pickup"
   )
 
   const _pickupMethods = availableShippingMethods?.filter(
-    (sm) => sm.service_zone?.fulfillment_set?.type === "pickup"
+    (sm) => (sm as any).service_zone?.fulfillment_set?.type === "pickup"
   )
 
   const hasPickupOptions = !!_pickupMethods?.length
@@ -111,6 +115,8 @@ const Shipping: React.FC<ShippingProps> = ({
   }
 
   const handleSubmit = () => {
+    // Tracking completion of the shipping step
+    trackCheckoutStepCompleted("shipping", cart.id)
     router.push(pathname + "?step=payment", { scroll: false })
   }
 
@@ -134,6 +140,26 @@ const Shipping: React.FC<ShippingProps> = ({
     })
 
     await setShippingMethod({ cartId: cart.id, shippingMethodId: id })
+      .then(() => {
+        // Tracking after successful selection of the shipping method
+        const selectedMethod = availableShippingMethods?.find(
+          (m) => m.id === id
+        )
+        if (selectedMethod) {
+          const amount =
+            selectedMethod.price_type === "flat"
+              ? selectedMethod.amount!
+              : calculatedPricesMap[id] || 0
+
+          trackShippingMethodSelected(
+            cart.id,
+            id,
+            selectedMethod.name,
+            amount,
+            cart.currency_code || "USD"
+          )
+        }
+      })
       .catch((err) => {
         setShippingMethodId(currentId)
 
@@ -342,8 +368,8 @@ const Shipping: React.FC<ShippingProps> = ({
                               </span>
                               <span className="text-base-regular text-ui-fg-muted">
                                 {formatAddress(
-                                  option.service_zone?.fulfillment_set?.location
-                                    ?.address
+                                  (option as any).service_zone?.fulfillment_set
+                                    ?.location?.address
                                 )}
                               </span>
                             </div>

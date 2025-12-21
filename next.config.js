@@ -67,6 +67,35 @@ const nextConfig = {
         : []),
     ],
   },
+  async rewrites() {
+    const posthogHost =
+      process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com"
+
+    const isEU = posthogHost.includes("eu.i.posthog.com")
+    const posthogAssetsHost = isEU
+      ? "https://eu-assets.i.posthog.com"
+      : "https://us-assets.i.posthog.com"
+
+    return [
+      {
+        source: "/:countryCode/ingest/static/:path*",
+        destination: `${posthogAssetsHost}/static/:path*`,
+      },
+      {
+        source: "/:countryCode/ingest/:path*",
+        destination: `${posthogHost}/:path*`,
+      },
+      {
+        source: "/ingest/static/:path*",
+        destination: `${posthogAssetsHost}/static/:path*`,
+      },
+      {
+        source: "/ingest/:path*",
+        destination: `${posthogHost}/:path*`,
+      },
+    ]
+  },
+  skipTrailingSlashRedirect: true,
 }
 
 module.exports = nextConfig

@@ -1,6 +1,10 @@
 "use client"
 
 import { setAddresses } from "@lib/data/cart"
+import {
+  trackCheckoutEmailEntered,
+  trackCheckoutStepCompleted,
+} from "@lib/posthog/checkout-tracking"
 import compareAddresses from "@lib/util/compare-addresses"
 import { CheckCircleSolid } from "@medusajs/icons"
 import { HttpTypes } from "@medusajs/types"
@@ -8,7 +12,7 @@ import { Heading, Text, useToggleState } from "@medusajs/ui"
 import Divider from "@modules/common/components/divider"
 import Spinner from "@modules/common/icons/spinner"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useActionState } from "react"
+import { useEffect, useActionState } from "react"
 import BillingAddress from "../billing_address"
 import ErrorMessage from "../error-message"
 import ShippingAddress from "../shipping-address"
@@ -38,6 +42,29 @@ const Addresses = ({
   }
 
   const [message, formAction] = useActionState(setAddresses, null)
+
+  // Трекінг після успішного введення email/адреси
+  useEffect(() => {
+    if (
+      !message &&
+      cart?.email &&
+      cart?.shipping_address?.address_1 &&
+      searchParams.get("step") === "delivery"
+    ) {
+      // Користувач успішно пройшов крок address
+      trackCheckoutStepCompleted("address", cart.id)
+      if (cart.email) {
+        trackCheckoutEmailEntered(cart.id, cart.email, !customer)
+      }
+    }
+  }, [
+    cart?.email,
+    cart?.shipping_address,
+    cart?.id,
+    message,
+    customer,
+    searchParams,
+  ])
 
   return (
     <div className="bg-white">

@@ -3,6 +3,10 @@
 import { RadioGroup } from "@headlessui/react"
 import { isStripeLike, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
+import {
+  trackCheckoutStepCompleted,
+  trackPaymentMethodSelected,
+} from "@lib/posthog/checkout-tracking"
 import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
 import { Button, Container, Heading, Text, clx } from "@medusajs/ui"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -46,6 +50,10 @@ const Payment = ({
         provider_id: method,
       })
     }
+
+    // Tracking selection of the payment method
+    const paymentMethodName = paymentInfoMap[method]?.title || method
+    trackPaymentMethodSelected(cart.id, method, paymentMethodName)
   }
 
   const paidByGiftcard =
@@ -86,6 +94,8 @@ const Payment = ({
       }
 
       if (!shouldInputCard) {
+        // Tracking completion of the payment step
+        trackCheckoutStepCompleted("payment", cart.id)
         return router.push(
           pathname + "?" + createQueryString("step", "review"),
           {

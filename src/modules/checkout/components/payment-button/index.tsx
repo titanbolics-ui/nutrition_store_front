@@ -7,6 +7,7 @@ import {
   isStripeLike,
 } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
+import { trackOrderPlaced } from "@lib/posthog/checkout-tracking"
 import { HttpTypes } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
