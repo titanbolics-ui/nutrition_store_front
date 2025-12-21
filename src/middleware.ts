@@ -70,9 +70,7 @@ async function getRegionMap(cacheId: string) {
     }
 
     if (!regions?.length) {
-      throw new Error(
-        "No regions found. Please set up regions in your Admin."
-      )
+      throw new Error("No regions found. Please set up regions in your Admin.")
     }
 
     // Create a map of country codes to regions.
@@ -132,8 +130,36 @@ async function getCountryCode(
 export async function middleware(request: NextRequest) {
   // Skip middleware for PostHog proxy requests - let rewrites handle them
   const pathname = request.nextUrl.pathname
+
   if (pathname.startsWith("/ingest") || pathname.match(/^\/[^/]+\/ingest/)) {
-    return NextResponse.next()
+    const url = request.nextUrl.clone()
+
+    // Determine if it's EU or US based on your env
+    const posthogHost =
+      process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com"
+    const isEU = posthogHost.includes("eu.i.posthog.com")
+
+    const hostname = pathname.includes("/ingest/static/")
+      ? isEU
+        ? "eu-assets.i.posthog.com"
+        : "us-assets.i.posthog.com"
+      : isEU
+      ? "eu.i.posthog.com"
+      : "us.i.posthog.com"
+
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set("host", hostname)
+
+    url.protocol = "https"
+    url.hostname = hostname
+    url.port = "443"
+    url.pathname = url.pathname
+      .replace(/^\/[^/]+\/ingest/, "")
+      .replace(/^\/ingest/, "")
+
+    return NextResponse.rewrite(url, {
+      headers: requestHeaders,
+    })
   }
 
   let redirectUrl = request.nextUrl.href
