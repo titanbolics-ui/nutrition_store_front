@@ -130,8 +130,9 @@ async function getCountryCode(
  * Middleware to handle region selection and onboarding status.
  */
 export async function middleware(request: NextRequest) {
-  // Skip middleware for PostHog proxy requests (must be first!)
-  if (request.nextUrl.pathname.startsWith("/ingest")) {
+  // Skip middleware for PostHog proxy requests - let rewrites handle them
+  const pathname = request.nextUrl.pathname
+  if (pathname.startsWith("/ingest") || pathname.match(/^\/[^/]+\/ingest/)) {
     return NextResponse.next()
   }
 
