@@ -18,8 +18,6 @@ export default async function Home(props: {
 
   const { countryCode } = params
 
-  const allRegions = await listRegions()
-
   const region = await getRegion(countryCode)
 
   const { collections } = await listCollections({
