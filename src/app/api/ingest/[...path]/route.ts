@@ -119,7 +119,7 @@ async function proxyRequest(request: NextRequest) {
 
     // Clone ALL response headers to preserve compression info
     const responseHeaders = new Headers()
-    
+
     // Copy all headers from PostHog response (including content-encoding, content-type, etc.)
     response.headers.forEach((value, key) => {
       // Keep all headers as-is to preserve compression

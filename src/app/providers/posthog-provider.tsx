@@ -24,10 +24,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         const isEU = posthogHost.includes("eu.i.posthog.com")
         const uiHost = isEU
           ? "https://eu.posthog.com"
-          : "https://us.i.posthog.com"
+          : "https://us.posthog.com"
 
         posthog.init(phKey, {
-          api_host: "/api/ingest", // Use API route instead of middleware
+          api_host: "/ph",
           ui_host: uiHost,
           person_profiles: "identified_only",
           capture_pageview: false,
@@ -38,7 +38,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
               ph.debug()
             }
             console.log("PostHog initialized successfully", {
-              api_host: "/api/ingest",
+              api_host: "/ph",
               ui_host: uiHost,
               key: phKey.substring(0, 10) + "...",
             })

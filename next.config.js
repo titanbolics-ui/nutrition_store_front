@@ -67,11 +67,6 @@ const nextConfig = {
         : []),
     ],
   },
-  // Removed rewrites for /ingest - using middleware proxy instead
-  // Middleware handles /ingest requests to properly forward POST body on Vercel
-  // async rewrites() {
-  //   ... removed for middleware proxy
-  // },
   skipTrailingSlashRedirect: true,
 }
 
