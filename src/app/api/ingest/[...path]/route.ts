@@ -80,6 +80,18 @@ async function proxyRequest(request: NextRequest) {
   }
 
   try {
+    // Log for debugging
+    console.log("PostHog proxy:", {
+      method: request.method,
+      targetUrl,
+      searchParams: searchParams.toString(),
+      hasBody: !!body,
+      bodyLength: body?.length || 0,
+      contentType: headers.get("content-type"),
+      pathname,
+      ingestPath,
+    })
+
     // Forward the request to PostHog
     const response = await fetch(targetUrl, {
       method: request.method,
