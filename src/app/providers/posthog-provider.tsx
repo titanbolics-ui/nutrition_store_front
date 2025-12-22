@@ -27,8 +27,8 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
         const isEU = posthogHost.includes("eu.i.posthog.com")
         const uiHost = isEU
-          ? "https://eu.posthog.com"
-          : "https://us.posthog.com"
+          ? "https://eu.i.posthog.com"
+          : "https://us.i.posthog.com"
 
         posthog.init(phKey, {
           api_host: "/ph",
