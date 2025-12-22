@@ -17,7 +17,10 @@ async function proxyRequest(request: NextRequest) {
   const searchParams = request.nextUrl.search
 
   // Extract path after /api/ingest
-  const pathSegments = pathname.replace("/api/ingest", "").split("/").filter(Boolean)
+  const pathSegments = pathname
+    .replace("/api/ingest", "")
+    .split("/")
+    .filter(Boolean)
   const ingestPath = pathSegments.join("/")
 
   // Determine PostHog hosts
@@ -38,15 +41,22 @@ async function proxyRequest(request: NextRequest) {
   const targetUrl = `${targetHost}/${ingestPath}${searchParams || ""}`
 
   // Get request body for POST requests
-  let body: string | undefined
+  let body: string | ArrayBuffer | undefined
   const contentType = request.headers.get("content-type")
-  
+
   if (request.method === "POST" || request.method === "PUT") {
     try {
-      // Always read as text to preserve the exact format
-      // PostHog SDK sends data in various formats (JSON, base64, etc.)
-      const bodyText = await request.text()
-      body = bodyText || undefined
+      // Read body as array buffer to preserve exact format (including base64)
+      const bodyBuffer = await request.arrayBuffer()
+      if (bodyBuffer.byteLength > 0) {
+        // Convert to string for text-based content, or keep as buffer
+        if (contentType?.includes("application/json") || contentType?.includes("text")) {
+          body = new TextDecoder().decode(bodyBuffer)
+        } else {
+          // For binary or other formats, use the buffer directly
+          body = bodyBuffer
+        }
+      }
     } catch (e) {
       // Body might be empty or unreadable
       console.error("Error reading body:", e)
@@ -56,7 +66,7 @@ async function proxyRequest(request: NextRequest) {
 
   // Clone headers - preserve all original headers except host/referer
   const headers = new Headers()
-  
+
   // Copy all headers from original request
   request.headers.forEach((value, key) => {
     // Skip headers that shouldn't be forwarded
@@ -69,10 +79,10 @@ async function proxyRequest(request: NextRequest) {
       headers.set(key, value)
     }
   })
-  
+
   // Set proper origin
   headers.set("origin", targetHost)
-  
+
   // Ensure content-type is preserved
   if (contentType) {
     headers.set("content-type", contentType)
@@ -92,11 +102,21 @@ async function proxyRequest(request: NextRequest) {
     })
 
     // Forward the request to PostHog
-    const response = await fetch(targetUrl, {
+    const fetchOptions: RequestInit = {
       method: request.method,
       headers: headers,
-      body: body,
-    })
+    }
+    
+    // Add body only if it exists
+    if (body !== undefined) {
+      if (typeof body === "string") {
+        fetchOptions.body = body
+      } else {
+        fetchOptions.body = body
+      }
+    }
+
+    const response = await fetch(targetUrl, fetchOptions)
 
     // Get response body
     const responseBody = await response.text()
@@ -117,4 +137,3 @@ async function proxyRequest(request: NextRequest) {
     return new NextResponse("Proxy error", { status: 500 })
   }
 }
-
