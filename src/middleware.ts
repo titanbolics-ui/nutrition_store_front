@@ -131,26 +131,9 @@ export async function middleware(request: NextRequest) {
   // Skip middleware for PostHog proxy requests - let rewrites handle them
   const pathname = request.nextUrl.pathname
 
+  // Skip middleware for PostHog proxy requests - let rewrites handle them
   if (pathname.startsWith("/ingest") || pathname.match(/^\/[^/]+\/ingest/)) {
-    const url = request.nextUrl.clone()
-
-    const hostname = pathname.includes("/static/")
-      ? "us-assets.i.posthog.com"
-      : "us.i.posthog.com"
-
-    const requestHeaders = new Headers(request.headers)
-    requestHeaders.set("host", hostname)
-
-    url.protocol = "https"
-    url.hostname = hostname
-    url.port = "443"
-    url.pathname = url.pathname
-      .replace(/^\/[^/]+\/ingest/, "")
-      .replace(/^\/ingest/, "")
-
-    return NextResponse.rewrite(url, {
-      headers: requestHeaders,
-    })
+    return NextResponse.next()
   }
 
   let redirectUrl = request.nextUrl.href
