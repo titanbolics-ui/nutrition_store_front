@@ -56,7 +56,10 @@ async function proxyRequest(request: NextRequest) {
       const bodyBuffer = await request.arrayBuffer()
       if (bodyBuffer.byteLength > 0) {
         // Convert to string for text-based content, or keep as buffer
-        if (contentType?.includes("application/json") || contentType?.includes("text")) {
+        if (
+          contentType?.includes("application/json") ||
+          contentType?.includes("text")
+        ) {
           body = new TextDecoder().decode(bodyBuffer)
         } else {
           // For binary or other formats, use the buffer directly
@@ -101,7 +104,8 @@ async function proxyRequest(request: NextRequest) {
       targetUrl,
       searchParams: searchParams.toString(),
       hasBody: !!body,
-      bodyLength: typeof body === "string" ? body.length : body ? body.byteLength : 0,
+      bodyLength:
+        typeof body === "string" ? body.length : body ? body.byteLength : 0,
       contentType: headers.get("content-type"),
       pathname,
       ingestPath,
@@ -112,7 +116,7 @@ async function proxyRequest(request: NextRequest) {
       method: request.method,
       headers: headers,
     }
-    
+
     // Add body only if it exists
     if (body !== undefined) {
       if (typeof body === "string") {

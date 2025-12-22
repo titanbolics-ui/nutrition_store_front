@@ -262,7 +262,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    // Match all routes including /ingest for PostHog proxy
     "/((?!api|_next/static|_next/image|favicon.ico|images|assets|png|svg|jpg|jpeg|gif|webp).*)",
-    // Removed 'ingest' from the exclusion list!
+    // Explicitly include ingest routes
+    "/ingest/:path*",
+    "/:countryCode/ingest/:path*",
   ],
 }

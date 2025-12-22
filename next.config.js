@@ -67,48 +67,11 @@ const nextConfig = {
         : []),
     ],
   },
-  async rewrites() {
-    const posthogHost =
-      process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com"
-
-    const isEU = posthogHost.includes("eu.i.posthog.com")
-    const posthogAssetsHost = isEU
-      ? "https://eu-assets.i.posthog.com"
-      : "https://us-assets.i.posthog.com"
-
-    return [
-      // Rewrites для запитів БЕЗ countryCode - статика
-      {
-        source: "/ingest/static/:path*",
-        destination: `${posthogAssetsHost}/static/:path*`,
-      },
-      // Rewrites для запитів БЕЗ countryCode - array (для завантаження config.js)
-      {
-        source: "/ingest/array/:path*",
-        destination: `${posthogHost}/array/:path*`,
-      },
-      // Rewrites для запитів БЕЗ countryCode - всі інші endpoint'и
-      {
-        source: "/ingest/:path*",
-        destination: `${posthogHost}/:path*`,
-      },
-      // Rewrites для запитів З countryCode - статика
-      {
-        source: "/:countryCode/ingest/static/:path*",
-        destination: `${posthogAssetsHost}/static/:path*`,
-      },
-      // Rewrites для запитів З countryCode - array
-      {
-        source: "/:countryCode/ingest/array/:path*",
-        destination: `${posthogHost}/array/:path*`,
-      },
-      // Rewrites для запитів З countryCode - всі інші endpoint'и
-      {
-        source: "/:countryCode/ingest/:path*",
-        destination: `${posthogHost}/:path*`,
-      },
-    ]
-  },
+  // Removed rewrites for /ingest - using middleware proxy instead
+  // Middleware handles /ingest requests to properly forward POST body on Vercel
+  // async rewrites() {
+  //   ... removed for middleware proxy
+  // },
   skipTrailingSlashRedirect: true,
 }
 
