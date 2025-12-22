@@ -140,40 +140,43 @@ async function fetchAndProxy(
   console.log("[PostHog Proxy] Fetching:", targetUrl)
   console.log("[PostHog Proxy] Method:", request.method)
 
+  // Determine which host to use based on the target URL
+  const targetHost = new URL(targetUrl).hostname
+
   // Prepare headers for forwarding
   const headers = new Headers()
 
   request.headers.forEach((value, key) => {
     const lowerKey = key.toLowerCase()
-    // Skip these headers
+    // Skip these headers - we'll set them manually
     if (
       lowerKey !== "host" &&
       lowerKey !== "connection" &&
       lowerKey !== "x-forwarded-host" &&
       lowerKey !== "x-forwarded-proto" &&
-      lowerKey !== "accept-encoding" // Critical: let fetch handle encoding
+      lowerKey !== "accept-encoding"
     ) {
       headers.set(key, value)
     }
   })
+
+  // CRITICAL: Set Host header to PostHog's domain
+  headers.set("Host", targetHost)
 
   // Set up timeout
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 25000)
 
   try {
-    // For POST/PUT requests with body, pass it directly without reading
     const fetchOptions: RequestInit = {
       method: request.method,
       headers: headers,
       signal: controller.signal,
     }
 
-    // Only include body for methods that support it
     if (request.method !== "GET" && request.method !== "HEAD") {
-      // Pass body directly - don't read it!
       fetchOptions.body = request.body
-      // @ts-ignore - duplex is required for streaming body in fetch
+      // @ts-ignore - duplex is required for streaming body
       fetchOptions.duplex = "half"
     }
 
@@ -187,7 +190,6 @@ async function fetchAndProxy(
       return NextResponse.json({ error: "No response body" }, { status: 500 })
     }
 
-    // Copy response headers but remove compression-related headers
     const responseHeaders = new Headers()
 
     response.headers.forEach((value, key) => {
@@ -197,7 +199,6 @@ async function fetchAndProxy(
       }
     })
 
-    // Add CORS headers
     responseHeaders.set("Access-Control-Allow-Origin", "*")
     responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     responseHeaders.set("Access-Control-Allow-Headers", "*")
@@ -217,7 +218,6 @@ async function fetchAndProxy(
       return NextResponse.json({ error: "Request timeout" }, { status: 504 })
     }
 
-    // Return proper JSON error response
     return NextResponse.json(
       { error: "Proxy error", details: error.message },
       { status: 502 }
