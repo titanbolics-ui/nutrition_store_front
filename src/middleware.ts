@@ -127,13 +127,67 @@ async function getCountryCode(
 /**
  * Middleware to handle region selection and onboarding status.
  */
+/**
+ * Proxy PostHog requests using NextResponse.rewrite
+ * This is needed because rewrites don't properly forward POST body on Vercel
+ */
+async function proxyPostHogRequest(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const searchParams = request.nextUrl.search
+
+  // Determine PostHog hosts
+  const posthogHost =
+    process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com"
+  const isEU = posthogHost.includes("eu.i.posthog.com")
+  const posthogAssetsHost = isEU
+    ? "https://eu-assets.i.posthog.com"
+    : "https://us-assets.i.posthog.com"
+
+  // Extract the path after /ingest
+  let ingestPath = pathname
+  if (pathname.startsWith("/ingest/")) {
+    ingestPath = pathname.replace("/ingest/", "")
+  } else {
+    // Handle /countryCode/ingest/...
+    const match = pathname.match(/^\/[^/]+\/ingest\/(.+)$/)
+    if (match) {
+      ingestPath = match[1]
+    } else {
+      ingestPath = pathname.replace(/^.*\/ingest\//, "")
+    }
+  }
+
+  // Determine target host based on path
+  let targetHost = posthogHost
+  if (ingestPath.startsWith("static/") || ingestPath.startsWith("array/")) {
+    targetHost = posthogAssetsHost
+  }
+
+  // Build target URL
+  const targetUrl = new URL(
+    `${targetHost}/${ingestPath}${searchParams || ""}`
+  )
+
+  // Clone request headers
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.delete("host")
+  requestHeaders.set("host", targetHost.replace("https://", ""))
+
+  // Use NextResponse.rewrite for proxying
+  return NextResponse.rewrite(targetUrl, {
+    request: {
+      headers: requestHeaders,
+      // For POST requests, body will be forwarded automatically by Next.js
+    },
+  })
+}
+
 export async function middleware(request: NextRequest) {
-  // Skip middleware for PostHog proxy requests - let rewrites handle them
   const pathname = request.nextUrl.pathname
 
-  // Skip middleware for PostHog proxy requests - let rewrites handle them
+  // Handle PostHog proxy requests with middleware (especially for POST)
   if (pathname.startsWith("/ingest") || pathname.match(/^\/[^/]+\/ingest/)) {
-    return NextResponse.next()
+    return proxyPostHogRequest(request)
   }
 
   let redirectUrl = request.nextUrl.href
