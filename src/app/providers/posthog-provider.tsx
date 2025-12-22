@@ -9,6 +9,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const phKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
+      console.log("Env check:", {
+        hasKey: !!process.env.NEXT_PUBLIC_POSTHOG_KEY,
+        keyPrefix: process.env.NEXT_PUBLIC_POSTHOG_KEY?.substring(0, 10),
+      })
 
       if (!phKey) {
         console.warn(

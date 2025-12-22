@@ -137,63 +137,61 @@ async function fetchAndProxy(
   targetUrl: string,
   request: NextRequest
 ): Promise<NextResponse> {
-  // Get request body for POST/PUT requests
-  let body: ArrayBuffer | undefined
-  const contentType = request.headers.get("content-type")
+  console.log("[PostHog Proxy] Fetching:", targetUrl)
+  console.log("[PostHog Proxy] Method:", request.method)
 
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    try {
-      const bodyBuffer = await request.arrayBuffer()
-      if (bodyBuffer.byteLength > 0) {
-        body = bodyBuffer
-      }
-    } catch (e) {
-      body = undefined
-    }
-  }
-
-  // Clone headers - preserve all original headers except host/referer
+  // Prepare headers for forwarding
   const headers = new Headers()
 
   request.headers.forEach((value, key) => {
     const lowerKey = key.toLowerCase()
+    // Skip these headers
     if (
       lowerKey !== "host" &&
-      lowerKey !== "referer" &&
+      lowerKey !== "connection" &&
       lowerKey !== "x-forwarded-host" &&
-      lowerKey !== "x-forwarded-proto"
+      lowerKey !== "x-forwarded-proto" &&
+      lowerKey !== "accept-encoding" // Critical: let fetch handle encoding
     ) {
       headers.set(key, value)
     }
   })
 
-  if (contentType) {
-    headers.set("content-type", contentType)
-  }
-
+  // Set up timeout
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 25000)
 
   try {
-    const response = await fetch(targetUrl, {
+    // For POST/PUT requests with body, pass it directly without reading
+    const fetchOptions: RequestInit = {
       method: request.method,
       headers: headers,
-      body: body,
       signal: controller.signal,
-    })
+    }
+
+    // Only include body for methods that support it
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      // Pass body directly - don't read it!
+      fetchOptions.body = request.body
+      // @ts-ignore - duplex is required for streaming body in fetch
+      fetchOptions.duplex = "half"
+    }
+
+    const response = await fetch(targetUrl, fetchOptions)
 
     clearTimeout(timeoutId)
 
+    console.log("[PostHog Proxy] Response status:", response.status)
+
     if (!response.body) {
-      return new NextResponse("No response body", { status: 500 })
+      return NextResponse.json({ error: "No response body" }, { status: 500 })
     }
 
-    // Copy response headers BUT remove compression-related headers
+    // Copy response headers but remove compression-related headers
     const responseHeaders = new Headers()
 
     response.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase()
-      // Remove content-encoding and content-length to prevent double decompression
       if (lowerKey !== "content-encoding" && lowerKey !== "content-length") {
         responseHeaders.set(key, value)
       }
@@ -211,11 +209,19 @@ async function fetchAndProxy(
     })
   } catch (error: any) {
     clearTimeout(timeoutId)
+
+    console.error("[PostHog Proxy] Error:", error)
+
     if (error.name === "AbortError") {
       console.error("PostHog proxy timeout:", targetUrl)
-      return new NextResponse("Request timeout", { status: 504 })
+      return NextResponse.json({ error: "Request timeout" }, { status: 504 })
     }
-    throw error
+
+    // Return proper JSON error response
+    return NextResponse.json(
+      { error: "Proxy error", details: error.message },
+      { status: 502 }
+    )
   }
 }
 
