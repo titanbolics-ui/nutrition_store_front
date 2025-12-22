@@ -27,11 +27,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           : "https://us.i.posthog.com"
 
         posthog.init(phKey, {
-          api_host: "/ingest",
+          api_host: "/api/ingest", // Use API route instead of middleware
           ui_host: uiHost,
           person_profiles: "identified_only",
           capture_pageview: false,
-          // Вимкнути завантаження remote config, якщо він викликає проблеми
           disable_persistence: false,
           autocapture: true,
           loaded: (ph) => {
@@ -39,7 +38,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
               ph.debug()
             }
             console.log("PostHog initialized successfully", {
-              api_host: "/ingest",
+              api_host: "/api/ingest",
               ui_host: uiHost,
               key: phKey.substring(0, 10) + "...",
             })

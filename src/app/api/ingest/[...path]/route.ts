@@ -47,24 +47,16 @@ async function proxyRequest(request: NextRequest) {
   const targetUrl = `${targetHost}/${ingestPath}${searchParams || ""}`
 
   // Get request body for POST requests
-  let body: string | ArrayBuffer | undefined
+  let body: ArrayBuffer | undefined
   const contentType = request.headers.get("content-type")
 
   if (request.method === "POST" || request.method === "PUT") {
     try {
-      // Read body as array buffer to preserve exact format (including base64)
+      // Always read as ArrayBuffer to preserve the exact binary format
+      // PostHog SDK sends data in various formats (JSON, base64, etc.)
       const bodyBuffer = await request.arrayBuffer()
       if (bodyBuffer.byteLength > 0) {
-        // Convert to string for text-based content, or keep as buffer
-        if (
-          contentType?.includes("application/json") ||
-          contentType?.includes("text")
-        ) {
-          body = new TextDecoder().decode(bodyBuffer)
-        } else {
-          // For binary or other formats, use the buffer directly
-          body = bodyBuffer
-        }
+        body = bodyBuffer
       }
     } catch (e) {
       // Body might be empty or unreadable
@@ -99,13 +91,12 @@ async function proxyRequest(request: NextRequest) {
 
   try {
     // Log for debugging
-    console.log("PostHog proxy:", {
+    console.log("🟢 API ROUTE: Handling PostHog request", {
       method: request.method,
       targetUrl,
       searchParams: searchParams.toString(),
       hasBody: !!body,
-      bodyLength:
-        typeof body === "string" ? body.length : body ? body.byteLength : 0,
+      bodyLength: body?.byteLength || 0,
       contentType: headers.get("content-type"),
       pathname,
       ingestPath,
@@ -115,15 +106,7 @@ async function proxyRequest(request: NextRequest) {
     const fetchOptions: RequestInit = {
       method: request.method,
       headers: headers,
-    }
-
-    // Add body only if it exists
-    if (body !== undefined) {
-      if (typeof body === "string") {
-        fetchOptions.body = body
-      } else {
-        fetchOptions.body = body
-      }
+      body: body, // ArrayBuffer works directly with fetch
     }
 
     const response = await fetch(targetUrl, fetchOptions)

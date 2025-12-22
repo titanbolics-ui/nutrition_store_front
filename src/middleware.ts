@@ -126,84 +126,22 @@ async function getCountryCode(
 
 /**
  * Middleware to handle region selection and onboarding status.
+ * PostHog requests are handled by API route /api/ingest/[...path]
  */
-/**
- * Proxy PostHog requests using NextResponse.rewrite
- * This is needed because rewrites don't properly forward POST body on Vercel
- */
-async function proxyPostHogRequest(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
-  const searchParams = request.nextUrl.search
-
-  // Determine PostHog hosts
-  const posthogHost =
-    process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com"
-  const isEU = posthogHost.includes("eu.i.posthog.com")
-  const posthogAssetsHost = isEU
-    ? "https://eu-assets.i.posthog.com"
-    : "https://us-assets.i.posthog.com"
-
-  // Extract the path after /ingest
-  let ingestPath = pathname
-  if (pathname.startsWith("/ingest/")) {
-    ingestPath = pathname.replace("/ingest/", "")
-  } else {
-    // Handle /countryCode/ingest/...
-    const match = pathname.match(/^\/[^/]+\/ingest\/(.+)$/)
-    if (match) {
-      ingestPath = match[1]
-    } else {
-      ingestPath = pathname.replace(/^.*\/ingest\//, "")
-    }
-  }
-
-  // Determine target host based on path
-  let targetHost = posthogHost
-  if (ingestPath.startsWith("static/") || ingestPath.startsWith("array/")) {
-    targetHost = posthogAssetsHost
-  }
-
-  // Build target URL using clone (as per PostHog docs)
-  const url = request.nextUrl.clone()
-  const hostname =
-    ingestPath.startsWith("static/") || ingestPath.startsWith("array/")
-      ? posthogAssetsHost.replace("https://", "")
-      : posthogHost.replace("https://", "")
-
-  url.protocol = "https"
-  url.hostname = hostname
-  url.port = "443"
-
-  // Remove /ingest prefix from pathname
-  if (pathname.startsWith("/ingest/")) {
-    url.pathname = pathname.replace("/ingest", "")
-  } else {
-    // Handle /countryCode/ingest/...
-    url.pathname = pathname.replace(/^\/[^/]+\/ingest/, "")
-  }
-
-  // Clone request headers and set host (as per PostHog docs)
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set("host", hostname)
-
-  // Use NextResponse.rewrite for proxying (preserves POST body on Vercel)
-  return NextResponse.rewrite(url, {
-    headers: requestHeaders,
-  })
-}
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Handle PostHog proxy requests FIRST (before region handling)
-  // This uses NextResponse.rewrite which properly forwards POST body on Vercel
+  // Skip PostHog API route requests - handled by API route handler
+  if (pathname.startsWith("/api/ingest")) {
+    console.log("🔵 MIDDLEWARE: Skipping /api/ingest, handled by API Route")
+    return NextResponse.next()
+  }
+
+  // Also skip old /ingest paths (should not happen, but just in case)
   if (pathname.startsWith("/ingest") || pathname.match(/^\/[^/]+\/ingest/)) {
-    console.log("🔵 MIDDLEWARE: Handling PostHog request", {
-      pathname,
-      method: request.method,
-      url: request.nextUrl.href,
-    })
-    return proxyPostHogRequest(request)
+    console.log("🔵 MIDDLEWARE: Skipping old /ingest path, should use /api/ingest")
+    return NextResponse.next()
   }
 
   let redirectUrl = request.nextUrl.href
