@@ -27,7 +27,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           : "https://us.i.posthog.com"
 
         posthog.init(phKey, {
-          api_host: "/ingest",
+          api_host: "/api/ingest",
           ui_host: uiHost,
           person_profiles: "identified_only",
           capture_pageview: false,
@@ -39,7 +39,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
               ph.debug()
             }
             console.log("PostHog initialized successfully", {
-              api_host: "/ingest",
+              api_host: "/api/ingest",
               ui_host: uiHost,
               key: phKey.substring(0, 10) + "...",
             })

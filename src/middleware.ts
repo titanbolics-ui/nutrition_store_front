@@ -164,9 +164,7 @@ async function proxyPostHogRequest(request: NextRequest) {
   }
 
   // Build target URL
-  const targetUrl = new URL(
-    `${targetHost}/${ingestPath}${searchParams || ""}`
-  )
+  const targetUrl = new URL(`${targetHost}/${ingestPath}${searchParams || ""}`)
 
   // Clone request headers
   const requestHeaders = new Headers(request.headers)
@@ -185,9 +183,14 @@ async function proxyPostHogRequest(request: NextRequest) {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Handle PostHog proxy requests with middleware (especially for POST)
+  // Skip middleware for PostHog API routes - they are handled by API route handler
+  if (pathname.startsWith("/api/ingest")) {
+    return NextResponse.next()
+  }
+
+  // Skip middleware for old /ingest paths (for backwards compatibility with rewrites)
   if (pathname.startsWith("/ingest") || pathname.match(/^\/[^/]+\/ingest/)) {
-    return proxyPostHogRequest(request)
+    return NextResponse.next()
   }
 
   let redirectUrl = request.nextUrl.href
