@@ -148,7 +148,6 @@ async function fetchAndProxy(
         body = bodyBuffer
       }
     } catch (e) {
-      // Body might be empty or unreadable
       body = undefined
     }
   }
@@ -156,9 +155,7 @@ async function fetchAndProxy(
   // Clone headers - preserve all original headers except host/referer
   const headers = new Headers()
 
-  // Copy all headers from original request
   request.headers.forEach((value, key) => {
-    // Skip headers that shouldn't be forwarded
     const lowerKey = key.toLowerCase()
     if (
       lowerKey !== "host" &&
@@ -170,15 +167,12 @@ async function fetchAndProxy(
     }
   })
 
-  // Ensure content-type is preserved
   if (contentType) {
     headers.set("content-type", contentType)
   }
 
-  // Forward the request to PostHog
-  // Add timeout for Vercel Edge runtime (max 30s)
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 25000) // 25s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 25000)
 
   try {
     const response = await fetch(targetUrl, {
@@ -190,19 +184,19 @@ async function fetchAndProxy(
 
     clearTimeout(timeoutId)
 
-    // Use response.body (ReadableStream) directly to preserve compression
-    // This allows Next.js to properly handle the stream without decompressing
     if (!response.body) {
       return new NextResponse("No response body", { status: 500 })
     }
 
-    // Clone ALL response headers to preserve compression info
+    // Copy response headers BUT remove compression-related headers
     const responseHeaders = new Headers()
 
-    // Copy all headers from PostHog response (including content-encoding, content-type, etc.)
     response.headers.forEach((value, key) => {
-      // Keep all headers as-is to preserve compression
-      responseHeaders.set(key, value)
+      const lowerKey = key.toLowerCase()
+      // Remove content-encoding and content-length to prevent double decompression
+      if (lowerKey !== "content-encoding" && lowerKey !== "content-length") {
+        responseHeaders.set(key, value)
+      }
     })
 
     // Add CORS headers
@@ -210,7 +204,6 @@ async function fetchAndProxy(
     responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     responseHeaders.set("Access-Control-Allow-Headers", "*")
 
-    // Return the stream directly - Next.js will handle it properly
     return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,
@@ -232,6 +225,7 @@ async function fetchAndProxy(
 async function proxyPostHog(
   request: NextRequest
 ): Promise<NextResponse | null> {
+  console.log("PostHog proxy request:", request.nextUrl.pathname)
   const pathname = request.nextUrl.pathname
 
   // Handle CORS preflight requests
@@ -247,16 +241,28 @@ async function proxyPostHog(
     })
   }
 
-  // Handle PostHog static assets (static files and array configs)
-  if (pathname.startsWith("/ph/static/") || pathname.startsWith("/ph/array/")) {
-    const path = pathname.replace("/ph/static/", "").replace("/ph/array/", "")
-    const prefix = pathname.startsWith("/ph/static/") ? "static" : "array"
-    const url = `${POSTHOG_ASSETS_HOST}/${prefix}/${path}${request.nextUrl.search}`
+  // Handle PostHog static assets
+  if (pathname.startsWith("/ph/static/")) {
+    const path = pathname.replace("/ph/", "") // Remove /ph/ prefix
+    const url = `${POSTHOG_ASSETS_HOST}/${path}${request.nextUrl.search}`
 
     try {
       return await fetchAndProxy(url, request)
     } catch (error) {
       console.error("PostHog static proxy error:", error)
+      return new NextResponse("Proxy error", { status: 502 })
+    }
+  }
+
+  // Handle PostHog array configs
+  if (pathname.startsWith("/ph/array/")) {
+    const path = pathname.replace("/ph/", "") // Remove /ph/ prefix
+    const url = `${POSTHOG_ASSETS_HOST}/${path}${request.nextUrl.search}`
+
+    try {
+      return await fetchAndProxy(url, request)
+    } catch (error) {
+      console.error("PostHog array proxy error:", error)
       return new NextResponse("Proxy error", { status: 502 })
     }
   }
