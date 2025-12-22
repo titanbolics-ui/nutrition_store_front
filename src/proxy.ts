@@ -7,11 +7,12 @@ const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
 
 // PostHog configuration
 const POSTHOG_HOST =
-  process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com"
-const POSTHOG_ASSETS_HOST = POSTHOG_HOST.includes("eu")
+  process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com"
+const isEU = POSTHOG_HOST.includes("eu.i.posthog.com")
+const POSTHOG_ASSETS_HOST = isEU
   ? "https://eu-assets.i.posthog.com"
   : "https://us-assets.i.posthog.com"
-const POSTHOG_API_HOST = POSTHOG_HOST.includes("eu")
+const POSTHOG_API_HOST = isEU
   ? "https://eu.i.posthog.com"
   : "https://us.i.posthog.com"
 
@@ -41,12 +42,7 @@ async function getRegionMap(cacheId: string) {
         headers: {
           "x-publishable-api-key": PUBLISHABLE_API_KEY ?? "",
         },
-        next: {
-          revalidate: 0, // Disable caching for this request TODO: adjust as needed
-          tags: [`regions-${cacheId}`],
-        },
-        // cache: "force-cache",
-        cache: "no-store",
+        cache: "no-store", // Edge runtime doesn't support next.revalidate or next.tags
       })
 
       const json = await res.json()
@@ -135,6 +131,102 @@ async function getCountryCode(
 }
 
 /**
+ * Fetches from PostHog and proxies the response preserving compression
+ */
+async function fetchAndProxy(
+  targetUrl: string,
+  request: NextRequest
+): Promise<NextResponse> {
+  // Get request body for POST/PUT requests
+  let body: ArrayBuffer | undefined
+  const contentType = request.headers.get("content-type")
+
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    try {
+      const bodyBuffer = await request.arrayBuffer()
+      if (bodyBuffer.byteLength > 0) {
+        body = bodyBuffer
+      }
+    } catch (e) {
+      // Body might be empty or unreadable
+      body = undefined
+    }
+  }
+
+  // Clone headers - preserve all original headers except host/referer
+  const headers = new Headers()
+
+  // Copy all headers from original request
+  request.headers.forEach((value, key) => {
+    // Skip headers that shouldn't be forwarded
+    const lowerKey = key.toLowerCase()
+    if (
+      lowerKey !== "host" &&
+      lowerKey !== "referer" &&
+      lowerKey !== "x-forwarded-host" &&
+      lowerKey !== "x-forwarded-proto"
+    ) {
+      headers.set(key, value)
+    }
+  })
+
+  // Ensure content-type is preserved
+  if (contentType) {
+    headers.set("content-type", contentType)
+  }
+
+  // Forward the request to PostHog
+  // Add timeout for Vercel Edge runtime (max 30s)
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 25000) // 25s timeout
+
+  try {
+    const response = await fetch(targetUrl, {
+      method: request.method,
+      headers: headers,
+      body: body,
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    // Use response.body (ReadableStream) directly to preserve compression
+    // This allows Next.js to properly handle the stream without decompressing
+    if (!response.body) {
+      return new NextResponse("No response body", { status: 500 })
+    }
+
+    // Clone ALL response headers to preserve compression info
+    const responseHeaders = new Headers()
+
+    // Copy all headers from PostHog response (including content-encoding, content-type, etc.)
+    response.headers.forEach((value, key) => {
+      // Keep all headers as-is to preserve compression
+      responseHeaders.set(key, value)
+    })
+
+    // Add CORS headers
+    responseHeaders.set("Access-Control-Allow-Origin", "*")
+    responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    responseHeaders.set("Access-Control-Allow-Headers", "*")
+
+    // Return the stream directly - Next.js will handle it properly
+    return new NextResponse(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+    })
+  } catch (error: any) {
+    clearTimeout(timeoutId)
+    if (error.name === "AbortError") {
+      console.error("PostHog proxy timeout:", targetUrl)
+      return new NextResponse("Request timeout", { status: 504 })
+    }
+    throw error
+  }
+}
+
+/**
  * Proxies PostHog requests to PostHog servers
  */
 async function proxyPostHog(
@@ -155,52 +247,14 @@ async function proxyPostHog(
     })
   }
 
-  // Handle PostHog static assets
-  if (pathname.startsWith("/ph/static/")) {
-    const path = pathname.replace("/ph/static/", "")
-    const url = `${POSTHOG_ASSETS_HOST}/static/${path}${request.nextUrl.search}`
+  // Handle PostHog static assets (static files and array configs)
+  if (pathname.startsWith("/ph/static/") || pathname.startsWith("/ph/array/")) {
+    const path = pathname.replace("/ph/static/", "").replace("/ph/array/", "")
+    const prefix = pathname.startsWith("/ph/static/") ? "static" : "array"
+    const url = `${POSTHOG_ASSETS_HOST}/${prefix}/${path}${request.nextUrl.search}`
 
     try {
-      // Get request body for non-GET requests
-      let body: BodyInit | undefined
-      if (request.method !== "GET" && request.method !== "HEAD") {
-        body = await request.arrayBuffer()
-      }
-
-      const response = await fetch(url, {
-        method: request.method,
-        headers: {
-          // Only forward necessary headers
-          ...(request.headers.get("user-agent") && {
-            "user-agent": request.headers.get("user-agent")!,
-          }),
-          ...(request.headers.get("accept") && {
-            accept: request.headers.get("accept")!,
-          }),
-          ...(request.headers.get("accept-language") && {
-            "accept-language": request.headers.get("accept-language")!,
-          }),
-          ...(request.headers.get("referer") && {
-            referer: request.headers.get("referer")!,
-          }),
-        },
-        body,
-      })
-
-      // Get response as array buffer to handle binary content
-      const data = await response.arrayBuffer()
-      const headers = new Headers(response.headers)
-
-      // Set CORS headers to allow requests from our domain
-      headers.set("access-control-allow-origin", "*")
-      headers.set("access-control-allow-methods", "GET, POST, OPTIONS")
-      headers.set("access-control-allow-headers", "Content-Type")
-
-      return new NextResponse(data, {
-        status: response.status,
-        statusText: response.statusText,
-        headers,
-      })
+      return await fetchAndProxy(url, request)
     } catch (error) {
       console.error("PostHog static proxy error:", error)
       return new NextResponse("Proxy error", { status: 502 })
@@ -213,43 +267,7 @@ async function proxyPostHog(
     const url = `${POSTHOG_API_HOST}/${path}${request.nextUrl.search}`
 
     try {
-      // Get request body for POST/PUT requests
-      let body: BodyInit | undefined
-      if (request.method !== "GET" && request.method !== "HEAD") {
-        body = await request.arrayBuffer()
-      }
-
-      const response = await fetch(url, {
-        method: request.method,
-        headers: {
-          // Forward necessary headers
-          ...(request.headers.get("user-agent") && {
-            "user-agent": request.headers.get("user-agent")!,
-          }),
-          ...(request.headers.get("content-type") && {
-            "content-type": request.headers.get("content-type")!,
-          }),
-          ...(request.headers.get("accept") && {
-            accept: request.headers.get("accept")!,
-          }),
-        },
-        body,
-      })
-
-      // Get response as array buffer to handle binary/JSON content
-      const data = await response.arrayBuffer()
-      const headers = new Headers(response.headers)
-
-      // Set CORS headers
-      headers.set("access-control-allow-origin", "*")
-      headers.set("access-control-allow-methods", "GET, POST, OPTIONS")
-      headers.set("access-control-allow-headers", "Content-Type")
-
-      return new NextResponse(data, {
-        status: response.status,
-        statusText: response.statusText,
-        headers,
-      })
+      return await fetchAndProxy(url, request)
     } catch (error) {
       console.error("PostHog API proxy error:", error)
       return new NextResponse("Proxy error", { status: 502 })
@@ -279,6 +297,18 @@ export async function proxy(request: NextRequest) {
     pathname.includes(".")
   ) {
     return NextResponse.next()
+  }
+
+  // Handle OPTIONS requests for non-PostHog routes (CORS preflight)
+  if (request.method === "OPTIONS") {
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+      },
+    })
   }
 
   let redirectUrl = request.nextUrl.href
