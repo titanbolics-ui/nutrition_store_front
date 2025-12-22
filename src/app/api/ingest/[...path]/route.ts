@@ -111,11 +111,19 @@ async function proxyRequest(request: NextRequest) {
 
     const response = await fetch(targetUrl, fetchOptions)
 
-    // Get response body
-    const responseBody = await response.text()
+    // Get response body as ArrayBuffer to preserve compression (gzip/deflate)
+    // Don't decode it - let the browser handle decompression based on content-encoding header
+    const responseBody = await response.arrayBuffer()
 
-    // Clone response headers
-    const responseHeaders = new Headers(response.headers)
+    // Clone ALL response headers to preserve compression info
+    const responseHeaders = new Headers()
+    
+    // Copy all headers from PostHog response (including content-encoding, content-type, etc.)
+    response.headers.forEach((value, key) => {
+      responseHeaders.set(key, value)
+    })
+
+    // Add CORS headers
     responseHeaders.set("Access-Control-Allow-Origin", "*")
     responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     responseHeaders.set("Access-Control-Allow-Headers", "*")

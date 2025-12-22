@@ -140,7 +140,9 @@ export async function middleware(request: NextRequest) {
 
   // Also skip old /ingest paths (should not happen, but just in case)
   if (pathname.startsWith("/ingest") || pathname.match(/^\/[^/]+\/ingest/)) {
-    console.log("🔵 MIDDLEWARE: Skipping old /ingest path, should use /api/ingest")
+    console.log(
+      "🔵 MIDDLEWARE: Skipping old /ingest path, should use /api/ingest"
+    )
     return NextResponse.next()
   }
 
