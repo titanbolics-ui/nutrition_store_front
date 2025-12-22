@@ -16,6 +16,12 @@ async function proxyRequest(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const searchParams = request.nextUrl.search
 
+  console.log("🟢 API ROUTE: Handling PostHog request", {
+    pathname,
+    method: request.method,
+    url: request.nextUrl.href,
+  })
+
   // Extract path after /api/ingest
   const pathSegments = pathname
     .replace("/api/ingest", "")
@@ -95,7 +101,7 @@ async function proxyRequest(request: NextRequest) {
       targetUrl,
       searchParams: searchParams.toString(),
       hasBody: !!body,
-      bodyLength: body?.length || 0,
+      bodyLength: typeof body === "string" ? body.length : body ? body.byteLength : 0,
       contentType: headers.get("content-type"),
       pathname,
       ingestPath,

@@ -163,34 +163,47 @@ async function proxyPostHogRequest(request: NextRequest) {
     targetHost = posthogAssetsHost
   }
 
-  // Build target URL
-  const targetUrl = new URL(`${targetHost}/${ingestPath}${searchParams || ""}`)
+  // Build target URL using clone (as per PostHog docs)
+  const url = request.nextUrl.clone()
+  const hostname =
+    ingestPath.startsWith("static/") || ingestPath.startsWith("array/")
+      ? posthogAssetsHost.replace("https://", "")
+      : posthogHost.replace("https://", "")
 
-  // Clone request headers
+  url.protocol = "https"
+  url.hostname = hostname
+  url.port = "443"
+
+  // Remove /ingest prefix from pathname
+  if (pathname.startsWith("/ingest/")) {
+    url.pathname = pathname.replace("/ingest", "")
+  } else {
+    // Handle /countryCode/ingest/...
+    url.pathname = pathname.replace(/^\/[^/]+\/ingest/, "")
+  }
+
+  // Clone request headers and set host (as per PostHog docs)
   const requestHeaders = new Headers(request.headers)
-  requestHeaders.delete("host")
-  requestHeaders.set("host", targetHost.replace("https://", ""))
+  requestHeaders.set("host", hostname)
 
-  // Use NextResponse.rewrite for proxying
-  return NextResponse.rewrite(targetUrl, {
-    request: {
-      headers: requestHeaders,
-      // For POST requests, body will be forwarded automatically by Next.js
-    },
+  // Use NextResponse.rewrite for proxying (preserves POST body on Vercel)
+  return NextResponse.rewrite(url, {
+    headers: requestHeaders,
   })
 }
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Skip middleware for PostHog API routes - they are handled by API route handler
-  if (pathname.startsWith("/api/ingest")) {
-    return NextResponse.next()
-  }
-
-  // Skip middleware for old /ingest paths (for backwards compatibility with rewrites)
+  // Handle PostHog proxy requests FIRST (before region handling)
+  // This uses NextResponse.rewrite which properly forwards POST body on Vercel
   if (pathname.startsWith("/ingest") || pathname.match(/^\/[^/]+\/ingest/)) {
-    return NextResponse.next()
+    console.log("🔵 MIDDLEWARE: Handling PostHog request", {
+      pathname,
+      method: request.method,
+      url: request.nextUrl.href,
+    })
+    return proxyPostHogRequest(request)
   }
 
   let redirectUrl = request.nextUrl.href
