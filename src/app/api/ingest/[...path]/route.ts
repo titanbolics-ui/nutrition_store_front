@@ -39,19 +39,45 @@ async function proxyRequest(request: NextRequest) {
 
   // Get request body for POST requests
   let body: string | undefined
+  const contentType = request.headers.get("content-type")
+  
   if (request.method === "POST" || request.method === "PUT") {
     try {
-      body = await request.text()
+      if (contentType?.includes("application/json")) {
+        body = await request.text()
+      } else {
+        // For form data or other types
+        body = await request.text()
+      }
     } catch (e) {
       // Body might be empty
+      console.error("Error reading body:", e)
     }
   }
 
-  // Clone headers
-  const headers = new Headers(request.headers)
-  headers.delete("host")
-  headers.delete("referer")
+  // Clone headers - preserve all original headers except host/referer
+  const headers = new Headers()
+  
+  // Copy all headers from original request
+  request.headers.forEach((value, key) => {
+    // Skip headers that shouldn't be forwarded
+    if (
+      key.toLowerCase() !== "host" &&
+      key.toLowerCase() !== "referer" &&
+      key.toLowerCase() !== "x-forwarded-host" &&
+      key.toLowerCase() !== "x-forwarded-proto"
+    ) {
+      headers.set(key, value)
+    }
+  })
+  
+  // Set proper origin
   headers.set("origin", targetHost)
+  
+  // Ensure content-type is preserved
+  if (contentType) {
+    headers.set("content-type", contentType)
+  }
 
   try {
     // Forward the request to PostHog
