@@ -43,15 +43,14 @@ async function proxyRequest(request: NextRequest) {
   
   if (request.method === "POST" || request.method === "PUT") {
     try {
-      if (contentType?.includes("application/json")) {
-        body = await request.text()
-      } else {
-        // For form data or other types
-        body = await request.text()
-      }
+      // Always read as text to preserve the exact format
+      // PostHog SDK sends data in various formats (JSON, base64, etc.)
+      const bodyText = await request.text()
+      body = bodyText || undefined
     } catch (e) {
-      // Body might be empty
+      // Body might be empty or unreadable
       console.error("Error reading body:", e)
+      body = undefined
     }
   }
 
