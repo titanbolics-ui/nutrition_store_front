@@ -111,15 +111,18 @@ async function proxyRequest(request: NextRequest) {
 
     const response = await fetch(targetUrl, fetchOptions)
 
-    // Get response body as ArrayBuffer to preserve compression (gzip/deflate)
-    // Don't decode it - let the browser handle decompression based on content-encoding header
-    const responseBody = await response.arrayBuffer()
+    // Use response.body (ReadableStream) directly to preserve compression
+    // This allows Next.js to properly handle the stream without decompressing
+    if (!response.body) {
+      return new NextResponse("No response body", { status: 500 })
+    }
 
     // Clone ALL response headers to preserve compression info
     const responseHeaders = new Headers()
     
     // Copy all headers from PostHog response (including content-encoding, content-type, etc.)
     response.headers.forEach((value, key) => {
+      // Keep all headers as-is to preserve compression
       responseHeaders.set(key, value)
     })
 
@@ -128,7 +131,8 @@ async function proxyRequest(request: NextRequest) {
     responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     responseHeaders.set("Access-Control-Allow-Headers", "*")
 
-    return new NextResponse(responseBody, {
+    // Return the stream directly - Next.js will handle it properly
+    return new NextResponse(response.body, {
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
