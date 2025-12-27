@@ -22,13 +22,19 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
 
   const { promotions = [] } = cart
   const removePromotionCode = async (code: string) => {
+    setErrorMessage("")
+    
     const validPromotions = promotions.filter(
       (promotion) => promotion.code !== code
     )
 
-    await applyPromotions(
-      validPromotions.filter((p) => p.code !== undefined).map((p) => p.code!)
-    )
+    try {
+      await applyPromotions(
+        validPromotions.filter((p) => p.code !== undefined).map((p) => p.code!)
+      )
+    } catch (e: any) {
+      setErrorMessage(e.message || "Failed to remove discount code")
+    }
   }
 
   const addPromotionCode = async (formData: FormData) => {

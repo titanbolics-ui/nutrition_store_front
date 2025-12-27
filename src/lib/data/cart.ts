@@ -392,40 +392,63 @@ export async function applyPromotions(codes: string[]) {
     }
   }
 
-  const response = await sdk.store.cart
-    .update(cartId, { promo_codes: codes }, {}, headers)
-    .catch((err) => {
-      const errorString = err.toString().toLowerCase()
-      const errorMessage = err.message ? err.message.toLowerCase() : ""
+  try {
+    const response = await sdk.store.cart.update(
+      cartId,
+      { promo_codes: codes },
+      {},
+      headers
+    )
 
-      if (
-        errorString.includes("customer_id") ||
-        errorMessage.includes("customer_id")
-      ) {
-        throw new Error(
-          "Please log in or create an account to use this discount code."
-        )
-      }
-      return medusaError(err)
-    })
+    if (!response || !response.cart) {
+      return
+    }
 
-  if (!response || !response.cart) {
-    return
+    const cart = response.cart
+
+    const codeApplied = cart.promotions?.some(
+      (promo) => promo.code && codes.includes(promo.code)
+    )
+    if (!codeApplied && codes.length > 0) {
+      throw new Error(
+        "Discount code is invalid, expired, or limitations apply."
+      )
+    }
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+
+    const fulfillmentCacheTag = await getCacheTag("fulfillment")
+    revalidateTag(fulfillmentCacheTag)
+  } catch (err: any) {
+    // Check error message in different places where Medusa might return it
+    const errorString = err.toString().toLowerCase()
+    const errorMessage = err.message ? String(err.message).toLowerCase() : ""
+
+    // Medusa errors often come in error.response.data.message
+    const responseMessage = err.response?.data?.message
+      ? String(err.response.data.message).toLowerCase()
+      : ""
+
+    // Also check the entire response data as string
+    const responseDataString = err.response?.data
+      ? JSON.stringify(err.response.data).toLowerCase()
+      : ""
+
+    // Check if error is related to customer_id requirement
+    if (
+      errorString.includes("customer_id") ||
+      errorMessage.includes("customer_id") ||
+      responseMessage.includes("customer_id") ||
+      responseDataString.includes("customer_id")
+    ) {
+      throw new Error(
+        "Please log in or create an account to use this discount code."
+      )
+    }
+
+    // medusaError always throws, so we don't need to return it
+    medusaError(err)
   }
-
-  const cart = response.cart
-
-  const codeApplied = cart.promotions?.some(
-    (promo) => promo.code && codes.includes(promo.code)
-  )
-  if (!codeApplied && codes.length > 0) {
-    throw new Error("Discount code is invalid, expired, or limitations apply.")
-  }
-  const cartCacheTag = await getCacheTag("carts")
-  revalidateTag(cartCacheTag)
-
-  const fulfillmentCacheTag = await getCacheTag("fulfillment")
-  revalidateTag(fulfillmentCacheTag)
 }
 
 export async function applyGiftCard(code: string) {
