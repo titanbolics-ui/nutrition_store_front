@@ -255,13 +255,141 @@ export async function initiatePaymentSession(
 
 export async function applyPromotions(codes: string[]) {
   const cartId = await getCartId()
+  console.log("cartId", cartId)
 
   if (!cartId) {
     throw new Error("No existing cart found")
   }
 
+  // Validate: only one promotion code can be applied at a time
+  if (codes.length > 1) {
+    throw new Error("Only one discount code can be applied at a time.")
+  }
+
   const headers = {
     ...(await getAuthHeaders()),
+  }
+
+  // Get current cart to check existing promotions and cart total
+  // Use standard fields first, then try to get totals if needed
+  let currentCart = await retrieveCart(cartId)
+
+  if (!currentCart) {
+    throw new Error("No existing cart found")
+  }
+
+  // If we need totals, try to fetch them separately
+  // First check if we have the data we need from the standard cart
+  const needsTotals =
+    codes[0]?.toUpperCase() === "XMAS30" || codes[0]?.toUpperCase() === "XMAS50"
+
+  if (needsTotals) {
+    // Try to get cart with totals - specifically request item_subtotal (without shipping)
+    try {
+      const cartWithTotals = await sdk.client
+        .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cartId}`, {
+          method: "GET",
+          query: {
+            fields:
+              "*items, *items.total, *promotions, item_subtotal, currency_code",
+          },
+          headers: {
+            ...(await getAuthHeaders()),
+          },
+          cache: "no-store",
+        })
+        .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+        .catch(() => null)
+
+      if (cartWithTotals) {
+        currentCart = cartWithTotals
+      }
+    } catch (error) {
+      // If fetching with totals fails, continue with the standard cart
+      console.warn("Failed to fetch cart totals, using standard cart:", error)
+    }
+  }
+
+  // If codes array is empty, this is a removal operation - skip all validations
+  if (codes.length === 0) {
+    // Just update the cart with empty promo codes
+    const response = await sdk.store.cart
+      .update(cartId, { promo_codes: [] }, {}, headers)
+      .catch((err) => {
+        return medusaError(err)
+      })
+
+    if (response?.cart) {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+
+      const fulfillmentCacheTag = await getCacheTag("fulfillment")
+      revalidateTag(fulfillmentCacheTag)
+    }
+
+    return
+  }
+
+  // Check if there's already a promotion applied (only when adding a new code)
+  const existingPromotions = currentCart.promotions || []
+  const existingCodes = existingPromotions
+    .map((p) => p.code)
+    .filter((code): code is string => !!code)
+  const newCode = codes[0]
+
+  // If trying to apply a different code when one is already applied
+  if (existingCodes.length > 0 && !existingCodes.includes(newCode)) {
+    throw new Error(
+      `A discount code "${existingCodes[0]}" is already applied. Please remove it before applying a new code.`
+    )
+  }
+
+  // Check minimum cart amount requirements (only for new codes, not if already applied)
+  const codeToApply = codes[0]?.toUpperCase()
+  const isNewCode = !existingCodes.includes(newCode)
+
+  // Get item_subtotal (subtotal without shipping and taxes)
+  // This is what's shown as "Subtotal (excl. shipping and taxes)" in the UI
+  // Medusa returns amounts in the smallest currency unit (cents for USD)
+  let cartSubtotalAmount = 0
+
+  // Try to get item_subtotal first (this is the subtotal without shipping)
+  if (
+    (currentCart as any).item_subtotal !== undefined &&
+    (currentCart as any).item_subtotal !== null
+  ) {
+    cartSubtotalAmount = (currentCart as any).item_subtotal
+  } else if (currentCart.items && currentCart.items.length > 0) {
+    // Calculate from items - sum up all item totals
+    // Items totals are also in cents
+    cartSubtotalAmount = currentCart.items.reduce((sum, item) => {
+      const itemTotal = (item as any).total || 0
+      return sum + itemTotal
+    }, 0)
+  }
+
+  // Convert from cents to dollars for comparison
+  // Medusa always returns amounts in the smallest currency unit
+
+  // Only check minimum amount for new codes (not if code is already applied)
+  if (isNewCode) {
+    if (codeToApply === "XMAS30") {
+      if (cartSubtotalAmount < 230) {
+        throw new Error(
+          `Minimum order amount of $230 is required to use code XMAS30. Your current subtotal is $${cartSubtotalAmount.toFixed(
+            2
+          )}.`
+        )
+      }
+    } else if (codeToApply === "XMAS50") {
+      if (cartSubtotalAmount < 350) {
+        throw new Error(
+          `Minimum order amount of $350 is required to use code XMAS50. Your current subtotal is $${cartSubtotalAmount.toFixed(
+            2
+          )}.`
+        )
+      }
+    }
   }
 
   const response = await sdk.store.cart

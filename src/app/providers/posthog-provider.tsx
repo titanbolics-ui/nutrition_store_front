@@ -9,6 +9,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const phKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
+      console.log("Env check:", {
+        hasKey: !!process.env.NEXT_PUBLIC_POSTHOG_KEY,
+        keyPrefix: process.env.NEXT_PUBLIC_POSTHOG_KEY?.substring(0, 10),
+      })
 
       if (!phKey) {
         console.warn(
@@ -23,15 +27,14 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
         const isEU = posthogHost.includes("eu.i.posthog.com")
         const uiHost = isEU
-          ? "https://eu.posthog.com"
+          ? "https://eu.i.posthog.com"
           : "https://us.i.posthog.com"
 
         posthog.init(phKey, {
-          api_host: "/ingest",
+          api_host: "/ph",
           ui_host: uiHost,
           person_profiles: "identified_only",
           capture_pageview: false,
-          // Вимкнути завантаження remote config, якщо він викликає проблеми
           disable_persistence: false,
           autocapture: true,
           loaded: (ph) => {
@@ -39,7 +42,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
               ph.debug()
             }
             console.log("PostHog initialized successfully", {
-              api_host: "/ingest",
+              api_host: "/ph",
               ui_host: uiHost,
               key: phKey.substring(0, 10) + "...",
             })
