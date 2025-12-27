@@ -28,12 +28,12 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
       (promotion) => promotion.code !== code
     )
 
-    try {
-      await applyPromotions(
-        validPromotions.filter((p) => p.code !== undefined).map((p) => p.code!)
-      )
-    } catch (e: any) {
-      setErrorMessage(e.message || "Failed to remove discount code")
+    const error = await applyPromotions(
+      validPromotions.filter((p) => p.code !== undefined).map((p) => p.code!)
+    )
+    
+    if (error) {
+      setErrorMessage(error)
     }
   }
 
@@ -50,14 +50,15 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
       .map((p) => p.code!)
     codes.push(code.toString())
 
-    try {
-      await applyPromotions(codes)
-    } catch (e: any) {
-      setErrorMessage(e.message)
-    }
-
-    if (input) {
-      input.value = ""
+    const error = await applyPromotions(codes)
+    
+    if (error) {
+      setErrorMessage(error)
+    } else {
+      // Success - clear input
+      if (input) {
+        input.value = ""
+      }
     }
   }
 

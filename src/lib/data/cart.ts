@@ -253,7 +253,7 @@ export async function initiatePaymentSession(
     .catch(medusaError)
 }
 
-export async function applyPromotions(codes: string[]) {
+async function _applyPromotions(codes: string[]) {
   const cartId = await getCartId()
   console.log("cartId", cartId)
 
@@ -494,16 +494,24 @@ export async function removeGiftCard(
   //   }
 }
 
+// Wrapper function that catches errors and returns them as strings
+// This is needed because Next.js hides thrown errors in production Server Components
+export async function applyPromotions(codes: string[]): Promise<string | void> {
+  try {
+    await _applyPromotions(codes)
+  } catch (e: any) {
+    // Return error message instead of throwing
+    // This allows the error to be properly displayed in production
+    return e.message || "An error occurred while applying the promotion code"
+  }
+}
+
 export async function submitPromotionForm(
   currentState: unknown,
   formData: FormData
 ) {
   const code = formData.get("code") as string
-  try {
-    await applyPromotions([code])
-  } catch (e: any) {
-    return e.message
-  }
+  return await applyPromotions([code])
 }
 
 // TODO: Pass a POJO instead of a form entity here
