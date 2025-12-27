@@ -15,6 +15,125 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 
+// Helper function to check if cart meets minimum requirements for applied promo codes
+async function checkAndRemoveInvalidPromotions(cartId: string) {
+  try {
+    console.log("[checkAndRemoveInvalidPromotions] Checking cart:", cartId)
+
+    // Get cart with promotions and totals
+    // Use simpler fields to avoid 500 errors
+    const cart = await sdk.client
+      .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cartId}`, {
+        method: "GET",
+        query: {
+          fields: "+items.total,+item_subtotal,+promotions.code",
+        },
+        headers: {
+          ...(await getAuthHeaders()),
+        },
+        cache: "no-store",
+      })
+      .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+      .catch((err) => {
+        console.error(
+          "[checkAndRemoveInvalidPromotions] Failed to fetch cart:",
+          err
+        )
+        return null
+      })
+
+    if (!cart) {
+      console.log("[checkAndRemoveInvalidPromotions] Cart not found")
+      return
+    }
+
+    console.log(
+      "[checkAndRemoveInvalidPromotions] Cart promotions:",
+      cart.promotions
+    )
+
+    if (!cart.promotions || cart.promotions.length === 0) {
+      console.log("[checkAndRemoveInvalidPromotions] No promotions applied")
+      return
+    }
+
+    // Check each promotion for minimum amount requirements
+    const invalidPromotions: string[] = []
+
+    for (const promo of cart.promotions) {
+      const code = promo.code?.toUpperCase()
+      console.log("[checkAndRemoveInvalidPromotions] Checking promotion:", code)
+
+      if (code === "XMAS30" || code === "XMAS50") {
+        // Calculate cart subtotal
+        let cartSubtotalAmount = 0
+
+        if (
+          (cart as any).item_subtotal !== undefined &&
+          (cart as any).item_subtotal !== null
+        ) {
+          cartSubtotalAmount = (cart as any).item_subtotal
+        } else if (cart.items && cart.items.length > 0) {
+          cartSubtotalAmount = cart.items.reduce((sum, item) => {
+            const itemTotal = (item as any).total || 0
+            return sum + itemTotal
+          }, 0)
+        }
+
+        console.log(
+          "[checkAndRemoveInvalidPromotions] Cart subtotal:",
+          cartSubtotalAmount
+        )
+
+        // Check minimum requirements
+        const minAmount = code === "XMAS30" ? 230 : 350
+
+        if (cartSubtotalAmount < minAmount) {
+          console.log(
+            `[checkAndRemoveInvalidPromotions] ${code} invalid: ${cartSubtotalAmount} < ${minAmount}`
+          )
+          invalidPromotions.push(promo.code!)
+        } else {
+          console.log(
+            `[checkAndRemoveInvalidPromotions] ${code} valid: ${cartSubtotalAmount} >= ${minAmount}`
+          )
+        }
+      }
+    }
+
+    // Remove invalid promotions
+    if (invalidPromotions.length > 0) {
+      console.log(
+        "[checkAndRemoveInvalidPromotions] Removing invalid promotions:",
+        invalidPromotions
+      )
+
+      const validCodes = cart.promotions
+        .filter((p) => p.code && !invalidPromotions.includes(p.code))
+        .map((p) => p.code!)
+
+      const headers = {
+        ...(await getAuthHeaders()),
+      }
+
+      await sdk.store.cart.update(
+        cartId,
+        { promo_codes: validCodes },
+        {},
+        headers
+      )
+      console.log(
+        "[checkAndRemoveInvalidPromotions] Promotions removed successfully"
+      )
+    } else {
+      console.log("[checkAndRemoveInvalidPromotions] All promotions are valid")
+    }
+  } catch (error) {
+    // Silently fail - this is a background check
+    console.error("[checkAndRemoveInvalidPromotions] Error:", error)
+  }
+}
+
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
  * @param cartId - optional - The ID of the cart to retrieve.
@@ -179,6 +298,9 @@ export async function updateLineItem({
   await sdk.store.cart
     .updateLineItem(cartId, lineId, { quantity }, {}, headers)
     .then(async () => {
+      // Check if applied promotions are still valid after quantity change
+      await checkAndRemoveInvalidPromotions(cartId)
+
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
 
@@ -206,6 +328,9 @@ export async function deleteLineItem(lineId: string) {
   await sdk.store.cart
     .deleteLineItem(cartId, lineId, {}, headers)
     .then(async () => {
+      // Check if applied promotions are still valid after item deletion
+      await checkAndRemoveInvalidPromotions(cartId)
+
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
 

@@ -1,6 +1,5 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
-import { PostHogProvider } from "./providers/posthog-provider"
 import "styles/globals.css"
 
 export const metadata: Metadata = {
@@ -16,9 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-mode="light">
       <body>
-        <PostHogProvider>
-          <main className="relative">{children}</main>
-        </PostHogProvider>
+        <main className="relative">{children}</main>
       </body>
     </html>
   )
