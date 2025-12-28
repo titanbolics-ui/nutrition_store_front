@@ -8,10 +8,11 @@ import { useEffect, Suspense } from "react"
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const phKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
+      // CRITICAL: Trim environment variables to remove any whitespace/newlines
+      const phKey = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim()
       console.log("Env check:", {
         hasKey: !!process.env.NEXT_PUBLIC_POSTHOG_KEY,
-        keyPrefix: process.env.NEXT_PUBLIC_POSTHOG_KEY?.substring(0, 10),
+        keyPrefix: process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim().substring(0, 10),
       })
 
       if (!phKey) {
@@ -23,7 +24,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
       if (!(posthog as any).__loaded) {
         const posthogHost =
-          process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com"
+          process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() || "https://eu.i.posthog.com"
 
         const isEU = posthogHost.includes("eu.i.posthog.com")
         const uiHost = isEU

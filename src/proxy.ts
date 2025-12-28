@@ -140,7 +140,10 @@ async function fetchAndProxy(
 ): Promise<NextResponse> {
   console.log("[PostHog Proxy] Fetching:", targetUrl)
   console.log("[PostHog Proxy] Method:", request.method)
-  console.log("[PostHog Proxy] Original headers:", Object.fromEntries(request.headers.entries()))
+  console.log(
+    "[PostHog Proxy] Original headers:",
+    Object.fromEntries(request.headers.entries())
+  )
 
   // Determine which host to use based on the target URL
   const targetHost = new URL(targetUrl).hostname
@@ -155,8 +158,7 @@ async function fetchAndProxy(
       lowerKey !== "host" &&
       lowerKey !== "connection" &&
       lowerKey !== "x-forwarded-host" &&
-      lowerKey !== "x-forwarded-proto" &&
-      lowerKey !== "accept-encoding"
+      lowerKey !== "x-forwarded-proto"
     ) {
       headers.set(key, value)
     }
@@ -164,8 +166,16 @@ async function fetchAndProxy(
 
   // CRITICAL: Set Host header to PostHog's domain
   headers.set("Host", targetHost)
-  
-  console.log("[PostHog Proxy] Forwarding headers:", Object.fromEntries(headers.entries()))
+
+  // Ensure accept-encoding is set for POST requests
+  if (request.method === "POST" && !headers.has("accept-encoding")) {
+    headers.set("accept-encoding", "gzip, deflate, br")
+  }
+
+  console.log(
+    "[PostHog Proxy] Forwarding headers:",
+    Object.fromEntries(headers.entries())
+  )
 
   // Set up timeout
   const controller = new AbortController()
@@ -183,7 +193,7 @@ async function fetchAndProxy(
       fetchOptions.body = bodyToSend !== undefined ? bodyToSend : request.body
       // @ts-ignore - duplex is required for streaming body
       fetchOptions.duplex = "half"
-      
+
       console.log("[PostHog Proxy] Has body stream:", !!fetchOptions.body)
     }
 
@@ -192,11 +202,16 @@ async function fetchAndProxy(
     clearTimeout(timeoutId)
 
     console.log("[PostHog Proxy] Response status:", response.status)
-    console.log("[PostHog Proxy] Response headers:", Object.fromEntries(response.headers.entries()))
-    
+    console.log(
+      "[PostHog Proxy] Response headers:",
+      Object.fromEntries(response.headers.entries())
+    )
+
     if (response.status === 401) {
-      console.error("[PostHog Proxy] 401 Unauthorized - Check PostHog API key and headers")
-      
+      console.error(
+        "[PostHog Proxy] 401 Unauthorized - Check PostHog API key and headers"
+      )
+
       // Try to read error body for debugging
       try {
         const errorText = await response.clone().text()
@@ -302,26 +317,38 @@ async function proxyPostHog(
     if (pathname.includes("/flags/")) {
       console.log("[PostHog Flags] Method:", request.method)
       console.log("[PostHog Flags] URL:", url)
-      console.log("[PostHog Flags] Content-Type:", request.headers.get("content-type"))
-      console.log("[PostHog Flags] Content-Length:", request.headers.get("content-length"))
+      console.log(
+        "[PostHog Flags] Content-Type:",
+        request.headers.get("content-type")
+      )
+      console.log(
+        "[PostHog Flags] Content-Length:",
+        request.headers.get("content-length")
+      )
       console.log("[PostHog Flags] Has body:", !!request.body)
     }
 
     try {
       // Clone request BEFORE passing to fetchAndProxy to preserve body
       const clonedRequest = request.clone()
-      
+
       // Debug: try to read body as text for logging
       if (pathname.includes("/flags/") && request.method === "POST") {
         try {
           const bodyText = await request.clone().text()
-          console.log("[PostHog Flags] Body content (first 500 chars):", bodyText.substring(0, 500))
-          console.log("[PostHog Flags] Body includes API key?:", bodyText.includes("api_key"))
+          console.log(
+            "[PostHog Flags] Body content (first 500 chars):",
+            bodyText.substring(0, 500)
+          )
+          console.log(
+            "[PostHog Flags] Body includes API key?:",
+            bodyText.includes("api_key")
+          )
         } catch (e) {
           console.error("[PostHog Flags] Could not read body:", e)
         }
       }
-      
+
       const bodyToSend = clonedRequest.body
       return await fetchAndProxy(url, request, bodyToSend)
     } catch (error) {
