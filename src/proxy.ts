@@ -310,6 +310,18 @@ async function proxyPostHog(
     try {
       // Clone request BEFORE passing to fetchAndProxy to preserve body
       const clonedRequest = request.clone()
+      
+      // Debug: try to read body as text for logging
+      if (pathname.includes("/flags/") && request.method === "POST") {
+        try {
+          const bodyText = await request.clone().text()
+          console.log("[PostHog Flags] Body content (first 500 chars):", bodyText.substring(0, 500))
+          console.log("[PostHog Flags] Body includes API key?:", bodyText.includes("api_key"))
+        } catch (e) {
+          console.error("[PostHog Flags] Could not read body:", e)
+        }
+      }
+      
       const bodyToSend = clonedRequest.body
       return await fetchAndProxy(url, request, bodyToSend)
     } catch (error) {
