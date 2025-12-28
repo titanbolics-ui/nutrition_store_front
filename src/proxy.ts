@@ -178,9 +178,13 @@ async function fetchAndProxy(
     }
 
     if (request.method !== "GET" && request.method !== "HEAD") {
-      fetchOptions.body = request.body
+      // Clone the request to ensure body is not consumed
+      const clonedRequest = request.clone()
+      fetchOptions.body = clonedRequest.body
       // @ts-ignore - duplex is required for streaming body
       fetchOptions.duplex = "half"
+      
+      console.log("[PostHog Proxy] Has body stream:", !!clonedRequest.body)
     }
 
     const response = await fetch(targetUrl, fetchOptions)
@@ -192,6 +196,14 @@ async function fetchAndProxy(
     
     if (response.status === 401) {
       console.error("[PostHog Proxy] 401 Unauthorized - Check PostHog API key and headers")
+      
+      // Try to read error body for debugging
+      try {
+        const errorText = await response.clone().text()
+        console.error("[PostHog Proxy] 401 Response body:", errorText)
+      } catch (e) {
+        console.error("[PostHog Proxy] Could not read error body")
+      }
     }
 
     if (!response.body) {
@@ -285,6 +297,15 @@ async function proxyPostHog(
   if (pathname.startsWith("/ph/")) {
     const path = pathname.replace("/ph/", "")
     const url = `${POSTHOG_API_HOST}/${path}${request.nextUrl.search}`
+
+    // Special logging for flags endpoint
+    if (pathname.includes("/flags/")) {
+      console.log("[PostHog Flags] Method:", request.method)
+      console.log("[PostHog Flags] URL:", url)
+      console.log("[PostHog Flags] Content-Type:", request.headers.get("content-type"))
+      console.log("[PostHog Flags] Content-Length:", request.headers.get("content-length"))
+      console.log("[PostHog Flags] Has body:", !!request.body)
+    }
 
     try {
       return await fetchAndProxy(url, request)
