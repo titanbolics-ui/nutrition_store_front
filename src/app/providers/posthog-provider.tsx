@@ -8,12 +8,8 @@ import { useEffect, Suspense } from "react"
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // CRITICAL: Trim environment variables to remove any whitespace/newlines
+      // Trim environment variables to remove any whitespace/newlines
       const phKey = process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim()
-      console.log("Env check:", {
-        hasKey: !!process.env.NEXT_PUBLIC_POSTHOG_KEY,
-        keyPrefix: process.env.NEXT_PUBLIC_POSTHOG_KEY?.trim().substring(0, 10),
-      })
 
       if (!phKey) {
         console.warn(
@@ -24,24 +20,16 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
       if (!(posthog as any).__loaded) {
         const posthogHost =
-          process.env.NEXT_PUBLIC_POSTHOG_HOST?.trim() || "https://eu.i.posthog.com"
+          process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com"
 
         const isEU = posthogHost.includes("eu.i.posthog.com")
         const uiHost = isEU
           ? "https://eu.i.posthog.com"
           : "https://us.i.posthog.com"
 
-        // Use full URL for api_host to ensure proper proxy routing on all environments
-        // This fixes 401 errors on Vercel deployments
+        // Use full URL for api_host to ensure proper proxy routing
         const apiHost =
           typeof window !== "undefined" ? `${window.location.origin}/ph` : "/ph"
-
-        console.log("[PostHog] Initializing with:", {
-          api_host: apiHost,
-          ui_host: uiHost,
-          origin:
-            typeof window !== "undefined" ? window.location.origin : "server",
-        })
 
         posthog.init(phKey, {
           api_host: apiHost,
@@ -54,15 +42,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
             if (process.env.NODE_ENV === "development" && ph) {
               ph.debug()
             }
-            console.log("PostHog initialized successfully", {
-              api_host: apiHost,
-              ui_host: uiHost,
-              key: phKey.substring(0, 10) + "...",
-            })
           },
         })
-      } else {
-        console.log("PostHog already initialized")
+
+        ;(posthog as any).__loaded = true
       }
     }
   }, [])

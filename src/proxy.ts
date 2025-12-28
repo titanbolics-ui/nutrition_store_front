@@ -135,17 +135,8 @@ async function getCountryCode(
  */
 async function fetchAndProxy(
   targetUrl: string,
-  request: NextRequest,
-  bodyToSend?: ReadableStream | null
+  request: NextRequest
 ): Promise<NextResponse> {
-  console.log("[PostHog Proxy] Fetching:", targetUrl)
-  console.log("[PostHog Proxy] Method:", request.method)
-  console.log(
-    "[PostHog Proxy] Original headers:",
-    Object.fromEntries(request.headers.entries())
-  )
-
-  // Determine which host to use based on the target URL
   const targetHost = new URL(targetUrl).hostname
 
   // Prepare headers for forwarding
@@ -153,7 +144,7 @@ async function fetchAndProxy(
 
   request.headers.forEach((value, key) => {
     const lowerKey = key.toLowerCase()
-    // Skip these headers - we'll set them manually
+    // Skip host-related headers that need to be set for PostHog
     if (
       lowerKey !== "host" &&
       lowerKey !== "connection" &&
@@ -164,20 +155,10 @@ async function fetchAndProxy(
     }
   })
 
-  // CRITICAL: Set Host header to PostHog's domain
+  // Set Host header to PostHog's domain
   headers.set("Host", targetHost)
 
-  // Ensure accept-encoding is set for POST requests
-  if (request.method === "POST" && !headers.has("accept-encoding")) {
-    headers.set("accept-encoding", "gzip, deflate, br")
-  }
-
-  console.log(
-    "[PostHog Proxy] Forwarding headers:",
-    Object.fromEntries(headers.entries())
-  )
-
-  // Set up timeout
+  // Set up timeout for Edge runtime (max 30s, use 25s to be safe)
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 25000)
 
@@ -189,44 +170,21 @@ async function fetchAndProxy(
     }
 
     if (request.method !== "GET" && request.method !== "HEAD") {
-      // Use the body passed as parameter, or fallback to request.body
-      fetchOptions.body = bodyToSend !== undefined ? bodyToSend : request.body
+      fetchOptions.body = request.body
       // @ts-ignore - duplex is required for streaming body
       fetchOptions.duplex = "half"
-
-      console.log("[PostHog Proxy] Has body stream:", !!fetchOptions.body)
     }
 
     const response = await fetch(targetUrl, fetchOptions)
-
     clearTimeout(timeoutId)
-
-    console.log("[PostHog Proxy] Response status:", response.status)
-    console.log(
-      "[PostHog Proxy] Response headers:",
-      Object.fromEntries(response.headers.entries())
-    )
-
-    if (response.status === 401) {
-      console.error(
-        "[PostHog Proxy] 401 Unauthorized - Check PostHog API key and headers"
-      )
-
-      // Try to read error body for debugging
-      try {
-        const errorText = await response.clone().text()
-        console.error("[PostHog Proxy] 401 Response body:", errorText)
-      } catch (e) {
-        console.error("[PostHog Proxy] Could not read error body")
-      }
-    }
 
     if (!response.body) {
       return NextResponse.json({ error: "No response body" }, { status: 500 })
     }
 
+    // Copy response headers, excluding content-encoding and content-length
+    // to let the browser handle decompression
     const responseHeaders = new Headers()
-
     response.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase()
       if (lowerKey !== "content-encoding" && lowerKey !== "content-length") {
@@ -234,6 +192,7 @@ async function fetchAndProxy(
       }
     })
 
+    // Add CORS headers
     responseHeaders.set("Access-Control-Allow-Origin", "*")
     responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
     responseHeaders.set("Access-Control-Allow-Headers", "*")
@@ -246,10 +205,7 @@ async function fetchAndProxy(
   } catch (error: any) {
     clearTimeout(timeoutId)
 
-    console.error("[PostHog Proxy] Error:", error)
-
     if (error.name === "AbortError") {
-      console.error("PostHog proxy timeout:", targetUrl)
       return NextResponse.json({ error: "Request timeout" }, { status: 504 })
     }
 
@@ -266,7 +222,6 @@ async function fetchAndProxy(
 async function proxyPostHog(
   request: NextRequest
 ): Promise<NextResponse | null> {
-  console.log("PostHog proxy request:", request.nextUrl.pathname)
   const pathname = request.nextUrl.pathname
 
   // Handle CORS preflight requests
@@ -284,77 +239,23 @@ async function proxyPostHog(
 
   // Handle PostHog static assets
   if (pathname.startsWith("/ph/static/")) {
-    const path = pathname.replace("/ph/", "") // Remove /ph/ prefix
+    const path = pathname.replace("/ph/", "")
     const url = `${POSTHOG_ASSETS_HOST}/${path}${request.nextUrl.search}`
-
-    try {
-      return await fetchAndProxy(url, request)
-    } catch (error) {
-      console.error("PostHog static proxy error:", error)
-      return new NextResponse("Proxy error", { status: 502 })
-    }
+    return await fetchAndProxy(url, request)
   }
 
   // Handle PostHog array configs
   if (pathname.startsWith("/ph/array/")) {
-    const path = pathname.replace("/ph/", "") // Remove /ph/ prefix
+    const path = pathname.replace("/ph/", "")
     const url = `${POSTHOG_ASSETS_HOST}/${path}${request.nextUrl.search}`
-
-    try {
-      return await fetchAndProxy(url, request)
-    } catch (error) {
-      console.error("PostHog array proxy error:", error)
-      return new NextResponse("Proxy error", { status: 502 })
-    }
+    return await fetchAndProxy(url, request)
   }
 
   // Handle PostHog API requests
   if (pathname.startsWith("/ph/")) {
     const path = pathname.replace("/ph/", "")
     const url = `${POSTHOG_API_HOST}/${path}${request.nextUrl.search}`
-
-    // Special logging for flags endpoint
-    if (pathname.includes("/flags/")) {
-      console.log("[PostHog Flags] Method:", request.method)
-      console.log("[PostHog Flags] URL:", url)
-      console.log(
-        "[PostHog Flags] Content-Type:",
-        request.headers.get("content-type")
-      )
-      console.log(
-        "[PostHog Flags] Content-Length:",
-        request.headers.get("content-length")
-      )
-      console.log("[PostHog Flags] Has body:", !!request.body)
-    }
-
-    try {
-      // Clone request BEFORE passing to fetchAndProxy to preserve body
-      const clonedRequest = request.clone()
-
-      // Debug: try to read body as text for logging
-      if (pathname.includes("/flags/") && request.method === "POST") {
-        try {
-          const bodyText = await request.clone().text()
-          console.log(
-            "[PostHog Flags] Body content (first 500 chars):",
-            bodyText.substring(0, 500)
-          )
-          console.log(
-            "[PostHog Flags] Body includes API key?:",
-            bodyText.includes("api_key")
-          )
-        } catch (e) {
-          console.error("[PostHog Flags] Could not read body:", e)
-        }
-      }
-
-      const bodyToSend = clonedRequest.body
-      return await fetchAndProxy(url, request, bodyToSend)
-    } catch (error) {
-      console.error("PostHog API proxy error:", error)
-      return new NextResponse("Proxy error", { status: 502 })
-    }
+    return await fetchAndProxy(url, request)
   }
 
   return null
