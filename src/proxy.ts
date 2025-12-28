@@ -135,7 +135,8 @@ async function getCountryCode(
  */
 async function fetchAndProxy(
   targetUrl: string,
-  request: NextRequest
+  request: NextRequest,
+  bodyToSend?: ReadableStream | null
 ): Promise<NextResponse> {
   console.log("[PostHog Proxy] Fetching:", targetUrl)
   console.log("[PostHog Proxy] Method:", request.method)
@@ -178,13 +179,12 @@ async function fetchAndProxy(
     }
 
     if (request.method !== "GET" && request.method !== "HEAD") {
-      // Clone the request to ensure body is not consumed
-      const clonedRequest = request.clone()
-      fetchOptions.body = clonedRequest.body
+      // Use the body passed as parameter, or fallback to request.body
+      fetchOptions.body = bodyToSend !== undefined ? bodyToSend : request.body
       // @ts-ignore - duplex is required for streaming body
       fetchOptions.duplex = "half"
       
-      console.log("[PostHog Proxy] Has body stream:", !!clonedRequest.body)
+      console.log("[PostHog Proxy] Has body stream:", !!fetchOptions.body)
     }
 
     const response = await fetch(targetUrl, fetchOptions)
@@ -308,7 +308,10 @@ async function proxyPostHog(
     }
 
     try {
-      return await fetchAndProxy(url, request)
+      // Clone request BEFORE passing to fetchAndProxy to preserve body
+      const clonedRequest = request.clone()
+      const bodyToSend = clonedRequest.body
+      return await fetchAndProxy(url, request, bodyToSend)
     } catch (error) {
       console.error("PostHog API proxy error:", error)
       return new NextResponse("Proxy error", { status: 502 })
