@@ -15,6 +15,125 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 
+// Helper function to check if cart meets minimum requirements for applied promo codes
+async function checkAndRemoveInvalidPromotions(cartId: string) {
+  try {
+    console.log("[checkAndRemoveInvalidPromotions] Checking cart:", cartId)
+
+    // Get cart with promotions and totals
+    // Use simpler fields to avoid 500 errors
+    const cart = await sdk.client
+      .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cartId}`, {
+        method: "GET",
+        query: {
+          fields: "+items.total,+item_subtotal,+promotions.code",
+        },
+        headers: {
+          ...(await getAuthHeaders()),
+        },
+        cache: "no-store",
+      })
+      .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+      .catch((err) => {
+        console.error(
+          "[checkAndRemoveInvalidPromotions] Failed to fetch cart:",
+          err
+        )
+        return null
+      })
+
+    if (!cart) {
+      console.log("[checkAndRemoveInvalidPromotions] Cart not found")
+      return
+    }
+
+    console.log(
+      "[checkAndRemoveInvalidPromotions] Cart promotions:",
+      cart.promotions
+    )
+
+    if (!cart.promotions || cart.promotions.length === 0) {
+      console.log("[checkAndRemoveInvalidPromotions] No promotions applied")
+      return
+    }
+
+    // Check each promotion for minimum amount requirements
+    const invalidPromotions: string[] = []
+
+    for (const promo of cart.promotions) {
+      const code = promo.code?.toUpperCase()
+      console.log("[checkAndRemoveInvalidPromotions] Checking promotion:", code)
+
+      if (code === "XMAS30" || code === "XMAS50") {
+        // Calculate cart subtotal
+        let cartSubtotalAmount = 0
+
+        if (
+          (cart as any).item_subtotal !== undefined &&
+          (cart as any).item_subtotal !== null
+        ) {
+          cartSubtotalAmount = (cart as any).item_subtotal
+        } else if (cart.items && cart.items.length > 0) {
+          cartSubtotalAmount = cart.items.reduce((sum, item) => {
+            const itemTotal = (item as any).total || 0
+            return sum + itemTotal
+          }, 0)
+        }
+
+        console.log(
+          "[checkAndRemoveInvalidPromotions] Cart subtotal:",
+          cartSubtotalAmount
+        )
+
+        // Check minimum requirements
+        const minAmount = code === "XMAS30" ? 230 : 350
+
+        if (cartSubtotalAmount < minAmount) {
+          console.log(
+            `[checkAndRemoveInvalidPromotions] ${code} invalid: ${cartSubtotalAmount} < ${minAmount}`
+          )
+          invalidPromotions.push(promo.code!)
+        } else {
+          console.log(
+            `[checkAndRemoveInvalidPromotions] ${code} valid: ${cartSubtotalAmount} >= ${minAmount}`
+          )
+        }
+      }
+    }
+
+    // Remove invalid promotions
+    if (invalidPromotions.length > 0) {
+      console.log(
+        "[checkAndRemoveInvalidPromotions] Removing invalid promotions:",
+        invalidPromotions
+      )
+
+      const validCodes = cart.promotions
+        .filter((p) => p.code && !invalidPromotions.includes(p.code))
+        .map((p) => p.code!)
+
+      const headers = {
+        ...(await getAuthHeaders()),
+      }
+
+      await sdk.store.cart.update(
+        cartId,
+        { promo_codes: validCodes },
+        {},
+        headers
+      )
+      console.log(
+        "[checkAndRemoveInvalidPromotions] Promotions removed successfully"
+      )
+    } else {
+      console.log("[checkAndRemoveInvalidPromotions] All promotions are valid")
+    }
+  } catch (error) {
+    // Silently fail - this is a background check
+    console.error("[checkAndRemoveInvalidPromotions] Error:", error)
+  }
+}
+
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
  * @param cartId - optional - The ID of the cart to retrieve.
@@ -179,6 +298,9 @@ export async function updateLineItem({
   await sdk.store.cart
     .updateLineItem(cartId, lineId, { quantity }, {}, headers)
     .then(async () => {
+      // Check if applied promotions are still valid after quantity change
+      await checkAndRemoveInvalidPromotions(cartId)
+
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
 
@@ -206,6 +328,9 @@ export async function deleteLineItem(lineId: string) {
   await sdk.store.cart
     .deleteLineItem(cartId, lineId, {}, headers)
     .then(async () => {
+      // Check if applied promotions are still valid after item deletion
+      await checkAndRemoveInvalidPromotions(cartId)
+
       const cartCacheTag = await getCacheTag("carts")
       revalidateTag(cartCacheTag)
 
@@ -253,51 +378,202 @@ export async function initiatePaymentSession(
     .catch(medusaError)
 }
 
-export async function applyPromotions(codes: string[]) {
+async function _applyPromotions(codes: string[]) {
   const cartId = await getCartId()
+  console.log("cartId", cartId)
 
   if (!cartId) {
     throw new Error("No existing cart found")
+  }
+
+  // Validate: only one promotion code can be applied at a time
+  if (codes.length > 1) {
+    throw new Error("Only one discount code can be applied at a time.")
   }
 
   const headers = {
     ...(await getAuthHeaders()),
   }
 
-  const response = await sdk.store.cart
-    .update(cartId, { promo_codes: codes }, {}, headers)
-    .catch((err) => {
-      const errorString = err.toString().toLowerCase()
-      const errorMessage = err.message ? err.message.toLowerCase() : ""
+  // Get current cart to check existing promotions and cart total
+  // Use standard fields first, then try to get totals if needed
+  let currentCart = await retrieveCart(cartId)
 
-      if (
-        errorString.includes("customer_id") ||
-        errorMessage.includes("customer_id")
-      ) {
-        throw new Error(
-          "Please log in or create an account to use this discount code."
-        )
+  if (!currentCart) {
+    throw new Error("No existing cart found")
+  }
+
+  // If we need totals, try to fetch them separately
+  // First check if we have the data we need from the standard cart
+  const needsTotals =
+    codes[0]?.toUpperCase() === "XMAS30" || codes[0]?.toUpperCase() === "XMAS50"
+
+  if (needsTotals) {
+    // Try to get cart with totals - specifically request item_subtotal (without shipping)
+    try {
+      const cartWithTotals = await sdk.client
+        .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cartId}`, {
+          method: "GET",
+          query: {
+            fields:
+              "*items, *items.total, *promotions, item_subtotal, currency_code",
+          },
+          headers: {
+            ...(await getAuthHeaders()),
+          },
+          cache: "no-store",
+        })
+        .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+        .catch(() => null)
+
+      if (cartWithTotals) {
+        currentCart = cartWithTotals
       }
-      return medusaError(err)
-    })
+    } catch (error) {
+      // If fetching with totals fails, continue with the standard cart
+      console.warn("Failed to fetch cart totals, using standard cart:", error)
+    }
+  }
 
-  if (!response || !response.cart) {
+  // If codes array is empty, this is a removal operation - skip all validations
+  if (codes.length === 0) {
+    // Just update the cart with empty promo codes
+    const response = await sdk.store.cart
+      .update(cartId, { promo_codes: [] }, {}, headers)
+      .catch((err) => {
+        return medusaError(err)
+      })
+
+    if (response?.cart) {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+
+      const fulfillmentCacheTag = await getCacheTag("fulfillment")
+      revalidateTag(fulfillmentCacheTag)
+    }
+
     return
   }
 
-  const cart = response.cart
+  // Check if there's already a promotion applied (only when adding a new code)
+  const existingPromotions = currentCart.promotions || []
+  const existingCodes = existingPromotions
+    .map((p) => p.code)
+    .filter((code): code is string => !!code)
+  const newCode = codes[0]
 
-  const codeApplied = cart.promotions?.some(
-    (promo) => promo.code && codes.includes(promo.code)
-  )
-  if (!codeApplied && codes.length > 0) {
-    throw new Error("Discount code is invalid, expired, or limitations apply.")
+  // If trying to apply a different code when one is already applied
+  if (existingCodes.length > 0 && !existingCodes.includes(newCode)) {
+    throw new Error(
+      `A discount code "${existingCodes[0]}" is already applied. Please remove it before applying a new code.`
+    )
   }
-  const cartCacheTag = await getCacheTag("carts")
-  revalidateTag(cartCacheTag)
 
-  const fulfillmentCacheTag = await getCacheTag("fulfillment")
-  revalidateTag(fulfillmentCacheTag)
+  // Check minimum cart amount requirements (only for new codes, not if already applied)
+  const codeToApply = codes[0]?.toUpperCase()
+  const isNewCode = !existingCodes.includes(newCode)
+
+  // Get item_subtotal (subtotal without shipping and taxes)
+  // This is what's shown as "Subtotal (excl. shipping and taxes)" in the UI
+  // Medusa returns amounts in the smallest currency unit (cents for USD)
+  let cartSubtotalAmount = 0
+
+  // Try to get item_subtotal first (this is the subtotal without shipping)
+  if (
+    (currentCart as any).item_subtotal !== undefined &&
+    (currentCart as any).item_subtotal !== null
+  ) {
+    cartSubtotalAmount = (currentCart as any).item_subtotal
+  } else if (currentCart.items && currentCart.items.length > 0) {
+    // Calculate from items - sum up all item totals
+    // Items totals are also in cents
+    cartSubtotalAmount = currentCart.items.reduce((sum, item) => {
+      const itemTotal = (item as any).total || 0
+      return sum + itemTotal
+    }, 0)
+  }
+
+  // Convert from cents to dollars for comparison
+  // Medusa always returns amounts in the smallest currency unit
+
+  // Only check minimum amount for new codes (not if code is already applied)
+  if (isNewCode) {
+    if (codeToApply === "XMAS30") {
+      if (cartSubtotalAmount < 230) {
+        throw new Error(
+          `Minimum order amount of $230 is required to use code XMAS30. Your current subtotal is $${cartSubtotalAmount.toFixed(
+            2
+          )}.`
+        )
+      }
+    } else if (codeToApply === "XMAS50") {
+      if (cartSubtotalAmount < 350) {
+        throw new Error(
+          `Minimum order amount of $350 is required to use code XMAS50. Your current subtotal is $${cartSubtotalAmount.toFixed(
+            2
+          )}.`
+        )
+      }
+    }
+  }
+
+  try {
+    const response = await sdk.store.cart.update(
+      cartId,
+      { promo_codes: codes },
+      {},
+      headers
+    )
+
+    if (!response || !response.cart) {
+      return
+    }
+
+    const cart = response.cart
+
+    const codeApplied = cart.promotions?.some(
+      (promo) => promo.code && codes.includes(promo.code)
+    )
+    if (!codeApplied && codes.length > 0) {
+      throw new Error(
+        "Discount code is invalid, expired, or limitations apply."
+      )
+    }
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+
+    const fulfillmentCacheTag = await getCacheTag("fulfillment")
+    revalidateTag(fulfillmentCacheTag)
+  } catch (err: any) {
+    // Check error message in different places where Medusa might return it
+    const errorString = err.toString().toLowerCase()
+    const errorMessage = err.message ? String(err.message).toLowerCase() : ""
+
+    // Medusa errors often come in error.response.data.message
+    const responseMessage = err.response?.data?.message
+      ? String(err.response.data.message).toLowerCase()
+      : ""
+
+    // Also check the entire response data as string
+    const responseDataString = err.response?.data
+      ? JSON.stringify(err.response.data).toLowerCase()
+      : ""
+
+    // Check if error is related to customer_id requirement
+    if (
+      errorString.includes("customer_id") ||
+      errorMessage.includes("customer_id") ||
+      responseMessage.includes("customer_id") ||
+      responseDataString.includes("customer_id")
+    ) {
+      throw new Error(
+        "Please log in or create an account to use this discount code."
+      )
+    }
+
+    // medusaError always throws, so we don't need to return it
+    medusaError(err)
+  }
 }
 
 export async function applyGiftCard(code: string) {
@@ -343,16 +619,24 @@ export async function removeGiftCard(
   //   }
 }
 
+// Wrapper function that catches errors and returns them as strings
+// This is needed because Next.js hides thrown errors in production Server Components
+export async function applyPromotions(codes: string[]): Promise<string | void> {
+  try {
+    await _applyPromotions(codes)
+  } catch (e: any) {
+    // Return error message instead of throwing
+    // This allows the error to be properly displayed in production
+    return e.message || "An error occurred while applying the promotion code"
+  }
+}
+
 export async function submitPromotionForm(
   currentState: unknown,
   formData: FormData
 ) {
   const code = formData.get("code") as string
-  try {
-    await applyPromotions([code])
-  } catch (e: any) {
-    return e.message
-  }
+  return await applyPromotions([code])
 }
 
 // TODO: Pass a POJO instead of a form entity here
