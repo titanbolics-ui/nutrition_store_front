@@ -30,8 +30,20 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           ? "https://eu.i.posthog.com"
           : "https://us.i.posthog.com"
 
+        // Use full URL for api_host to ensure proper proxy routing on all environments
+        // This fixes 401 errors on Vercel deployments
+        const apiHost =
+          typeof window !== "undefined" ? `${window.location.origin}/ph` : "/ph"
+
+        console.log("[PostHog] Initializing with:", {
+          api_host: apiHost,
+          ui_host: uiHost,
+          origin:
+            typeof window !== "undefined" ? window.location.origin : "server",
+        })
+
         posthog.init(phKey, {
-          api_host: "/ph",
+          api_host: apiHost,
           ui_host: uiHost,
           person_profiles: "identified_only",
           capture_pageview: false,
@@ -42,7 +54,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
               ph.debug()
             }
             console.log("PostHog initialized successfully", {
-              api_host: "/ph",
+              api_host: apiHost,
               ui_host: uiHost,
               key: phKey.substring(0, 10) + "...",
             })
