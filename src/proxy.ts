@@ -139,6 +139,7 @@ async function fetchAndProxy(
 ): Promise<NextResponse> {
   console.log("[PostHog Proxy] Fetching:", targetUrl)
   console.log("[PostHog Proxy] Method:", request.method)
+  console.log("[PostHog Proxy] Original headers:", Object.fromEntries(request.headers.entries()))
 
   // Determine which host to use based on the target URL
   const targetHost = new URL(targetUrl).hostname
@@ -162,6 +163,8 @@ async function fetchAndProxy(
 
   // CRITICAL: Set Host header to PostHog's domain
   headers.set("Host", targetHost)
+  
+  console.log("[PostHog Proxy] Forwarding headers:", Object.fromEntries(headers.entries()))
 
   // Set up timeout
   const controller = new AbortController()
@@ -185,6 +188,11 @@ async function fetchAndProxy(
     clearTimeout(timeoutId)
 
     console.log("[PostHog Proxy] Response status:", response.status)
+    console.log("[PostHog Proxy] Response headers:", Object.fromEntries(response.headers.entries()))
+    
+    if (response.status === 401) {
+      console.error("[PostHog Proxy] 401 Unauthorized - Check PostHog API key and headers")
+    }
 
     if (!response.body) {
       return NextResponse.json({ error: "No response body" }, { status: 500 })
