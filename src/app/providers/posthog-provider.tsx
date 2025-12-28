@@ -44,7 +44,6 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
             }
           },
         })
-
         ;(posthog as any).__loaded = true
       }
     }
