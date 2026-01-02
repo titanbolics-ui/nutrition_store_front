@@ -7,6 +7,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { signup } from "@lib/data/customer"
+import posthog from "posthog-js"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
@@ -14,6 +15,23 @@ type Props = {
 
 const Register = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(signup, null)
+
+  // Трекаємо email для PostHog
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const email = e.target.value
+    if (email && email.includes("@") && posthog) {
+      posthog.setPersonProperties({
+        $email: email,
+      })
+    }
+  }
+
+  // Обробник сабміту форми - трекаємо спробу реєстрації
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (posthog) {
+      posthog.capture("signup_attempted")
+    }
+  }
 
   return (
     <div
@@ -27,7 +45,7 @@ const Register = ({ setCurrentView }: Props) => {
         Create your Onyx Genetics Member profile, and get access to an enhanced
         shopping experience.
       </p>
-      <form className="w-full flex flex-col" action={formAction}>
+      <form className="w-full flex flex-col" action={formAction} onSubmit={handleSubmit}>
         <div className="flex flex-col w-full gap-y-2">
           <Input
             label="First name"
@@ -50,6 +68,7 @@ const Register = ({ setCurrentView }: Props) => {
             type="email"
             autoComplete="email"
             data-testid="email-input"
+            onChange={handleEmailChange}
           />
           <Input
             label="Phone"
