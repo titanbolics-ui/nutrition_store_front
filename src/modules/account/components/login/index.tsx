@@ -1,9 +1,12 @@
+"use client"
+
 import { login } from "@lib/data/customer"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
 import Input from "@modules/common/components/input"
 import { useActionState } from "react"
+import posthog from "posthog-js"
 
 type Props = {
   setCurrentView: (view: LOGIN_VIEW) => void
@@ -11,6 +14,23 @@ type Props = {
 
 const Login = ({ setCurrentView }: Props) => {
   const [message, formAction] = useActionState(login, null)
+
+  // Трекаємо email для PostHog
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const email = e.target.value
+    if (email && email.includes("@") && posthog) {
+      posthog.setPersonProperties({
+        $email: email,
+      })
+    }
+  }
+
+  // Обробник сабміту форми - трекаємо спробу логіну
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (posthog) {
+      posthog.capture("login_attempted")
+    }
+  }
 
   return (
     <div
@@ -21,7 +41,7 @@ const Login = ({ setCurrentView }: Props) => {
       <p className="text-center text-base-regular text-ui-fg-base mb-8">
         Sign in to access an enhanced shopping experience.
       </p>
-      <form className="w-full" action={formAction}>
+      <form className="w-full" action={formAction} onSubmit={handleSubmit}>
         <div className="flex flex-col w-full gap-y-2">
           <Input
             label="Email"
@@ -31,6 +51,7 @@ const Login = ({ setCurrentView }: Props) => {
             autoComplete="email"
             required
             data-testid="email-input"
+            onChange={handleEmailChange}
           />
           <Input
             label="Password"
