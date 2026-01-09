@@ -64,7 +64,7 @@ async function checkAndRemoveInvalidPromotions(cartId: string) {
       const code = promo.code?.toUpperCase()
       console.log("[checkAndRemoveInvalidPromotions] Checking promotion:", code)
 
-      if (code === "XMAS30" || code === "XMAS50") {
+      if (code === "XMAS30" || code === "XMAS50" || code === "TIER1") {
         // Calculate cart subtotal
         let cartSubtotalAmount = 0
 
@@ -86,7 +86,14 @@ async function checkAndRemoveInvalidPromotions(cartId: string) {
         )
 
         // Check minimum requirements
-        const minAmount = code === "XMAS30" ? 230 : 350
+        const minAmount =
+          code === "XMAS30"
+            ? 230
+            : code === "XMAS50"
+            ? 350
+            : code === "TIER1"
+            ? 1100
+            : 0
 
         if (cartSubtotalAmount < minAmount) {
           console.log(
