@@ -16,7 +16,7 @@ export async function getCustomerForIdentification() {
       firstName: customer.first_name,
       lastName: customer.last_name,
       phone: customer.phone,
-      hasAccount: customer.has_account,
+      hasAccount: true, // If customer is retrieved, they have an account
       createdAt: customer.created_at,
     }
   } catch (error) {
