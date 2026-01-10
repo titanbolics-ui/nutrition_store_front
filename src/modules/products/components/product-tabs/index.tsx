@@ -54,6 +54,22 @@ const ShippingInfoTab = () => {
   return (
     <div className="text-small-regular py-8">
       <div className="grid grid-cols-1 gap-y-8">
+        {/* Терміни доставки - перший пункт */}
+        <div className="flex items-start gap-x-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <FastDelivery className="text-blue-600" />
+          <div>
+            <span className="font-bold text-blue-900 text-base">
+              Delivery Time
+            </span>
+            <p className="max-w-sm text-blue-800 font-medium mt-1">
+              10-12 business days after dispatch
+            </p>
+            <p className="max-w-sm text-blue-700 text-xs mt-1">
+              International shipping with reliable tracking
+            </p>
+          </div>
+        </div>
+        
         <div className="flex items-start gap-x-2">
           <FastDelivery />
           <div>

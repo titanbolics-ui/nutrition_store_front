@@ -1,13 +1,20 @@
 import { Suspense } from "react"
 
-import { listRegions } from "@lib/data/regions"
+import { listRegions, getRegion } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
+import SearchButtonWrapper, {
+  SearchButtonFallback,
+} from "@modules/layout/components/search-button/search-button-wrapper"
 
 export default async function Nav() {
   const regions = await listRegions().then((regions: StoreRegion[]) => regions)
+
+  // Використовуємо US як дефолтний регіон для пошуку
+  // Оскільки пошук показує всі продукти, регіон потрібен тільки для форматування цін
+  const region = await getRegion("us").catch(() => regions?.[0] || null)
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
@@ -39,6 +46,14 @@ export default async function Nav() {
                 Account
               </LocalizedClientLink>
             </div>
+
+            {/* Search Button */}
+            {region && (
+              <Suspense fallback={<SearchButtonFallback />}>
+                <SearchButtonWrapper region={region} />
+              </Suspense>
+            )}
+
             <Suspense
               fallback={
                 <LocalizedClientLink
