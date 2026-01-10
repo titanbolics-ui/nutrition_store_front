@@ -6603,6 +6603,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fuse.js@npm:^7.1.0":
+  version: 7.1.0
+  resolution: "fuse.js@npm:7.1.0"
+  checksum: 10/9f9105e54372897a46cb3e04074f0db5bd0a428320d4618276a57e6142d7502235a556f05cf87aa3c5d6d9c6fdfa06b901b78379c48aa0951672ccbc4a1bfe70
+  languageName: node
+  linkType: hard
+
 "generator-function@npm:^2.0.0":
   version: 2.0.1
   resolution: "generator-function@npm:2.0.1"
@@ -8004,6 +8011,7 @@ __metadata:
     eslint: "npm:8.10.0"
     eslint-config-next: "npm:15.0.3"
     framer-motion: "npm:^12.23.24"
+    fuse.js: "npm:^7.1.0"
     lodash: "npm:^4.17.21"
     lucide-react: "npm:^0.561.0"
     next: "npm:^16.0.10"
