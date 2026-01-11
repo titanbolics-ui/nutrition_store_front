@@ -5,7 +5,7 @@ import { retrieveCustomer } from "@lib/data/customer"
 export async function getCustomerForIdentification() {
   try {
     const customer = await retrieveCustomer()
-    
+
     if (!customer) {
       return null
     }
@@ -24,4 +24,3 @@ export async function getCustomerForIdentification() {
     return null
   }
 }
-
