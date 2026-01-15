@@ -36,18 +36,18 @@ const AddressSelect = ({
     <Listbox onChange={handleSelect} value={selectedAddress?.id}>
       <div className="relative">
         <Listbox.Button
-          className="relative w-full flex justify-between items-center px-4 py-[10px] text-left bg-white cursor-default focus:outline-none border rounded-rounded focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-gray-300 focus-visible:ring-offset-2 focus-visible:border-gray-300 text-base-regular"
+          className="relative w-full flex justify-between items-center px-4 py-[10px] text-left bg-gray-900 text-white cursor-default focus:outline-none border border-gray-700 rounded-md focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-[#b8ff2b] focus-visible:border-[#b8ff2b] text-base-regular"
           data-testid="shipping-address-select"
         >
           {({ open }) => (
             <>
-              <span className="block truncate">
+              <span className="block truncate text-white">
                 {selectedAddress
                   ? selectedAddress.address_1
                   : "Choose an address"}
               </span>
               <ChevronUpDown
-                className={clx("transition-rotate duration-200", {
+                className={clx("transition-rotate duration-200 text-gray-400", {
                   "transform rotate-180": open,
                 })}
               />
@@ -61,7 +61,7 @@ const AddressSelect = ({
           leaveTo="opacity-0"
         >
           <Listbox.Options
-            className="absolute z-20 w-full overflow-auto text-small-regular bg-white border border-top-0 max-h-60 focus:outline-none sm:text-sm"
+            className="absolute z-20 w-full overflow-auto text-small-regular bg-gray-900 border border-gray-700 rounded-md mt-1 max-h-60 focus:outline-none sm:text-sm"
             data-testid="shipping-address-options"
           >
             {addresses.map((address) => {
@@ -69,7 +69,7 @@ const AddressSelect = ({
                 <Listbox.Option
                   key={address.id}
                   value={address.id}
-                  className="cursor-default select-none relative pl-6 pr-10 hover:bg-gray-50 py-4"
+                  className="cursor-default select-none relative pl-6 pr-10 hover:bg-gray-800 py-4 text-white"
                   data-testid="shipping-address-option"
                 >
                   <div className="flex gap-x-4 items-start">
@@ -78,15 +78,15 @@ const AddressSelect = ({
                       data-testid="shipping-address-radio"
                     />
                     <div className="flex flex-col">
-                      <span className="text-left text-base-semi">
+                      <span className="text-left text-base-semi text-white">
                         {address.first_name} {address.last_name}
                       </span>
                       {address.company && (
-                        <span className="text-small-regular text-ui-fg-base">
+                        <span className="text-small-regular text-gray-400">
                           {address.company}
                         </span>
                       )}
-                      <div className="flex flex-col text-left text-base-regular mt-2">
+                      <div className="flex flex-col text-left text-base-regular mt-2 text-gray-400">
                         <span>
                           {address.address_1}
                           {address.address_2 && (

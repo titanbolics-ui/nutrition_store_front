@@ -26,26 +26,28 @@ export default async function Home(props: {
 
   return (
     <>
-      {(!collections || !region) && (
-        <div className="p-10 bg-red-100 text-red-800 font-bold text-center border-b border-red-500">
-          ERROR: {!region ? "Region not found!" : "Collections not found!"}{" "}
-          <br />
-          Check the terminal VS Code.
-        </div>
-      )}
-
       <Hero />
       <LabResults />
-      <div className="py-12">
-        <ul className="flex flex-col gap-x-6">
-          {collections && region ? (
-            <FeaturedProducts collections={collections} region={region} />
-          ) : (
-            <p className="text-center">
-              There should be products here, but there are no data.
-            </p>
-          )}
-        </ul>
+
+      {/* FEATURED PRODUCTS SECTION - DARK MODE */}
+      <div className="relative py-24 bg-[#0a0a0a] min-h-screen">
+        {/* Grid Texture Background */}
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`,
+            backgroundSize: "4rem 4rem",
+          }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10">
+          <ul className="flex flex-col gap-y-12">
+            {collections && region && (
+              <FeaturedProducts collections={collections} region={region} />
+            )}
+          </ul>
+        </div>
       </div>
     </>
   )

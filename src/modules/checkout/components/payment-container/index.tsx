@@ -36,18 +36,18 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
       value={paymentProviderId}
       disabled={disabled}
       className={clx(
-        "flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 transition-all duration-200",
+        "flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-xl px-8 mb-2 transition-all duration-200 focus:outline-none",
         {
           // Стилі для звичайних методів
-          "border-ui-border-base hover:shadow-borders-interactive-with-active":
-            !isCashAppProvider,
-          "border-ui-border-interactive":
+          "border-gray-700 bg-gray-900 hover:border-gray-500":
+            !isCashAppProvider && selectedPaymentOptionId !== paymentProviderId,
+          "border-[#b8ff2b] bg-gray-800":
             selectedPaymentOptionId === paymentProviderId && !isCashAppProvider,
 
           // 🟢 Стилі для CASH APP (Зелені)
-          "border-emerald-200 bg-[#fdfdfd] hover:border-emerald-400 hover:shadow-md":
-            isCashAppProvider,
-          "border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500":
+          "border-emerald-800 bg-gray-900 hover:border-emerald-500":
+            isCashAppProvider && selectedPaymentOptionId !== paymentProviderId,
+          "border-emerald-500 bg-emerald-900/10 ring-1 ring-emerald-500":
             isCashAppProvider && selectedPaymentOptionId === paymentProviderId,
         }
       )}
@@ -59,14 +59,15 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
           <div className="flex flex-col">
             <Text
               className={clx("text-base-regular flex items-center gap-2", {
-                "font-semibold text-emerald-900": isCashAppProvider,
+                "font-semibold text-white": !isCashAppProvider,
+                "font-semibold text-emerald-400": isCashAppProvider,
               })}
             >
               {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
 
               {/* Бейдж для Cash App */}
               {isCashAppProvider && (
-                <span className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ml-2">
+                <span className="bg-emerald-500 text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ml-2">
                   Fastest
                 </span>
               )}
@@ -74,7 +75,7 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
 
             {/* Підзаголовок для Cash App (видимий завжди) */}
             {isCashAppProvider && (
-              <Text className="text-[11px] text-gray-500 mt-0.5">
+              <Text className="text-[11px] text-gray-400 mt-0.5">
                 Pay instantly via Debit/Credit Card
               </Text>
             )}
@@ -85,19 +86,19 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
           )}
         </div>
 
-        <span className="justify-self-end text-ui-fg-base">
+        <span className="justify-self-end text-white">
           {paymentInfoMap[paymentProviderId]?.icon}
         </span>
       </div>
 
       {/* 🟢 ЗЕЛЕНИЙ БЛОК ІНСТРУКЦІЇ (Тільки коли вибрано Cash App) */}
       {isCashAppProvider && selectedPaymentOptionId === paymentProviderId && (
-        <div className="mt-3 pt-3 border-t border-emerald-200/50">
-          <div className="bg-white p-3 rounded border border-emerald-100 shadow-sm">
-            <p className="text-[12px] text-emerald-800 font-medium mb-1">
+        <div className="mt-3 pt-3 border-t border-emerald-500/30">
+          <div className="bg-gray-900 p-3 rounded border border-emerald-800 shadow-sm">
+            <p className="text-[12px] text-emerald-400 font-medium mb-1">
               ⚡ Quick Instructions:
             </p>
-            <ul className="list-disc list-inside text-[11px] text-gray-600 space-y-0.5 pl-1">
+            <ul className="list-disc list-inside text-[11px] text-gray-400 space-y-0.5 pl-1">
               <li>No crypto wallet needed.</li>
               <li>Buy Bitcoin inside Cash App in 60 seconds.</li>
               <li>Send to our address (shown on next step).</li>
@@ -136,14 +137,14 @@ export const StripeCardContainer = ({
       style: {
         base: {
           fontFamily: "Inter, sans-serif",
-          color: "#424270",
+          color: "#ffffff",
           "::placeholder": {
             color: "rgb(107 114 128)",
           },
         },
       },
       classes: {
-        base: "pt-3 pb-1 block w-full h-11 px-4 mt-0 bg-ui-bg-field border rounded-md appearance-none focus:outline-none focus:ring-0 focus:shadow-borders-interactive-with-active border-ui-border-base hover:bg-ui-bg-field-hover transition-all duration-300 ease-in-out",
+        base: "pt-3 pb-1 block w-full h-11 px-4 mt-0 bg-gray-900 border rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-[#b8ff2b] focus:border-[#b8ff2b] border-gray-700 hover:bg-gray-800 transition-all duration-300 ease-in-out text-white",
       },
     }
   }, [])
@@ -158,7 +159,7 @@ export const StripeCardContainer = ({
       {selectedPaymentOptionId === paymentProviderId &&
         (stripeReady ? (
           <div className="my-4 transition-all duration-150 ease-in-out">
-            <Text className="txt-medium-plus text-ui-fg-base mb-1">
+            <Text className="txt-medium-plus text-white mb-1">
               Enter your card details:
             </Text>
             <CardElement

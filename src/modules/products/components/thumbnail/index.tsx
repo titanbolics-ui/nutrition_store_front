@@ -12,6 +12,7 @@ type ThumbnailProps = {
   isFeatured?: boolean
   className?: string
   "data-testid"?: string
+  isContain?: boolean
 }
 
 const Thumbnail: React.FC<ThumbnailProps> = ({
@@ -21,13 +22,14 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   isFeatured,
   className,
   "data-testid": dataTestid,
+  isContain = false,
 }) => {
   const initialImage = thumbnail || images?.[0]?.url
 
   return (
     <Container
       className={clx(
-        "relative w-full overflow-hidden p-4 bg-ui-bg-subtle shadow-elevation-card-rest rounded-large group-hover:shadow-elevation-card-hover transition-shadow ease-in-out duration-150",
+        "relative w-full overflow-hidden p-4 bg-gray-800/50 border border-gray-700 rounded-lg group-hover:border-gray-600 transition-all ease-in-out duration-150",
         className,
         {
           "aspect-square": size !== "square",
@@ -40,7 +42,11 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
       )}
       data-testid={dataTestid}
     >
-      <ImageOrPlaceholder image={initialImage} size={size} />
+      <ImageOrPlaceholder
+        image={initialImage}
+        size={size}
+        isContain={isContain}
+      />
     </Container>
   )
 }
@@ -48,12 +54,16 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
 const ImageOrPlaceholder = ({
   image,
   size,
-}: Pick<ThumbnailProps, "size"> & { image?: string }) => {
+  isContain,
+}: Pick<ThumbnailProps, "size" | "isContain"> & { image?: string }) => {
   return image ? (
     <Image
       src={image}
       alt="Thumbnail"
-      className="absolute inset-0 object-cover object-center"
+      className={clx("absolute inset-0 object-center rounded-md opacity-95 hover:opacity-100 transition-opacity", {
+        "object-cover": !isContain,
+        "object-contain": isContain,
+      })}
       draggable={false}
       quality={50}
       sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"

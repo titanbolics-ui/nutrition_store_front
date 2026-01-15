@@ -24,15 +24,18 @@ const OrderCard = ({ order }: OrderCardProps) => {
   }, [order])
 
   return (
-    <div className="bg-white flex flex-col" data-testid="order-card">
-      <div className="uppercase text-large-semi mb-1">
+    <div
+      className="bg-gray-900 border border-gray-800 rounded-lg p-6 flex flex-col"
+      data-testid="order-card"
+    >
+      <div className="uppercase text-large-semi mb-1 text-white font-bold">
         #ONX-<span data-testid="order-display-id">{order.display_id}</span>
       </div>
-      <div className="flex items-center divide-x divide-gray-200 text-small-regular text-ui-fg-base">
+      <div className="flex items-center divide-x divide-gray-700 text-small-regular text-gray-400">
         <span className="pr-2" data-testid="order-created-at">
           {new Date(order.created_at).toDateString()}
         </span>
-        <span className="px-2" data-testid="order-amount">
+        <span className="px-2 text-white" data-testid="order-amount">
           {convertToLocale({
             amount: order.total,
             currency_code: order.currency_code,
@@ -51,25 +54,27 @@ const OrderCard = ({ order }: OrderCardProps) => {
               data-testid="order-item"
             >
               <Thumbnail thumbnail={i.thumbnail} images={[]} size="full" />
-              <div className="flex items-center text-small-regular text-ui-fg-base">
+              <div className="flex items-center text-small-regular text-gray-300">
                 <span
-                  className="text-ui-fg-base font-semibold"
+                  className="text-white font-semibold"
                   data-testid="item-title"
                 >
                   {i.title}
                 </span>
-                <span className="ml-2">x</span>
-                <span data-testid="item-quantity">{i.quantity}</span>
+                <span className="ml-2 text-gray-500">x</span>
+                <span data-testid="item-quantity" className="text-gray-400">
+                  {i.quantity}
+                </span>
               </div>
             </div>
           )
         })}
         {numberOfProducts > 4 && (
           <div className="w-full h-full flex flex-col items-center justify-center">
-            <span className="text-small-regular text-ui-fg-base">
+            <span className="text-small-regular text-gray-400">
               + {numberOfLines - 4}
             </span>
-            <span className="text-small-regular text-ui-fg-base">more</span>
+            <span className="text-small-regular text-gray-500">more</span>
           </div>
         )}
       </div>

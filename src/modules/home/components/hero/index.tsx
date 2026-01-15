@@ -198,7 +198,7 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* NEON BUTTONS */}
+      {/* NEON BUTTONS - Stacked on mobile, horizontal on desktop */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -207,28 +207,30 @@ const Hero = () => {
           delay: 2.8,
           ease: [0.6, 0.05, 0.01, 0.9],
         }}
-        className="absolute z-20 flex gap-6"
+        className="absolute z-20 flex flex-col md:flex-row gap-3 md:gap-6 items-center px-4 md:px-0"
         style={{
           top: "60%",
-          left: "calc(50% - 175px)", // Aligning with athlete center-ish
+          left: "50%",
           transform: "translate(-50%, -50%)",
         }}
       >
-        <LocalizedClientLink href="/store">
+        <LocalizedClientLink href="/store" className="w-full md:w-auto">
           <Button
             size="large"
-            className="bg-[#ccff00] text-black hover:bg-[#b3e600] px-10 py-5 text-lg font-black italic rounded-none skew-x-[-10deg] shadow-[0_0_30px_rgba(204,255,0,0.3)] hover:shadow-[0_0_50px_rgba(204,255,0,0.6)] transition-all duration-300 border-none"
+            className="w-full md:w-auto bg-[#ccff00] text-black hover:bg-[#b3e600] px-8 md:px-10 py-4 md:py-5 text-base md:text-lg font-black italic rounded-none md:skew-x-[-10deg] shadow-[0_0_30px_rgba(204,255,0,0.3)] hover:shadow-[0_0_50px_rgba(204,255,0,0.6)] transition-all duration-300 border-none"
           >
-            <span className="skew-x-[10deg] inline-block">SHOP NOW</span>
+            <span className="md:skew-x-[10deg] inline-block">SHOP NOW</span>
           </Button>
         </LocalizedClientLink>
-        <Button
-          size="large"
-          variant="transparent"
-          className="bg-transparent border border-white/30 text-white hover:bg-white/10 px-10 py-5 text-lg font-black italic rounded-none skew-x-[-10deg] backdrop-blur-sm transition-all duration-300"
-        >
-          <span className="skew-x-[10deg] inline-block">EXPLORE ALL</span>
-        </Button>
+        <LocalizedClientLink href="/store" className="w-full md:w-auto">
+          <Button
+            size="large"
+            variant="transparent"
+            className="w-full md:w-auto bg-transparent border border-white/30 text-white hover:bg-white/10 px-8 md:px-10 py-4 md:py-5 text-base md:text-lg font-black italic rounded-none md:skew-x-[-10deg] backdrop-blur-sm transition-all duration-300"
+          >
+            <span className="md:skew-x-[10deg] inline-block">EXPLORE ALL</span>
+          </Button>
+        </LocalizedClientLink>
       </motion.div>
 
       {/* BOTTOM INFO */}
@@ -245,28 +247,48 @@ const Hero = () => {
         </p>
       </motion.div>
 
-      {/* VIDEO PREVIEW */}
+      {/* TRUST BADGE - Social Proof */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 3.2 }}
-        className="absolute bottom-12 right-12 z-20 group cursor-pointer"
+        className="absolute bottom-4 right-4 md:bottom-12 md:right-12 z-20"
       >
-        <div className="relative w-48 h-28 bg-gray-900 border border-gray-800 rounded overflow-hidden">
-          <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-all duration-500" />
-          <img
-            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400"
-            alt="Video"
-            className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-10 h-10 rounded-full border border-[#ccff00] flex items-center justify-center bg-black/50 backdrop-blur-md">
-              <div className="w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-[#ccff00] border-b-[5px] border-b-transparent ml-1" />
+        <div className="backdrop-blur-md bg-black/60 border border-gray-700/50 rounded-xl p-3 md:p-4 space-y-2 md:space-y-3 max-w-[200px] md:max-w-xs">
+          {/* Rating */}
+          <div className="flex items-center gap-2">
+            <span className="text-[#ccff00] text-lg">⭐</span>
+            <div>
+              <span className="text-white font-bold text-sm">4.9/5</span>
+              <span className="text-gray-400 text-xs ml-1">Rating</span>
             </div>
           </div>
-        </div>
-        <div className="text-[#ccff00] text-xs font-bold mt-2 tracking-widest uppercase text-right">
-          Watch Film
+          
+          {/* Delivery Guarantee */}
+          <div className="flex items-center gap-2">
+            <span className="text-[#ccff00] text-lg">📦</span>
+            <div>
+              <span className="text-white font-bold text-sm">100%</span>
+              <span className="text-gray-400 text-xs ml-1">Delivery</span>
+            </div>
+          </div>
+          
+          {/* Lab Tested */}
+          <div className="flex items-center gap-2">
+            <span className="text-[#ccff00] text-lg">🔬</span>
+            <div>
+              <span className="text-white font-bold text-sm">&gt;98%</span>
+              <span className="text-gray-400 text-xs ml-1">Purity</span>
+            </div>
+          </div>
+          
+          {/* Verified Badge */}
+          <div className="pt-2 border-t border-gray-700/50">
+            <div className="flex items-center gap-1 text-[#ccff00] text-[10px] md:text-xs font-bold tracking-wider">
+              <span>✓</span>
+              <span>VERIFIED QUALITY</span>
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>

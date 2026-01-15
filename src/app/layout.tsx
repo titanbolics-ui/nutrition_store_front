@@ -15,11 +15,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" data-mode="light">
-      <body>
+    <html lang="en" data-mode="dark" className="dark">
+      <body className="bg-[#0a0a0a] text-[#e5e5e5] antialiased selection:bg-[#ccff00] selection:text-black">
         <PostHogProvider>
           <PostHogIdentifier />
-          <main className="relative">{children}</main>
+          <main className="relative min-h-screen">{children}</main>
         </PostHogProvider>
       </body>
     </html>

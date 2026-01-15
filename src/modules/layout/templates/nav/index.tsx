@@ -8,6 +8,7 @@ import SideMenu from "@modules/layout/components/side-menu"
 import SearchButtonWrapper, {
   SearchButtonFallback,
 } from "@modules/layout/components/search-button/search-button-wrapper"
+import HeaderWrapper from "@modules/layout/components/header-wrapper"
 
 export default async function Nav() {
   const regions = await listRegions().then((regions: StoreRegion[]) => regions)
@@ -17,7 +18,7 @@ export default async function Nav() {
   const region = await getRegion("us").catch(() => regions?.[0] || null)
 
   return (
-    <div className="fixed top-0 inset-x-0 z-50 group">
+    <HeaderWrapper>
       <header className="relative h-20 mx-auto duration-200 bg-black/50 backdrop-blur-md border-b border-white/5">
         <nav className="content-container txt-xsmall-plus text-gray-300 flex items-center justify-between w-full h-full text-small-regular">
           <div className="flex-1 basis-0 h-full flex items-center gap-6">
@@ -99,6 +100,6 @@ export default async function Nav() {
           </div>
         </nav>
       </header>
-    </div>
+    </HeaderWrapper>
   )
 }
