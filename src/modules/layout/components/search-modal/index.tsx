@@ -122,9 +122,9 @@ export default function SearchModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-xl transition-all">
+              <DialogPanel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-gray-900 border border-gray-800 shadow-2xl transition-all">
                 {/* Search Input */}
-                <div className="border-b p-4">
+                <div className="border-b border-gray-800 p-4">
                   <div className="relative">
                     <input
                       ref={inputRef}
@@ -132,12 +132,12 @@ export default function SearchModal({
                       placeholder="Search products..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full px-4 py-3 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 text-lg bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#ccff00]/30 focus:border-[#ccff00]"
                     />
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
                       >
                         ✕
                       </button>
@@ -147,68 +147,68 @@ export default function SearchModal({
 
                 {/* Search Results */}
                 <div className="max-h-[60vh] overflow-y-auto py-4 px-4">
-          {searchQuery.trim().length < 2 && (
-            <div className="text-center text-gray-500 py-8">
-              Type at least 2 characters to search
-            </div>
-          )}
-
-          {searchQuery.trim().length >= 2 && searchResults.length === 0 && (
-            <div className="text-center text-gray-500 py-8">
-              No products found for &quot;{searchQuery}&quot;
-            </div>
-          )}
-
-          {searchResults.length > 0 && (
-            <div className="space-y-1">
-              {searchResults.map((product) => (
-                <LocalizedClientLink
-                  key={product.id}
-                  href={`/products/${product.handle}`}
-                  onClick={handleClose}
-                  className="flex items-center gap-3 p-2 hover:bg-gray-100 transition-colors group"
-                >
-                  {/* Thumbnail */}
-                  <div className="relative w-14 h-14 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-                    {product.thumbnail ? (
-                      <Image
-                        src={product.thumbnail}
-                        alt={product.title}
-                        fill
-                        className="object-cover"
-                        sizes="56px"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                        No image
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="flex-1 min-w-0 py-1">
-                    <h3 className="text-sm text-gray-900 line-clamp-2 leading-tight">
-                      {product.title}
-                    </h3>
-                  </div>
-
-                  {/* Price */}
-                  {product.cheapestPrice && (
-                    <div className="flex-shrink-0 text-right">
-                      <div className="text-base font-semibold text-gray-900">
-                        {product.cheapestPrice}
-                      </div>
+                  {searchQuery.trim().length < 2 && (
+                    <div className="text-center text-gray-500 py-8">
+                      Type at least 2 characters to search
                     </div>
                   )}
-                </LocalizedClientLink>
-              ))}
-            </div>
-          )}
+
+                  {searchQuery.trim().length >= 2 && searchResults.length === 0 && (
+                    <div className="text-center text-gray-500 py-8">
+                      No products found for &quot;{searchQuery}&quot;
+                    </div>
+                  )}
+
+                  {searchResults.length > 0 && (
+                    <div className="space-y-1">
+                      {searchResults.map((product) => (
+                        <LocalizedClientLink
+                          key={product.id}
+                          href={`/products/${product.handle}`}
+                          onClick={handleClose}
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors group"
+                        >
+                          {/* Thumbnail */}
+                          <div className="relative w-14 h-14 flex-shrink-0 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+                            {product.thumbnail ? (
+                              <Image
+                                src={product.thumbnail}
+                                alt={product.title}
+                                fill
+                                className="object-cover"
+                                sizes="56px"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
+                                No image
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Product Info */}
+                          <div className="flex-1 min-w-0 py-1">
+                            <h3 className="text-sm text-white line-clamp-2 leading-tight group-hover:text-[#ccff00] transition-colors">
+                              {product.title}
+                            </h3>
+                          </div>
+
+                          {/* Price */}
+                          {product.cheapestPrice && (
+                            <div className="flex-shrink-0 text-right">
+                              <div className="text-base font-semibold text-[#ccff00]">
+                                {product.cheapestPrice}
+                              </div>
+                            </div>
+                          )}
+                        </LocalizedClientLink>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Results Count */}
                 {searchResults.length > 0 && (
-                  <div className="border-t p-3 text-center text-sm text-gray-500">
+                  <div className="border-t border-gray-800 p-3 text-center text-sm text-gray-500">
                     Showing {searchResults.length} result
                     {searchResults.length !== 1 ? "s" : ""}
                   </div>

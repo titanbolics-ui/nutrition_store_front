@@ -13,8 +13,8 @@ const Hero = () => {
   >("typing")
   const [workoutText, setWorkoutText] = useState("")
 
-  const text = "GEAR UP"
-  const workout = "WORKOUT!"
+  const text = "GENETICS"
+  const workout = "UNLOCK YOUR POTENTIAL"
 
   // Typing/Erasing animation for WORKOUT
   useEffect(() => {
@@ -113,7 +113,7 @@ const Hero = () => {
           ))}
         </div>
         <div className="text-[12vw] leading-[0.85] font-black text-transparent bg-clip-text bg-gradient-to-b from-white/10 to-transparent tracking-tighter mt-[-2vw]">
-          EVERY SEASON
+          EVOLUTION
         </div>
       </div>
 
@@ -198,7 +198,7 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* NEON BUTTONS - Stacked on mobile, horizontal on desktop */}
+      {/* NEON BUTTONS - Centered on screen */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -207,22 +207,21 @@ const Hero = () => {
           delay: 2.8,
           ease: [0.6, 0.05, 0.01, 0.9],
         }}
-        className="absolute z-20 flex flex-col md:flex-row gap-3 md:gap-6 items-center px-4 md:px-0"
+        className="absolute z-20 left-0 right-0 flex flex-col md:flex-row gap-3 md:gap-6 items-center justify-center px-4 md:px-0"
         style={{
-          top: "60%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
+          top: "52%",
+          transform: "translateY(-50%)",
         }}
       >
-        <LocalizedClientLink href="/store" className="w-full md:w-auto">
+        <LocalizedClientLink href="/store" className="w-full max-w-[280px] md:w-auto md:max-w-none">
           <Button
             size="large"
             className="w-full md:w-auto bg-[#ccff00] text-black hover:bg-[#b3e600] px-8 md:px-10 py-4 md:py-5 text-base md:text-lg font-black italic rounded-none md:skew-x-[-10deg] shadow-[0_0_30px_rgba(204,255,0,0.3)] hover:shadow-[0_0_50px_rgba(204,255,0,0.6)] transition-all duration-300 border-none"
           >
-            <span className="md:skew-x-[10deg] inline-block">SHOP NOW</span>
+            <span className="md:skew-x-[10deg] inline-block">START YOUR CYCLE</span>
           </Button>
         </LocalizedClientLink>
-        <LocalizedClientLink href="/store" className="w-full md:w-auto">
+        <LocalizedClientLink href="/store" className="w-full max-w-[280px] md:w-auto md:max-w-none">
           <Button
             size="large"
             variant="transparent"
@@ -231,20 +230,6 @@ const Hero = () => {
             <span className="md:skew-x-[10deg] inline-block">EXPLORE ALL</span>
           </Button>
         </LocalizedClientLink>
-      </motion.div>
-
-      {/* BOTTOM INFO */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 3.0 }}
-        className="absolute bottom-12 left-12 z-20 max-w-xs"
-      >
-        <div className="w-12 h-1 bg-[#ccff00] mb-4" />
-        <p className="text-gray-400 text-sm leading-relaxed">
-          Stay cozy without compromising your range of motion. Engineered for
-          the modern athlete.
-        </p>
       </motion.div>
 
       {/* TRUST BADGE - Social Proof */}
