@@ -80,24 +80,24 @@ const MobileActions: React.FC<MobileActionsProps> = ({
           leaveTo="opacity-0"
         >
           <div
-            className="bg-white flex flex-col gap-y-3 justify-center items-center text-large-regular p-4 h-full w-full border-t border-gray-200"
+            className="bg-gray-900 border-t border-gray-800 flex flex-col gap-y-3 justify-center items-center text-large-regular p-4 h-full w-full"
             data-testid="mobile-actions"
           >
-            <div className="flex items-center gap-x-2">
-              <span data-testid="mobile-title">{product.title}</span>
-              <span>—</span>
+            <div className="flex items-center gap-x-2 text-white">
+              <span data-testid="mobile-title" className="font-medium">{product.title}</span>
+              <span className="text-gray-500">—</span>
               {selectedPrice ? (
-                <div className="flex items-end gap-x-2 text-ui-fg-base">
+                <div className="flex items-end gap-x-2">
                   {selectedPrice.price_type === "sale" && (
                     <p>
-                      <span className="line-through text-small-regular">
+                      <span className="line-through text-small-regular text-gray-500">
                         {selectedPrice.original_price}
                       </span>
                     </p>
                   )}
                   <span
-                    className={clx({
-                      "text-ui-fg-interactive":
+                    className={clx("text-[#ccff00] font-bold", {
+                      "text-[#ccff00]":
                         selectedPrice.price_type === "sale",
                     })}
                   >
@@ -112,7 +112,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
               {!isSimple && <Button
                 onClick={open}
                 variant="secondary"
-                className="w-full"
+                className="w-full bg-gray-800 border border-gray-700 text-white hover:bg-gray-700"
                 data-testid="mobile-actions-button"
               >
                 <div className="flex items-center justify-between w-full">
@@ -125,17 +125,17 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                 </div>
               </Button>}
               <div className="flex items-center gap-x-4 w-full">
-                <div className="flex items-center border border-ui-border-base rounded-rounded">
+                <div className="flex items-center border border-gray-700 rounded-lg bg-gray-900">
                   <button
                     onClick={decreaseQuantity}
                     disabled={quantity <= 1 || optionsDisabled}
-                    className="w-10 h-10 flex items-center justify-center text-ui-fg-subtle hover:text-ui-fg-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     type="button"
                     data-testid="mobile-decrease-quantity-button"
                   >
                     −
                   </button>
-                  <span className="w-12 h-10 flex items-center justify-center text-base-regular" data-testid="mobile-quantity-value">
+                  <span className="w-12 h-10 flex items-center justify-center text-white font-medium" data-testid="mobile-quantity-value">
                     {quantity}
                   </span>
                   <button
@@ -145,7 +145,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                       (variant?.manage_inventory && 
                        quantity >= (variant?.inventory_quantity || 0))
                     }
-                    className="w-10 h-10 flex items-center justify-center text-ui-fg-subtle hover:text-ui-fg-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     type="button"
                     data-testid="mobile-increase-quantity-button"
                   >
@@ -155,7 +155,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                 <Button
                   onClick={handleAddToCart}
                   disabled={!inStock || !variant || !isValidVariant}
-                  className="flex-1"
+                  className="flex-1 bg-[#ccff00] text-black font-bold hover:bg-[#b8e600] border-none shadow-[0_0_20px_rgba(204,255,0,0.3)] disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none"
                   isLoading={isAdding}
                   data-testid="mobile-cart-button"
                 >
@@ -213,13 +213,13 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                   <div className="w-full flex justify-end pr-6">
                     <button
                       onClick={close}
-                      className="bg-white w-12 h-12 rounded-full text-ui-fg-base flex justify-center items-center"
+                      className="bg-gray-800 border border-gray-700 w-12 h-12 rounded-full text-white flex justify-center items-center hover:bg-gray-700 transition-colors"
                       data-testid="close-modal-button"
                     >
                       <X />
                     </button>
                   </div>
-                  <div className="bg-white px-6 py-12">
+                  <div className="bg-gray-900 border-t border-gray-800 px-6 py-12 rounded-t-2xl">
                     {/* Display options even when there's only one variant (mobile) */}
                     {product.options && product.options.length > 0 && (
                       <div className="flex flex-col gap-y-6">
