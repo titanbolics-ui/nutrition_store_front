@@ -1,18 +1,12 @@
-import { listCategories } from "@lib/data/categories"
-import { listCollections } from "@lib/data/collections"
 import { Text } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
-export default async function Footer() {
-  const { collections } = await listCollections({
-    fields: "*products",
-  })
-  const productCategories = await listCategories()
+export default function Footer() {
 
   return (
     <footer className="relative bg-black text-white border-t border-white/5 overflow-hidden">
       {/* WATERMARK LOGO */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-[0.03] select-none">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-[0.02] select-none">
         <h1 className="text-[20vw] font-black leading-none whitespace-nowrap">
           ONYX
         </h1>
@@ -33,44 +27,130 @@ export default async function Footer() {
               and potency. Engineered for the elite.
             </p>
 
-            {/* TRUST BADGES */}
-            <div className="flex gap-4 mt-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-gray-400 border border-white/10 px-3 py-2 rounded bg-white/5">
-                <span>₿</span> Bitcoin Accepted
+            {/* TRUST BADGES - Vertical stack */}
+            <div className="flex flex-col gap-2 mt-4">
+              <div className="flex items-center gap-2 text-xs font-bold text-gray-400 border border-white/10 px-3 py-2 rounded bg-white/5 w-fit">
+                <span className="text-sm leading-none">₿</span>
+                <span className="leading-none">Bitcoin Accepted</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-gray-400 border border-white/10 px-3 py-2 rounded bg-white/5">
-                <span>🛡️</span> SSL Secure
+              <div className="flex items-center gap-2 text-xs font-bold text-gray-400 border border-white/10 px-3 py-2 rounded bg-white/5 w-fit">
+                <span className="text-sm leading-none">🛡️</span>
+                <span className="leading-none">SSL Secure</span>
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-gray-400 border border-white/10 px-3 py-2 rounded bg-white/5">
-                <span>📦</span> Discrete Ship
+              <div className="flex items-center gap-2 text-xs font-bold text-gray-400 border border-white/10 px-3 py-2 rounded bg-white/5 w-fit">
+                <span className="text-sm leading-none">📦</span>
+                <span className="leading-none">Discrete Shipping</span>
               </div>
             </div>
           </div>
 
           {/* LINKS COLUMNS */}
-          <div className="flex gap-16 flex-wrap">
-            {productCategories && productCategories?.length > 0 && (
-              <div className="flex flex-col gap-y-4">
-                <span className="text-sm font-bold text-white uppercase tracking-wider">
-                  Categories
-                </span>
-                <ul className="flex flex-col gap-y-2 text-gray-500 text-sm">
-                  {productCategories?.slice(0, 6).map((c) => {
-                    if (c.parent_category) return null
-                    return (
-                      <li key={c.id}>
-                        <LocalizedClientLink
-                          className="hover:text-[#ccff00] transition-colors"
-                          href={`/categories/${c.handle}`}
-                        >
-                          {c.name}
-                        </LocalizedClientLink>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            )}
+          <div className="flex gap-12 lg:gap-16 flex-wrap">
+            {/* CATEGORIES */}
+            <div className="flex flex-col gap-y-4">
+              <span className="text-sm font-bold text-white uppercase tracking-wider">
+                Categories
+              </span>
+              <ul className="flex flex-col gap-y-2 text-gray-500 text-sm">
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/categories/injectables"
+                  >
+                    Injectables
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/categories/oral-steroids"
+                  >
+                    Oral Steroids
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/categories/peptides"
+                  >
+                    Peptides
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/categories/hgh"
+                  >
+                    HGH
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/categories/pct"
+                  >
+                    PCT
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/categories/sexual-health"
+                  >
+                    Sexual Health
+                  </LocalizedClientLink>
+                </li>
+              </ul>
+            </div>
+
+            {/* SUPPORT */}
+            <div className="flex flex-col gap-y-4">
+              <span className="text-sm font-bold text-white uppercase tracking-wider">
+                Support
+              </span>
+              <ul className="flex flex-col gap-y-2 text-gray-500 text-sm">
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/account/orders"
+                  >
+                    Track Order
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/shipping"
+                  >
+                    Shipping Info
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/returns"
+                  >
+                    Returns Policy
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/contact"
+                  >
+                    Contact Us
+                  </LocalizedClientLink>
+                </li>
+                <li>
+                  <LocalizedClientLink
+                    className="hover:text-[#ccff00] transition-colors"
+                    href="/lab-tests"
+                  >
+                    Lab Tests
+                  </LocalizedClientLink>
+                </li>
+              </ul>
+            </div>
 
             {/* NEWSLETTER */}
             <div className="flex flex-col gap-y-4 min-w-[250px]">
