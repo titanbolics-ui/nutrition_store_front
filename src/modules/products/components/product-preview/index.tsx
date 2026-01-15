@@ -29,12 +29,6 @@ export default async function ProductPreview({
       >
         {/* IMAGE CONTAINER - "INSTAGRAM GRID" STYLE */}
         <div className="relative p-2 sm:p-4 md:p-6 bg-white/5 border-b border-gray-800 flex items-center justify-center aspect-square group-hover:bg-white/10 transition-colors duration-300">
-          {/* DOMESTIC BADGE */}
-          <div className="absolute top-2 right-2 z-10 bg-[#ccff00] text-black text-[8px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-sm uppercase tracking-wider flex items-center gap-0.5 sm:gap-1 shadow-md">
-            <span>US</span>
-            <span className="text-[10px] sm:text-xs">🇺🇸</span>
-          </div>
-
           <div className="relative w-full h-full rounded-lg overflow-hidden bg-white p-2 sm:p-3 md:p-4 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]">
         <Thumbnail
           thumbnail={product.thumbnail}
