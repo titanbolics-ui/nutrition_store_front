@@ -99,9 +99,9 @@ const MobileCard = ({
   // Width is 88vw so next card peeks through
   <div className="flex-shrink-0 w-[88vw] h-full snap-center flex items-start justify-center first:ml-[6vw]">
     <div className="relative w-full h-full flex flex-col">
-      {/* Image Section */}
+      {/* Image Section - flex-1 to take all available space */}
       <motion.div
-        className="relative w-full h-[40%] overflow-hidden flex-shrink-0"
+        className="relative w-full flex-1 overflow-hidden"
         initial={{ opacity: 0, scale: 1.05 }}
         whileInView={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
@@ -112,7 +112,7 @@ const MobileCard = ({
             src={category.image}
             alt={category.title}
             fill
-            className="object-cover object-top"
+            className="object-cover object-[center_20%]"
             sizes="100vw"
             priority={index < 2}
           />
@@ -128,10 +128,10 @@ const MobileCard = ({
 
         {/* Number Badge */}
         <motion.div
-          className="absolute top-4 left-4 text-6xl font-black pointer-events-none"
-          style={{ color: category.accent, opacity: 0.3 }}
+          className="absolute top-3 left-3 text-5xl font-black pointer-events-none"
+          style={{ color: category.accent, opacity: 0.4 }}
           initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 0.3, x: 0 }}
+          whileInView={{ opacity: 0.4, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           viewport={{ once: true }}
         >
@@ -139,22 +139,22 @@ const MobileCard = ({
         </motion.div>
       </motion.div>
 
-      {/* Content Section - overlaps image slightly */}
-      <div className="relative flex-1 flex flex-col justify-start px-3 -mt-6 z-10">
+      {/* Content Section - fixed at bottom, overlaps image */}
+      <div className="relative flex flex-col px-4 -mt-8 z-10 pb-6">
         {/* Subtitle */}
         <motion.div
-          className="flex items-center gap-2 mb-2"
+          className="flex items-center gap-2 mb-1"
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
           viewport={{ once: true, amount: 0.5 }}
         >
           <div
-            className="w-6 h-[2px]"
+            className="w-5 h-[2px]"
             style={{ backgroundColor: category.accent }}
           />
           <span
-            className="text-xs font-bold tracking-[0.15em]"
+            className="text-[10px] font-bold tracking-[0.15em]"
             style={{ color: category.accent }}
           >
             {category.subtitle}
@@ -163,7 +163,7 @@ const MobileCard = ({
 
         {/* Title */}
         <motion.h2
-          className="text-3xl font-black text-white mb-3 tracking-tight leading-[1.1]"
+          className="text-xl font-black text-white mb-1 tracking-tight leading-[1.1]"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
@@ -171,22 +171,18 @@ const MobileCard = ({
         >
           {category.title.includes("&") ? (
             <>
-              <span className="block">
-                {category.title.split("&")[0].trim()}{" "}
-                <span style={{ color: category.accent }}>&</span>
-              </span>
-              <span className="block">
-                {category.title.split("&")[1].trim()}
-              </span>
+              {category.title.split("&")[0].trim()}{" "}
+              <span style={{ color: category.accent }}>&</span>{" "}
+              {category.title.split("&")[1].trim()}
             </>
           ) : (
             category.title
           )}
         </motion.h2>
 
-        {/* Description */}
+        {/* Description - one line */}
         <motion.p
-          className="text-sm text-gray-400 mb-4 leading-relaxed"
+          className="text-xs text-gray-400 mb-2 leading-snug line-clamp-1"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.2 }}
@@ -195,41 +191,39 @@ const MobileCard = ({
           {category.description}
         </motion.p>
 
-        {/* Products Row */}
+        {/* Products Row - inline */}
         <motion.div
-          className="mb-4"
+          className="flex items-center gap-1.5 mb-3"
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.25 }}
           viewport={{ once: true, amount: 0.5 }}
         >
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">
-            {category.isExploreAll ? "Browse" : "Popular Products"}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {category.products.map((product, i) => (
-              <motion.span
-                key={i}
-                className="px-2.5 py-1.5 text-xs font-bold border"
-                style={{
-                  borderColor: `${category.accent}50`,
-                  color: category.accent,
-                  backgroundColor: `${category.accent}10`,
-                }}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.3 + i * 0.05 }}
-                viewport={{ once: true }}
-              >
-                {product}
-              </motion.span>
-            ))}
-          </div>
+          {category.products.slice(0, 3).map((product, i) => (
+            <span
+              key={i}
+              className="px-2 py-0.5 text-[9px] font-bold border"
+              style={{
+                borderColor: `${category.accent}50`,
+                color: category.accent,
+                backgroundColor: `${category.accent}10`,
+              }}
+            >
+              {product}
+            </span>
+          ))}
+          {category.products.length > 3 && (
+            <span 
+              className="text-[9px] font-bold"
+              style={{ color: category.accent }}
+            >
+              +{category.products.length - 3}
+            </span>
+          )}
         </motion.div>
 
         {/* CTA Button */}
         <motion.div
-          className="mt-auto pb-4"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.35 }}
@@ -237,7 +231,7 @@ const MobileCard = ({
         >
           <LocalizedClientLink href={category.href}>
             <motion.button
-              className="w-full px-6 py-3 font-black text-sm tracking-wider"
+              className="w-full px-5 py-3 font-black text-sm tracking-wider"
               style={{
                 backgroundColor: category.accent,
                 border: `2px solid ${category.accent}`,
@@ -430,7 +424,7 @@ const HorizontalScrollSection = () => {
     return (
       <section
         ref={sectionRef}
-        className="relative bg-[#0a0a0a] h-screen overflow-hidden py-20"
+        className="relative bg-[#0a0a0a] h-screen overflow-hidden pt-14 pb-0"
       >
         {/* Background Grid */}
         <div
@@ -477,7 +471,7 @@ const HorizontalScrollSection = () => {
             scrollbarWidth: "none",
             msOverflowStyle: "none",
             WebkitOverflowScrolling: "touch",
-            height: "75vh",
+            height: "calc(100vh - 3.5rem)",
           }}
         >
           {categories.map((category, index) => (
