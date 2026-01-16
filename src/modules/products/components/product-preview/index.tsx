@@ -27,9 +27,9 @@ export default async function ProductPreview({
         data-testid="product-wrapper"
         className="h-full bg-[#111111] border border-gray-800 rounded-lg md:rounded-xl overflow-hidden hover:border-[#ccff00]/50 transition-all duration-300 shadow-lg hover:shadow-[#ccff00]/10 flex flex-col"
       >
-        {/* IMAGE CONTAINER - "INSTAGRAM GRID" STYLE */}
-        <div className="relative p-2 sm:p-4 md:p-6 bg-white/5 border-b border-gray-800 flex items-center justify-center aspect-square group-hover:bg-white/10 transition-colors duration-300">
-          <div className="relative w-full h-full rounded-lg overflow-hidden bg-white p-2 sm:p-3 md:p-4 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]">
+        {/* IMAGE CONTAINER */}
+        <div className="relative p-2 sm:p-3 md:p-4 bg-gray-900/50 border-b border-gray-800 flex items-center justify-center aspect-square group-hover:bg-gray-800/50 transition-colors duration-300">
+          <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 p-2 sm:p-3 md:p-4">
         <Thumbnail
           thumbnail={product.thumbnail}
           images={product.images}
@@ -44,15 +44,15 @@ export default async function ProductPreview({
         {/* INFO CONTAINER */}
         <div className="p-3 sm:p-4 md:p-5 flex flex-col flex-grow justify-between gap-2 sm:gap-3 md:gap-4 bg-[#111111]">
           <div>
-            <div className="text-gray-500 text-[8px] sm:text-[10px] uppercase tracking-widest font-mono mb-0.5 sm:mb-1">
+            <div className="text-[#ccff00]/70 text-[8px] sm:text-[10px] uppercase tracking-widest font-mono mb-0.5 sm:mb-1">
               {product.collection?.title || "Spectrum Pharma"}
             </div>
             <Text
-              className="text-white text-sm sm:text-base font-bold leading-snug uppercase tracking-normal group-hover:text-[#ccff00] transition-colors line-clamp-2"
+              className="text-gray-200 text-xs sm:text-sm md:text-base font-bold leading-tight uppercase tracking-normal group-hover:text-[#ccff00] transition-colors line-clamp-3"
               data-testid="product-title"
             >
-            {product.title}
-          </Text>
+              {product.title}
+            </Text>
           </div>
 
           <div className="flex items-center justify-between border-t border-gray-800 pt-2 sm:pt-3 md:pt-4 mt-auto">
