@@ -54,7 +54,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       <Table.Cell
         className={clx({
           "!p-1 sm:!p-2 w-auto align-top sm:align-middle": type === "preview",
-          "py-3 px-2 w-20": type === "full",
+          "py-2 px-1 sm:px-2 w-16 sm:w-20": type === "full",
         })}
       >
         <LocalizedClientLink

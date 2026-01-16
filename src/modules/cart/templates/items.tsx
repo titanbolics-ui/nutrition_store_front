@@ -16,7 +16,7 @@ const ItemsTemplate = ({ cart }: ItemsTemplateProps) => {
       <div className="pb-3 flex items-center">
         <Heading className="text-[2rem] leading-[2.75rem] text-white">Cart</Heading>
       </div>
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 sm:p-4">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-1 sm:p-2">
         <Table className="text-white">
           <Table.Header className="border-t-0 border-b border-gray-800">
             <Table.Row className="text-gray-400 txt-medium-plus">
