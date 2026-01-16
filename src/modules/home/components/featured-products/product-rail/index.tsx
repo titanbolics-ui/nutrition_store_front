@@ -34,7 +34,7 @@ export default async function ProductRail({
         </Text>
         <InteractiveLink href={`/collections/${collection.handle}`}>
           <span className="text-gray-400 hover:text-[#ccff00] transition-colors font-mono uppercase tracking-wider text-xs">
-          View all
+            View all
           </span>
         </InteractiveLink>
       </div>

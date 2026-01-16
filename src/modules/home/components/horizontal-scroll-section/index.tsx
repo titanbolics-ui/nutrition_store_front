@@ -23,7 +23,8 @@ const categories: CategoryCard[] = [
     subtitle: "BULKING CYCLE",
     description:
       "Build serious mass and raw power with proven anabolic compounds designed for maximum muscle growth.",
-    image: "/uscle.jpg",
+    image:
+      "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/muscle.jpg",
     href: "/collections/bulking",
     accent: "#ccff00",
     products: ["Test", "Deca", "D-bol", "Anadrol"],
@@ -34,7 +35,8 @@ const categories: CategoryCard[] = [
     subtitle: "CUTTING CYCLE",
     description:
       "Get competition-ready with compounds that preserve muscle while torching fat. Veins, striations, the works.",
-    image: "/Esthetic.jpg",
+    image:
+      "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/Esthetic.jpg",
     href: "/collections/cutting",
     accent: "#00d4ff",
     products: ["Masteron", "Tren", "Winstrol", "Clenbuterol"],
@@ -45,7 +47,8 @@ const categories: CategoryCard[] = [
     subtitle: "FAT LOSS / HEALING",
     description:
       "Next-generation peptides for accelerated fat loss, tissue repair, and metabolic optimization.",
-    image: "/model_female.jpg",
+    image:
+      "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/model_female.jpg",
     href: "/collections/peptides",
     accent: "#ff6b9d",
     products: ["Tirzepatide", "Semaglutide", "BPC-157"],
@@ -57,7 +60,7 @@ const categories: CategoryCard[] = [
     description:
       "Turn back the clock with growth hormone and TRT protocols. Look better, feel younger, perform at any age.",
     image: "/silver_fox.jpg",
-    href: "/collections/anti-aging",
+    href: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/silver_fox.jpg",
     accent: "#ff6b35",
     products: ["HGH Kits", "TRT Doses", "MK-677"],
   },
@@ -67,7 +70,8 @@ const categories: CategoryCard[] = [
     subtitle: "EXPLORE EVERYTHING",
     description:
       "Browse our complete catalog. Find the perfect compound for your goals with our guided selection.",
-    image: "/hero.png",
+    image:
+      "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/hero.webp",
     href: "/store",
     accent: "#a855f7",
     products: ["All Products", "Best Sellers", "New Arrivals"],
@@ -149,7 +153,7 @@ const HorizontalScrollSection = () => {
             ))}
           </div>
           <span className="text-white/50 text-xs md:text-sm font-mono">
-              <motion.span>
+            <motion.span>
               {categories.map((_, i) => {
                 const isLast = i === categories.length - 1
                 const start = (i * 0.85) / 5
@@ -228,9 +232,9 @@ const HorizontalScrollSection = () => {
                   >
                     0{index + 1}
                   </div>
-                  
+
                   {/* Mobile Number Badge */}
-                  <div 
+                  <div
                     className="md:hidden absolute top-4 left-4 text-6xl font-black pointer-events-none"
                     style={{ color: category.accent, opacity: 0.3 }}
                   >
@@ -265,7 +269,7 @@ const HorizontalScrollSection = () => {
                   </motion.div>
 
                   {/* Title - Simple on mobile, animated on desktop */}
-                  <motion.h2 
+                  <motion.h2
                     className="text-3xl md:text-7xl font-black text-white mb-3 md:mb-6 tracking-tight leading-[1.1] md:leading-[0.95]"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -273,8 +277,13 @@ const HorizontalScrollSection = () => {
                   >
                     {category.title.includes("&") ? (
                       <>
-                        <span className="block">{category.title.split("&")[0].trim()} <span style={{ color: category.accent }}>&</span></span>
-                        <span className="block">{category.title.split("&")[1].trim()}</span>
+                        <span className="block">
+                          {category.title.split("&")[0].trim()}{" "}
+                          <span style={{ color: category.accent }}>&</span>
+                        </span>
+                        <span className="block">
+                          {category.title.split("&")[1].trim()}
+                        </span>
                       </>
                     ) : (
                       category.title
@@ -396,4 +405,3 @@ const HorizontalScrollSection = () => {
 }
 
 export default HorizontalScrollSection
-
