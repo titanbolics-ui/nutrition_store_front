@@ -2,6 +2,7 @@
 
 import { motion, useScroll, useTransform, useSpring } from "framer-motion"
 import { useRef, useState } from "react"
+import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 interface CategoryCard {
@@ -59,8 +60,9 @@ const categories: CategoryCard[] = [
     subtitle: "LONGEVITY",
     description:
       "Turn back the clock with growth hormone and TRT protocols. Look better, feel younger, perform at any age.",
-    image: "/silver_fox.jpg",
-    href: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/silver_fox.jpg",
+    image:
+      "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/silver_fox.jpg",
+    href: "/collections/anti-aging",
     accent: "#ff6b35",
     products: ["HGH Kits", "TRT Doses", "MK-677"],
   },
@@ -207,10 +209,13 @@ const HorizontalScrollSection = () => {
                       clipPath: "polygon(0 0, 100% 0, 100% 90%, 0 100%)",
                     }}
                   >
-                    <img
+                    <Image
                       src={category.image}
                       alt={category.title}
-                      className="w-full h-full object-cover object-top"
+                      fill
+                      className="object-cover object-top"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      priority={index < 2}
                     />
                     {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-transparent via-transparent to-[#0a0a0a]" />
