@@ -6,6 +6,7 @@ import {
   useTransform,
   useSpring,
   MotionValue,
+  AnimatePresence,
 } from "framer-motion"
 import { useRef, useState, useEffect } from "react"
 import Image from "next/image"
@@ -87,7 +88,7 @@ const categories: CategoryCard[] = [
   },
 ]
 
-// Mobile Card Component - Full screen design with peek of next card
+// Mobile Card Component - Full screen design with peek of next card and animations
 const MobileCard = ({
   category,
   index,
@@ -96,16 +97,17 @@ const MobileCard = ({
   index: number
 }) => (
   // Width is 88vw so next card peeks through
-  <div className="flex-shrink-0 w-[88vw] h-full snap-center flex items-center justify-center first:ml-[6vw]">
-    <div className="relative w-full h-[85vh] flex flex-col pt-16">
+  <div className="flex-shrink-0 w-[88vw] h-full snap-center flex items-start justify-center first:ml-[6vw]">
+    <div className="relative w-full h-full flex flex-col">
       {/* Image Section */}
-      <div className="relative w-full h-[35vh] overflow-hidden flex-shrink-0">
-        <div
-          className="absolute inset-0"
-          style={{
-            clipPath: "polygon(0 0, 100% 0, 100% 90%, 0 100%)",
-          }}
-        >
+      <motion.div
+        className="relative w-full h-[40%] overflow-hidden flex-shrink-0"
+        initial={{ opacity: 0, scale: 1.05 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true, amount: 0.3 }}
+      >
+        <div className="absolute inset-0">
           <Image
             src={category.image}
             alt={category.title}
@@ -114,6 +116,7 @@ const MobileCard = ({
             sizes="100vw"
             priority={index < 2}
           />
+          {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0a]" />
           <div
             className="absolute inset-0 opacity-30"
@@ -124,18 +127,28 @@ const MobileCard = ({
         </div>
 
         {/* Number Badge */}
-        <div
+        <motion.div
           className="absolute top-4 left-4 text-6xl font-black pointer-events-none"
           style={{ color: category.accent, opacity: 0.3 }}
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 0.3, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          viewport={{ once: true }}
         >
           0{index + 1}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* Content Section */}
-      <div className="relative flex-1 flex flex-col justify-start px-2 pt-4">
+      {/* Content Section - overlaps image slightly */}
+      <div className="relative flex-1 flex flex-col justify-start px-3 -mt-6 z-10">
         {/* Subtitle */}
-        <div className="flex items-center gap-2 mb-2">
+        <motion.div
+          className="flex items-center gap-2 mb-2"
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
           <div
             className="w-6 h-[2px]"
             style={{ backgroundColor: category.accent }}
@@ -146,10 +159,16 @@ const MobileCard = ({
           >
             {category.subtitle}
           </span>
-        </div>
+        </motion.div>
 
         {/* Title */}
-        <h2 className="text-3xl font-black text-white mb-3 tracking-tight leading-[1.1]">
+        <motion.h2
+          className="text-3xl font-black text-white mb-3 tracking-tight leading-[1.1]"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
           {category.title.includes("&") ? (
             <>
               <span className="block">
@@ -163,21 +182,33 @@ const MobileCard = ({
           ) : (
             category.title
           )}
-        </h2>
+        </motion.h2>
 
         {/* Description */}
-        <p className="text-sm text-gray-400 mb-4 leading-relaxed">
+        <motion.p
+          className="text-sm text-gray-400 mb-4 leading-relaxed"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
           {category.description}
-        </p>
+        </motion.p>
 
         {/* Products Row */}
-        <div className="mb-4">
+        <motion.div
+          className="mb-4"
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.25 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
           <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">
             {category.isExploreAll ? "Browse" : "Popular Products"}
           </div>
           <div className="flex flex-wrap gap-1.5">
             {category.products.map((product, i) => (
-              <span
+              <motion.span
                 key={i}
                 className="px-2.5 py-1.5 text-xs font-bold border"
                 style={{
@@ -185,28 +216,39 @@ const MobileCard = ({
                   color: category.accent,
                   backgroundColor: `${category.accent}10`,
                 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.3 + i * 0.05 }}
+                viewport={{ once: true }}
               >
                 {product}
-              </span>
+              </motion.span>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* CTA Button */}
-        <div className="mt-auto pb-4">
+        <motion.div
+          className="mt-auto pb-4"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
           <LocalizedClientLink href={category.href}>
-            <button
+            <motion.button
               className="w-full px-6 py-3 font-black text-sm tracking-wider"
               style={{
                 backgroundColor: category.accent,
                 border: `2px solid ${category.accent}`,
                 color: "#0a0a0a",
               }}
+              whileTap={{ scale: 0.98 }}
             >
               {category.isExploreAll ? "VIEW ALL →" : "EXPLORE →"}
-            </button>
+            </motion.button>
           </LocalizedClientLink>
-        </div>
+        </motion.div>
       </div>
 
       {/* Background Accent Glow */}
@@ -254,9 +296,12 @@ const NumberDisplay = ({
 const HorizontalScrollSection = () => {
   const containerRef = useRef<HTMLDivElement>(null)
   const mobileScrollRef = useRef<HTMLDivElement>(null)
+  const sectionRef = useRef<HTMLElement>(null)
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [activeCardIndex, setActiveCardIndex] = useState(0)
+  const [showSwipeHint, setShowSwipeHint] = useState(false)
+  const [sectionInView, setSectionInView] = useState(false)
 
   // All hooks must be called unconditionally at the top level
   const { scrollYProgress } = useScroll({
@@ -318,19 +363,61 @@ const HorizontalScrollSection = () => {
 
     const handleScroll = () => {
       const scrollLeft = scrollContainer.scrollLeft
-      const cardWidth = scrollContainer.offsetWidth * 0.85
+      const cardWidth = scrollContainer.offsetWidth * 0.88
       const newIndex = Math.round(scrollLeft / cardWidth)
       setActiveCardIndex(Math.min(newIndex, categories.length - 1))
+
+      // Hide swipe hint after user starts scrolling
+      if (scrollLeft > 10) {
+        setShowSwipeHint(false)
+      }
     }
 
     scrollContainer.addEventListener("scroll", handleScroll)
     return () => scrollContainer.removeEventListener("scroll", handleScroll)
   }, [isMobile])
 
+  // Detect when section comes into view
+  useEffect(() => {
+    if (!isMobile || !sectionRef.current) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSectionInView(true)
+        }
+      },
+      { threshold: 0.5 } // Trigger when 50% of section is visible
+    )
+
+    observer.observe(sectionRef.current)
+    return () => observer.disconnect()
+  }, [isMobile])
+
+  // Show swipe hint when section is in view, hide after 5 seconds
+  useEffect(() => {
+    if (isMobile && sectionInView && !showSwipeHint) {
+      // Show after small delay when section enters view
+      const showTimer = setTimeout(() => setShowSwipeHint(true), 500)
+      return () => clearTimeout(showTimer)
+    }
+  }, [isMobile, sectionInView])
+
+  // Auto-hide swipe hint after 5 seconds of being shown
+  useEffect(() => {
+    if (showSwipeHint) {
+      const hideTimer = setTimeout(() => setShowSwipeHint(false), 5000)
+      return () => clearTimeout(hideTimer)
+    }
+  }, [showSwipeHint])
+
   // Mobile version - horizontal swipe with full-screen cards
   if (isMobile) {
     return (
-      <section className="relative bg-[#0a0a0a] h-screen overflow-hidden">
+      <section
+        ref={sectionRef}
+        className="relative bg-[#0a0a0a] min-h-screen overflow-hidden py-20"
+      >
         {/* Background Grid */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -371,11 +458,12 @@ const HorizontalScrollSection = () => {
         {/* Horizontal Scroll Container */}
         <div
           ref={mobileScrollRef}
-          className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
           style={{
             scrollbarWidth: "none",
             msOverflowStyle: "none",
             WebkitOverflowScrolling: "touch",
+            height: "75vh",
           }}
         >
           {categories.map((category, index) => (
@@ -385,95 +473,113 @@ const HorizontalScrollSection = () => {
           <div className="flex-shrink-0 w-[6vw]" />
         </div>
 
-        {/* Swipe Hint Overlay - Shows on first card with animated arrow */}
-        {activeCardIndex === 0 && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none z-20"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            transition={{ delay: 4, duration: 0.5 }}
-          >
-            {/* Gradient overlay on right edge */}
-            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#ccff00]/20 to-transparent" />
+        {/* Swipe Hint with green gradient on right */}
+        <AnimatePresence>
+          {showSwipeHint && (
+            <>
+              {/* Green gradient on right edge - no pulse */}
+              <motion.div
+                key="gradient-hint"
+                className="absolute right-0 top-0 bottom-0 w-24 pointer-events-none z-20 bg-gradient-to-l from-[#ccff00]/30 to-transparent"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              />
 
-            {/* Animated swipe indicator */}
-            <motion.div
-              className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col items-center gap-2"
-              animate={{
-                x: [0, -12, 0],
-                opacity: [0.9, 1, 0.9],
-              }}
-              transition={{
-                duration: 1.2,
-                repeat: 5,
-                ease: "easeInOut",
-              }}
-            >
-              <div className="w-11 h-11 rounded-full bg-[#ccff00] flex items-center justify-center shadow-lg shadow-[#ccff00]/40">
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="text-black"
-                >
-                  <path
-                    d="M9 18l6-6-6-6"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <span className="text-[#ccff00] text-[10px] font-bold tracking-widest uppercase">
-                Swipe
-              </span>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Bottom Swipe Hint */}
-        <motion.div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <motion.div
-            className="flex items-center gap-3 px-5 py-2.5 bg-black/70 backdrop-blur-md rounded-full border border-[#ccff00]/40"
-            animate={{ x: [0, 6, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <span className="text-white text-sm font-semibold tracking-wide">
-              swipe
-            </span>
-            <motion.div
-              animate={{ x: [0, 4, 0] }}
-              transition={{
-                duration: 0.7,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                className="text-[#ccff00]"
+              {/* Animated swipe gesture - simple finger with arrow */}
+              <motion.div
+                key="swipe-gesture"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 pointer-events-none flex items-center gap-1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
               >
-                <path
-                  d="M5 12h14m0 0l-6-6m6 6l-6 6"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </motion.div>
-          </motion.div>
-        </motion.div>
+                {/* Motion lines */}
+                <motion.div
+                  className="flex flex-col gap-1"
+                  animate={{ opacity: [0.3, 1, 0.3], x: [0, -5, 0] }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <div className="w-3 h-0.5 bg-[#ccff00] rounded-full" />
+                  <div className="w-4 h-0.5 bg-[#ccff00] rounded-full" />
+                  <div className="w-3 h-0.5 bg-[#ccff00] rounded-full" />
+                </motion.div>
+
+                {/* Finger/touch circle */}
+                <motion.div
+                  className="w-12 h-12 rounded-full border-2 border-[#ccff00] bg-[#ccff00]/20 flex items-center justify-center"
+                  animate={{ x: [0, -20, 0] }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <motion.div
+                    className="w-4 h-4 rounded-full bg-[#ccff00]"
+                    animate={{ scale: [1, 0.8, 1] }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                </motion.div>
+              </motion.div>
+
+              {/* Bottom swipe label */}
+              <motion.div
+                key="swipe-label"
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.4 }}
+              >
+                <motion.div
+                  className="flex items-center gap-3 px-5 py-2.5 bg-black/80 backdrop-blur-md rounded-full border border-[#ccff00]/50"
+                  animate={{ x: [0, 6, 0] }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <span className="text-white text-sm font-semibold">
+                    Swipe
+                  </span>
+                  <motion.svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-[#ccff00]"
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <path
+                      d="M5 12h14m0 0l-6-6m6 6l-6 6"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </motion.svg>
+                </motion.div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* Hide scrollbar */}
         <style jsx>{`
