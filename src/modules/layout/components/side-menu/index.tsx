@@ -42,9 +42,14 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
         <button
           data-testid="nav-menu-button"
           onClick={openMenu}
-          className="h-full flex items-center transition-all ease-out duration-200 focus:outline-none hover:text-[#ccff00]"
+          className="h-full flex items-center gap-2 transition-all ease-out duration-200 focus:outline-none hover:text-[#ccff00] group"
         >
-          Menu
+          {/* Hamburger Icon */}
+          <div className="flex flex-col gap-1.5 w-5">
+            <span className="w-full h-[2px] bg-current rounded-full transition-transform group-hover:translate-x-0.5" />
+            <span className="w-3/4 h-[2px] bg-current rounded-full transition-transform group-hover:w-full" />
+            <span className="w-full h-[2px] bg-current rounded-full transition-transform group-hover:-translate-x-0.5" />
+          </div>
         </button>
 
         {/* Full Screen Menu Dialog */}
