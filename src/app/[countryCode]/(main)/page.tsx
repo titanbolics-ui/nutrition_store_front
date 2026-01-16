@@ -2,6 +2,7 @@ import { Metadata } from "next"
 
 import FeaturedProducts from "@modules/home/components/featured-products"
 import Hero from "@modules/home/components/hero"
+import HorizontalScrollSection from "@modules/home/components/horizontal-scroll-section"
 import { listCollections } from "@lib/data/collections"
 import { getRegion, listRegions } from "@lib/data/regions"
 import LabResults from "@modules/home/components/lab-tested-section"
@@ -27,6 +28,7 @@ export default async function Home(props: {
   return (
     <>
       <Hero />
+      <HorizontalScrollSection />
       <LabResults />
 
       {/* FEATURED PRODUCTS SECTION - DARK MODE */}
