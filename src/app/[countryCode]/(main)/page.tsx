@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import Hero from "@modules/home/components/hero"
 import HorizontalScrollSection from "@modules/home/components/horizontal-scroll-section"
 import BestSellers from "@modules/home/components/best-sellers"
+import OnyxStandard from "@modules/home/components/onyx-standard"
 import { getRegion } from "@lib/data/regions"
 import LabResults from "@modules/home/components/lab-tested-section"
 
@@ -24,24 +25,9 @@ export default async function Home(props: {
     <>
       <Hero />
       <HorizontalScrollSection />
+      {region && <BestSellers region={region} />}
       <LabResults />
-
-      {/* BEST SELLERS SECTION - DARK MODE */}
-      <div className="relative py-24 bg-[#0a0a0a]">
-        {/* Grid Texture Background */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
-          style={{
-            backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`,
-            backgroundSize: "4rem 4rem",
-          }}
-        />
-
-        {/* Content */}
-        <div className="relative z-10">
-          {region && <BestSellers region={region} />}
-        </div>
-      </div>
+      <OnyxStandard />
     </>
   )
 }

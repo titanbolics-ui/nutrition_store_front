@@ -66,29 +66,41 @@ export default async function BestSellers({
   }
 
   return (
-    <div className="content-container py-12">
-      <div className="flex justify-between items-end mb-10 border-b border-white/10 pb-6">
-        <div>
-          <Text className="text-[#ccff00] text-xs font-mono uppercase tracking-widest mb-2">
-            Top Picks
-          </Text>
-          <Text className="text-white font-black uppercase text-3xl tracking-tight">
-            Best Sellers
-          </Text>
+    <section className="relative py-16 md:py-24 bg-[#0a0a0a]">
+      {/* Grid Texture Background */}
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`,
+          backgroundSize: "4rem 4rem",
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 content-container">
+        <div className="flex justify-between items-end mb-10 border-b border-white/10 pb-6">
+          <div>
+            <Text className="text-[#ccff00] text-xs font-mono uppercase tracking-widest mb-2">
+              Top Picks
+            </Text>
+            <Text className="text-white font-black uppercase text-3xl tracking-tight">
+              Best Sellers
+            </Text>
+          </div>
+          <InteractiveLink href="/store">
+            <span className="text-gray-400 hover:text-[#ccff00] transition-colors font-mono uppercase tracking-wider text-xs">
+              View all
+            </span>
+          </InteractiveLink>
         </div>
-        <InteractiveLink href="/store">
-          <span className="text-gray-400 hover:text-[#ccff00] transition-colors font-mono uppercase tracking-wider text-xs">
-            View all
-          </span>
-        </InteractiveLink>
+        <ul className="grid grid-cols-2 small:grid-cols-2 medium:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
+          {displayProducts.map((product) => (
+            <li key={product.id} className="h-full">
+              <ProductPreview product={product} region={region} isFeatured />
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul className="grid grid-cols-2 small:grid-cols-2 medium:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
-        {displayProducts.map((product) => (
-          <li key={product.id} className="h-full">
-            <ProductPreview product={product} region={region} isFeatured />
-          </li>
-        ))}
-      </ul>
-    </div>
+    </section>
   )
 }
