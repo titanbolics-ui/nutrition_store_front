@@ -99,9 +99,9 @@ const MobileCard = ({
   // Width is 88vw so next card peeks through
   <div className="flex-shrink-0 w-[88vw] h-full snap-center flex items-start justify-center first:ml-[6vw]">
     <div className="relative w-full h-full flex flex-col">
-      {/* Image Section - increased to 55% for better visibility */}
+      {/* Image Section - flex-1 to take all available space */}
       <motion.div
-        className="relative w-full h-[55%] overflow-hidden flex-shrink-0"
+        className="relative w-full flex-1 overflow-hidden"
         initial={{ opacity: 0, scale: 1.05 }}
         whileInView={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
@@ -112,7 +112,7 @@ const MobileCard = ({
             src={category.image}
             alt={category.title}
             fill
-            className="object-cover object-top"
+            className="object-cover object-[center_20%]"
             sizes="100vw"
             priority={index < 2}
           />
@@ -139,103 +139,91 @@ const MobileCard = ({
         </motion.div>
       </motion.div>
 
-      {/* Content Section - overlaps image slightly, more compact */}
-      <div className="relative flex-1 flex flex-col justify-between px-3 -mt-6 z-10">
-        <div>
-          {/* Subtitle */}
-          <motion.div
-            className="flex items-center gap-2 mb-1"
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            viewport={{ once: true, amount: 0.5 }}
+      {/* Content Section - fixed at bottom, overlaps image */}
+      <div className="relative flex flex-col px-4 -mt-8 z-10 pb-6">
+        {/* Subtitle */}
+        <motion.div
+          className="flex items-center gap-2 mb-1"
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          <div
+            className="w-5 h-[2px]"
+            style={{ backgroundColor: category.accent }}
+          />
+          <span
+            className="text-[10px] font-bold tracking-[0.15em]"
+            style={{ color: category.accent }}
           >
-            <div
-              className="w-5 h-[2px]"
-              style={{ backgroundColor: category.accent }}
-            />
+            {category.subtitle}
+          </span>
+        </motion.div>
+
+        {/* Title */}
+        <motion.h2
+          className="text-xl font-black text-white mb-1 tracking-tight leading-[1.1]"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          {category.title.includes("&") ? (
+            <>
+              {category.title.split("&")[0].trim()}{" "}
+              <span style={{ color: category.accent }}>&</span>{" "}
+              {category.title.split("&")[1].trim()}
+            </>
+          ) : (
+            category.title
+          )}
+        </motion.h2>
+
+        {/* Description - one line */}
+        <motion.p
+          className="text-xs text-gray-400 mb-2 leading-snug line-clamp-1"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          {category.description}
+        </motion.p>
+
+        {/* Products Row - inline */}
+        <motion.div
+          className="flex items-center gap-1.5 mb-3"
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.25 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          {category.products.slice(0, 3).map((product, i) => (
             <span
-              className="text-[10px] font-bold tracking-[0.15em]"
+              key={i}
+              className="px-2 py-0.5 text-[9px] font-bold border"
+              style={{
+                borderColor: `${category.accent}50`,
+                color: category.accent,
+                backgroundColor: `${category.accent}10`,
+              }}
+            >
+              {product}
+            </span>
+          ))}
+          {category.products.length > 3 && (
+            <span 
+              className="text-[9px] font-bold"
               style={{ color: category.accent }}
             >
-              {category.subtitle}
+              +{category.products.length - 3}
             </span>
-          </motion.div>
-
-          {/* Title */}
-          <motion.h2
-            className="text-2xl font-black text-white mb-2 tracking-tight leading-[1.1]"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            viewport={{ once: true, amount: 0.5 }}
-          >
-            {category.title.includes("&") ? (
-              <>
-                <span className="block">
-                  {category.title.split("&")[0].trim()}{" "}
-                  <span style={{ color: category.accent }}>&</span>
-                </span>
-                <span className="block">
-                  {category.title.split("&")[1].trim()}
-                </span>
-              </>
-            ) : (
-              category.title
-            )}
-          </motion.h2>
-
-          {/* Description - shorter */}
-          <motion.p
-            className="text-xs text-gray-400 mb-2 leading-relaxed line-clamp-2"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            viewport={{ once: true, amount: 0.5 }}
-          >
-            {category.description}
-          </motion.p>
-
-          {/* Products Row - more compact */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.25 }}
-            viewport={{ once: true, amount: 0.5 }}
-          >
-            <div className="flex flex-wrap gap-1">
-              {category.products.slice(0, 3).map((product, i) => (
-                <motion.span
-                  key={i}
-                  className="px-2 py-1 text-[10px] font-bold border"
-                  style={{
-                    borderColor: `${category.accent}50`,
-                    color: category.accent,
-                    backgroundColor: `${category.accent}10`,
-                  }}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3, delay: 0.3 + i * 0.05 }}
-                  viewport={{ once: true }}
-                >
-                  {product}
-                </motion.span>
-              ))}
-              {category.products.length > 3 && (
-                <span 
-                  className="px-2 py-1 text-[10px] font-bold"
-                  style={{ color: category.accent }}
-                >
-                  +{category.products.length - 3}
-                </span>
-              )}
-            </div>
-          </motion.div>
-        </div>
+          )}
+        </motion.div>
 
         {/* CTA Button */}
         <motion.div
-          className="pb-4"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.35 }}
@@ -436,7 +424,7 @@ const HorizontalScrollSection = () => {
     return (
       <section
         ref={sectionRef}
-        className="relative bg-[#0a0a0a] h-screen overflow-hidden py-20"
+        className="relative bg-[#0a0a0a] h-screen overflow-hidden pt-14 pb-0"
       >
         {/* Background Grid */}
         <div
@@ -483,7 +471,7 @@ const HorizontalScrollSection = () => {
             scrollbarWidth: "none",
             msOverflowStyle: "none",
             WebkitOverflowScrolling: "touch",
-            height: "75vh",
+            height: "calc(100vh - 3.5rem)",
           }}
         >
           {categories.map((category, index) => (
