@@ -54,7 +54,7 @@ export default function Footer() {
                 <li>
                   <LocalizedClientLink
                     className="hover:text-[#ccff00] transition-colors"
-                    href="/categories/injectables"
+                    href="/categories/injectable-steroids"
                   >
                     Injectables
                   </LocalizedClientLink>
@@ -86,7 +86,7 @@ export default function Footer() {
                 <li>
                   <LocalizedClientLink
                     className="hover:text-[#ccff00] transition-colors"
-                    href="/categories/pct"
+                    href="/categories/post-cycle-therapy"
                   >
                     PCT
                   </LocalizedClientLink>

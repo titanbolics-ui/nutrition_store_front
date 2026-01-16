@@ -15,7 +15,7 @@ const ProductCategories = [
   { name: "ORAL STEROIDS", href: "/categories/oral-steroids" },
   { name: "PEPTIDES", href: "/categories/peptides" },
   { name: "HGH", href: "/categories/hgh" },
-  { name: "PCT", href: "/categories/pct" },
+  { name: "PCT", href: "/categories/post-cycle-therapy" },
   { name: "ALL PRODUCTS", href: "/store" },
 ]
 
