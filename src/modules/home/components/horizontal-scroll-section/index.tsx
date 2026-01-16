@@ -50,7 +50,7 @@ const categories: CategoryCard[] = [
       "Next-generation peptides for accelerated fat loss, tissue repair, and metabolic optimization.",
     image:
       "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/model_female.jpg",
-    href: "/collections/peptides",
+    href: "/categories/peptides",
     accent: "#ff6b9d",
     products: ["Tirzepatide", "Semaglutide", "BPC-157"],
   },
@@ -62,7 +62,7 @@ const categories: CategoryCard[] = [
       "Turn back the clock with growth hormone and TRT protocols. Look better, feel younger, perform at any age.",
     image:
       "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/silver_fox.jpg",
-    href: "/collections/anti-aging",
+    href: "/collections/longevity",
     accent: "#ff6b35",
     products: ["HGH Kits", "TRT Doses", "MK-677"],
   },

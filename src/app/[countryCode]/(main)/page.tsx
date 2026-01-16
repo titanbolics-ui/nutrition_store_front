@@ -1,10 +1,9 @@
 import { Metadata } from "next"
 
-import FeaturedProducts from "@modules/home/components/featured-products"
 import Hero from "@modules/home/components/hero"
 import HorizontalScrollSection from "@modules/home/components/horizontal-scroll-section"
-import { listCollections } from "@lib/data/collections"
-import { getRegion, listRegions } from "@lib/data/regions"
+import BestSellers from "@modules/home/components/best-sellers"
+import { getRegion } from "@lib/data/regions"
 import LabResults from "@modules/home/components/lab-tested-section"
 
 export const metadata: Metadata = {
@@ -21,18 +20,14 @@ export default async function Home(props: {
 
   const region = await getRegion(countryCode)
 
-  const { collections } = await listCollections({
-    fields: "id, handle, title",
-  })
-
   return (
     <>
       <Hero />
       <HorizontalScrollSection />
       <LabResults />
 
-      {/* FEATURED PRODUCTS SECTION - DARK MODE */}
-      <div className="relative py-24 bg-[#0a0a0a] min-h-screen">
+      {/* BEST SELLERS SECTION - DARK MODE */}
+      <div className="relative py-24 bg-[#0a0a0a]">
         {/* Grid Texture Background */}
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -44,11 +39,7 @@ export default async function Home(props: {
 
         {/* Content */}
         <div className="relative z-10">
-          <ul className="flex flex-col gap-y-12">
-            {collections && region && (
-              <FeaturedProducts collections={collections} region={region} />
-            )}
-          </ul>
+          {region && <BestSellers region={region} />}
         </div>
       </div>
     </>
