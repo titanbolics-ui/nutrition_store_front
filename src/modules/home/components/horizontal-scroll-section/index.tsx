@@ -1,7 +1,14 @@
 "use client"
 
-import { motion, useScroll, useTransform, useSpring } from "framer-motion"
-import { useRef, useState } from "react"
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  MotionValue,
+  AnimatePresence,
+} from "framer-motion"
+import { useRef, useState, useEffect } from "react"
 import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
@@ -81,10 +88,222 @@ const categories: CategoryCard[] = [
   },
 ]
 
+// Mobile Card Component - Full screen design with peek of next card and animations
+const MobileCard = ({
+  category,
+  index,
+}: {
+  category: CategoryCard
+  index: number
+}) => (
+  // Width is 88vw so next card peeks through
+  <div className="flex-shrink-0 w-[88vw] h-full snap-center flex items-start justify-center first:ml-[6vw]">
+    <div className="relative w-full h-full flex flex-col">
+      {/* Image Section */}
+      <motion.div
+        className="relative w-full h-[40%] overflow-hidden flex-shrink-0"
+        initial={{ opacity: 0, scale: 1.05 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true, amount: 0.3 }}
+      >
+        <div className="absolute inset-0">
+          <Image
+            src={category.image}
+            alt={category.title}
+            fill
+            className="object-cover object-top"
+            sizes="100vw"
+            priority={index < 2}
+          />
+          {/* Gradient overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0a]" />
+          <div
+            className="absolute inset-0 opacity-30"
+            style={{
+              background: `linear-gradient(135deg, ${category.accent}20 0%, transparent 50%)`,
+            }}
+          />
+        </div>
+
+        {/* Number Badge */}
+        <motion.div
+          className="absolute top-4 left-4 text-6xl font-black pointer-events-none"
+          style={{ color: category.accent, opacity: 0.3 }}
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 0.3, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          viewport={{ once: true }}
+        >
+          0{index + 1}
+        </motion.div>
+      </motion.div>
+
+      {/* Content Section - overlaps image slightly */}
+      <div className="relative flex-1 flex flex-col justify-start px-3 -mt-6 z-10">
+        {/* Subtitle */}
+        <motion.div
+          className="flex items-center gap-2 mb-2"
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          <div
+            className="w-6 h-[2px]"
+            style={{ backgroundColor: category.accent }}
+          />
+          <span
+            className="text-xs font-bold tracking-[0.15em]"
+            style={{ color: category.accent }}
+          >
+            {category.subtitle}
+          </span>
+        </motion.div>
+
+        {/* Title */}
+        <motion.h2
+          className="text-3xl font-black text-white mb-3 tracking-tight leading-[1.1]"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          {category.title.includes("&") ? (
+            <>
+              <span className="block">
+                {category.title.split("&")[0].trim()}{" "}
+                <span style={{ color: category.accent }}>&</span>
+              </span>
+              <span className="block">
+                {category.title.split("&")[1].trim()}
+              </span>
+            </>
+          ) : (
+            category.title
+          )}
+        </motion.h2>
+
+        {/* Description */}
+        <motion.p
+          className="text-sm text-gray-400 mb-4 leading-relaxed"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          {category.description}
+        </motion.p>
+
+        {/* Products Row */}
+        <motion.div
+          className="mb-4"
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.25 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">
+            {category.isExploreAll ? "Browse" : "Popular Products"}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {category.products.map((product, i) => (
+              <motion.span
+                key={i}
+                className="px-2.5 py-1.5 text-xs font-bold border"
+                style={{
+                  borderColor: `${category.accent}50`,
+                  color: category.accent,
+                  backgroundColor: `${category.accent}10`,
+                }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.3 + i * 0.05 }}
+                viewport={{ once: true }}
+              >
+                {product}
+              </motion.span>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* CTA Button */}
+        <motion.div
+          className="mt-auto pb-4"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.35 }}
+          viewport={{ once: true, amount: 0.5 }}
+        >
+          <LocalizedClientLink href={category.href}>
+            <motion.button
+              className="w-full px-6 py-3 font-black text-sm tracking-wider"
+              style={{
+                backgroundColor: category.accent,
+                border: `2px solid ${category.accent}`,
+                color: "#0a0a0a",
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {category.isExploreAll ? "VIEW ALL →" : "EXPLORE →"}
+            </motion.button>
+          </LocalizedClientLink>
+        </motion.div>
+      </div>
+
+      {/* Background Accent Glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle at 50% 30%, ${category.accent}08 0%, transparent 50%)`,
+        }}
+      />
+    </div>
+  </div>
+)
+
+// Progress bar component that uses pre-computed transforms
+const ProgressBar = ({
+  accent,
+  scaleX,
+}: {
+  accent: string
+  scaleX: MotionValue<number>
+}) => (
+  <motion.div className="w-8 h-1 bg-white/20 rounded-full overflow-hidden">
+    <motion.div
+      className="h-full rounded-full"
+      style={{
+        backgroundColor: accent,
+        scaleX,
+        transformOrigin: "left",
+      }}
+    />
+  </motion.div>
+)
+
+// Number display component
+const NumberDisplay = ({
+  index,
+  display,
+}: {
+  index: number
+  display: MotionValue<string>
+}) => (
+  <motion.span style={{ display: display as any }}>0{index + 1}</motion.span>
+)
+
 const HorizontalScrollSection = () => {
   const containerRef = useRef<HTMLDivElement>(null)
+  const mobileScrollRef = useRef<HTMLDivElement>(null)
+  const sectionRef = useRef<HTMLElement>(null)
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  const [activeCardIndex, setActiveCardIndex] = useState(0)
+  const [showSwipeHint, setShowSwipeHint] = useState(false)
+  const [sectionInView, setSectionInView] = useState(false)
 
+  // All hooks must be called unconditionally at the top level
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
@@ -96,14 +315,288 @@ const HorizontalScrollSection = () => {
     restDelta: 0.001,
   })
 
-  // Horizontal scroll transform - stops at last card and holds it
+  // Desktop horizontal scroll transform
   const x = useTransform(smoothProgress, [0, 0.85, 1], ["0%", "-80%", "-80%"])
 
+  // Pre-compute all progress bar transforms (must be called unconditionally)
+  const progressScales = [
+    useTransform(smoothProgress, [0, 0.17], [0, 1]),
+    useTransform(smoothProgress, [0.17, 0.34], [0, 1]),
+    useTransform(smoothProgress, [0.34, 0.51], [0, 1]),
+    useTransform(smoothProgress, [0.51, 0.68], [0, 1]),
+    useTransform(smoothProgress, [0.68, 0.85], [0, 1]),
+  ]
+
+  // Pre-compute all number display transforms
+  const numberDisplays = [
+    useTransform(smoothProgress, [0, 0.085, 0.17], ["none", "inline", "none"]),
+    useTransform(
+      smoothProgress,
+      [0.17, 0.255, 0.34],
+      ["none", "inline", "none"]
+    ),
+    useTransform(
+      smoothProgress,
+      [0.34, 0.425, 0.51],
+      ["none", "inline", "none"]
+    ),
+    useTransform(
+      smoothProgress,
+      [0.51, 0.595, 0.68],
+      ["none", "inline", "none"]
+    ),
+    useTransform(smoothProgress, [0.68, 0.85, 1.1], ["none", "inline", "none"]),
+  ]
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  // Track active card on mobile scroll
+  useEffect(() => {
+    const scrollContainer = mobileScrollRef.current
+    if (!scrollContainer || !isMobile) return
+
+    const handleScroll = () => {
+      const scrollLeft = scrollContainer.scrollLeft
+      const cardWidth = scrollContainer.offsetWidth * 0.88
+      const newIndex = Math.round(scrollLeft / cardWidth)
+      setActiveCardIndex(Math.min(newIndex, categories.length - 1))
+
+      // Hide swipe hint after user starts scrolling
+      if (scrollLeft > 10) {
+        setShowSwipeHint(false)
+      }
+    }
+
+    scrollContainer.addEventListener("scroll", handleScroll)
+    return () => scrollContainer.removeEventListener("scroll", handleScroll)
+  }, [isMobile])
+
+  // Detect when section comes into view
+  useEffect(() => {
+    if (!isMobile || !sectionRef.current) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSectionInView(true)
+        }
+      },
+      { threshold: 0.5 } // Trigger when 50% of section is visible
+    )
+
+    observer.observe(sectionRef.current)
+    return () => observer.disconnect()
+  }, [isMobile])
+
+  // Show swipe hint when section is in view, hide after 5 seconds
+  useEffect(() => {
+    if (isMobile && sectionInView && !showSwipeHint) {
+      // Show after small delay when section enters view
+      const showTimer = setTimeout(() => setShowSwipeHint(true), 500)
+      return () => clearTimeout(showTimer)
+    }
+  }, [isMobile, sectionInView])
+
+  // Auto-hide swipe hint after 5 seconds of being shown
+  useEffect(() => {
+    if (showSwipeHint) {
+      const hideTimer = setTimeout(() => setShowSwipeHint(false), 5000)
+      return () => clearTimeout(hideTimer)
+    }
+  }, [showSwipeHint])
+
+  // Mobile version - horizontal swipe with full-screen cards
+  if (isMobile) {
+    return (
+      <section
+        ref={sectionRef}
+        className="relative bg-[#0a0a0a] min-h-screen overflow-hidden py-20"
+      >
+        {/* Background Grid */}
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`,
+            backgroundSize: "4rem 4rem",
+          }}
+        />
+
+        {/* Header - Fixed */}
+        <div className="absolute top-4 left-4 z-30">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-[2px] bg-[#ccff00]" />
+            <span className="text-[#ccff00] text-xs font-bold tracking-[0.2em]">
+              CATEGORIES
+            </span>
+          </div>
+        </div>
+
+        {/* Progress Dots - Fixed */}
+        <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+          {categories.map((cat, i) => (
+            <div
+              key={cat.id}
+              className="w-2 h-2 rounded-full transition-all duration-300"
+              style={{
+                backgroundColor:
+                  i === activeCardIndex ? cat.accent : "rgba(255,255,255,0.2)",
+                transform: i === activeCardIndex ? "scale(1.3)" : "scale(1)",
+              }}
+            />
+          ))}
+          <span className="text-white/50 text-xs font-mono ml-1">
+            0{activeCardIndex + 1}/05
+          </span>
+        </div>
+
+        {/* Horizontal Scroll Container */}
+        <div
+          ref={mobileScrollRef}
+          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+          style={{
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+            height: "75vh",
+          }}
+        >
+          {categories.map((category, index) => (
+            <MobileCard key={category.id} category={category} index={index} />
+          ))}
+          {/* End spacer */}
+          <div className="flex-shrink-0 w-[6vw]" />
+        </div>
+
+        {/* Swipe Hint with green gradient on right */}
+        <AnimatePresence>
+          {showSwipeHint && (
+            <>
+              {/* Green gradient on right edge - no pulse */}
+              <motion.div
+                key="gradient-hint"
+                className="absolute right-0 top-0 bottom-0 w-24 pointer-events-none z-20 bg-gradient-to-l from-[#ccff00]/30 to-transparent"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+              />
+
+              {/* Animated swipe gesture - simple finger with arrow */}
+              <motion.div
+                key="swipe-gesture"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 pointer-events-none flex items-center gap-1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Motion lines */}
+                <motion.div
+                  className="flex flex-col gap-1"
+                  animate={{ opacity: [0.3, 1, 0.3], x: [0, -5, 0] }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <div className="w-3 h-0.5 bg-[#ccff00] rounded-full" />
+                  <div className="w-4 h-0.5 bg-[#ccff00] rounded-full" />
+                  <div className="w-3 h-0.5 bg-[#ccff00] rounded-full" />
+                </motion.div>
+
+                {/* Finger/touch circle */}
+                <motion.div
+                  className="w-12 h-12 rounded-full border-2 border-[#ccff00] bg-[#ccff00]/20 flex items-center justify-center"
+                  animate={{ x: [0, -20, 0] }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <motion.div
+                    className="w-4 h-4 rounded-full bg-[#ccff00]"
+                    animate={{ scale: [1, 0.8, 1] }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  />
+                </motion.div>
+              </motion.div>
+
+              {/* Bottom swipe label */}
+              <motion.div
+                key="swipe-label"
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.4 }}
+              >
+                <motion.div
+                  className="flex items-center gap-3 px-5 py-2.5 bg-black/80 backdrop-blur-md rounded-full border border-[#ccff00]/50"
+                  animate={{ x: [0, 6, 0] }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <span className="text-white text-sm font-semibold">
+                    Swipe
+                  </span>
+                  <motion.svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-[#ccff00]"
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <path
+                      d="M5 12h14m0 0l-6-6m6 6l-6 6"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </motion.svg>
+                </motion.div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Hide scrollbar */}
+        <style jsx>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+      </section>
+    )
+  }
+
+  // Desktop version - scroll-driven animation
   return (
     <section
       ref={containerRef}
       className="relative bg-[#0a0a0a]"
-      style={{ height: "600vh" }} // Extra height so last card stays visible longer
+      style={{ height: "600vh" }}
     >
       {/* Fixed Container for Horizontal Scroll */}
       <div className="sticky top-0 h-screen w-full overflow-hidden">
@@ -116,95 +609,60 @@ const HorizontalScrollSection = () => {
           }}
         />
 
-        {/* Section Header - Fixed */}
+        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="absolute top-16 left-4 md:top-20 md:left-8 z-30"
+          className="absolute top-20 left-8 z-30"
         >
-          <div className="flex items-center gap-2 md:gap-4">
-            <div className="w-6 md:w-12 h-[2px] bg-[#ccff00]" />
-            <span className="text-[#ccff00] text-xs md:text-sm font-bold tracking-[0.2em] md:tracking-[0.3em]">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-[2px] bg-[#ccff00]" />
+            <span className="text-[#ccff00] text-sm font-bold tracking-[0.3em]">
               CATEGORIES
             </span>
           </div>
         </motion.div>
 
         {/* Progress Indicator */}
-        <div className="absolute top-16 right-4 md:top-20 md:right-8 z-30 flex items-center gap-2 md:gap-4">
-          <div className="flex gap-1 md:gap-2">
+        <div className="absolute top-20 right-8 z-30 flex items-center gap-4">
+          <div className="flex gap-2">
             {categories.map((cat, i) => (
-              <motion.div
+              <ProgressBar
                 key={cat.id}
-                className="w-4 md:w-8 h-1 bg-white/20 rounded-full overflow-hidden"
-              >
-                <motion.div
-                  className="h-full rounded-full"
-                  style={{
-                    backgroundColor: cat.accent,
-                    scaleX: useTransform(
-                      smoothProgress,
-                      [(i * 0.85) / 5, ((i + 1) * 0.85) / 5],
-                      [0, 1]
-                    ),
-                    transformOrigin: "left",
-                  }}
-                />
-              </motion.div>
+                accent={cat.accent}
+                scaleX={progressScales[i]}
+              />
             ))}
           </div>
-          <span className="text-white/50 text-xs md:text-sm font-mono">
-            <motion.span>
-              {categories.map((_, i) => {
-                const isLast = i === categories.length - 1
-                const start = (i * 0.85) / 5
-                const mid = ((i + 0.5) * 0.85) / 5
-                const end = isLast ? 1.1 : ((i + 1) * 0.85) / 5
-                return (
-                  <motion.span
-                    key={i}
-                    style={{
-                      display: useTransform(
-                        smoothProgress,
-                        [start, mid, end],
-                        ["none", "inline", "none"]
-                      ) as any,
-                    }}
-                  >
-                    0{i + 1}
-                  </motion.span>
-                )
-              })}
-            </motion.span>
+          <span className="text-white/50 text-sm font-mono">
+            {categories.map((_, i) => (
+              <NumberDisplay key={i} index={i} display={numberDisplays[i]} />
+            ))}
             /05
           </span>
         </div>
 
         {/* Horizontal Scrolling Cards Container */}
-        <motion.div
-          style={{ x }}
-          className="flex h-full w-[500vw]" // 5 cards x 100vw each
-        >
+        <motion.div style={{ x }} className="flex h-full w-[500vw]">
           {categories.map((category, index) => (
             <div
               key={category.id}
-              className="relative w-screen h-full flex items-center justify-center px-4 md:px-8"
+              className="relative w-screen h-full flex items-center justify-center px-8"
               onMouseEnter={() => setHoveredCard(category.id)}
               onMouseLeave={() => setHoveredCard(null)}
             >
-              {/* Card Container - Vertical on mobile, horizontal on desktop */}
-              <div className="relative w-full max-w-6xl h-[85vh] md:h-[75vh] flex flex-col md:flex-row pt-20 md:pt-8">
+              {/* Card Container */}
+              <div className="relative w-full max-w-6xl h-[75vh] flex flex-row pt-8">
                 {/* Left Side - Image */}
                 <motion.div
-                  className="relative w-full md:w-1/2 h-[35vh] md:h-full overflow-hidden flex-shrink-0"
+                  className="relative w-1/2 h-full overflow-hidden flex-shrink-0"
                   initial={{ opacity: 0, x: -100 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
                 >
-                  {/* Image Container with Clip Path */}
                   <div
-                    className="absolute inset-0 md:clip-path-none"
+                    className="absolute inset-0"
                     style={{
                       clipPath: "polygon(0 0, 100% 0, 100% 90%, 0 100%)",
                     }}
@@ -214,11 +672,10 @@ const HorizontalScrollSection = () => {
                       alt={category.title}
                       fill
                       className="object-cover object-top"
-                      sizes="(max-width: 768px) 100vw, 50vw"
+                      sizes="50vw"
                       priority={index < 2}
                     />
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-b md:bg-gradient-to-r from-transparent via-transparent to-[#0a0a0a]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#0a0a0a]" />
                     <div
                       className="absolute inset-0 opacity-30"
                       style={{
@@ -227,9 +684,9 @@ const HorizontalScrollSection = () => {
                     />
                   </div>
 
-                  {/* Floating Number - Hidden on mobile */}
+                  {/* Floating Number */}
                   <div
-                    className="hidden md:block absolute -right-16 top-1/2 -translate-y-1/2 text-[20rem] font-black leading-none pointer-events-none select-none"
+                    className="absolute -right-16 top-1/2 -translate-y-1/2 text-[20rem] font-black leading-none pointer-events-none select-none"
                     style={{
                       color: "transparent",
                       WebkitTextStroke: `1px ${category.accent}30`,
@@ -237,45 +694,37 @@ const HorizontalScrollSection = () => {
                   >
                     0{index + 1}
                   </div>
-
-                  {/* Mobile Number Badge */}
-                  <div
-                    className="md:hidden absolute top-4 left-4 text-6xl font-black pointer-events-none"
-                    style={{ color: category.accent, opacity: 0.3 }}
-                  >
-                    0{index + 1}
-                  </div>
                 </motion.div>
 
                 {/* Right Side - Content */}
                 <motion.div
-                  className="relative w-full md:w-1/2 flex-1 md:h-full flex flex-col justify-start md:justify-center px-2 md:pl-16 pt-4 md:pt-0"
+                  className="relative w-1/2 h-full flex flex-col justify-center pl-16"
                   initial={{ opacity: 0, x: 100 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.8, delay: 0.4 }}
                 >
                   {/* Subtitle */}
                   <motion.div
-                    className="flex items-center gap-2 md:gap-3 mb-2 md:mb-4"
+                    className="flex items-center gap-3 mb-4"
                     initial={{ opacity: 0, x: 20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 }}
                   >
                     <div
-                      className="w-6 md:w-8 h-[2px]"
+                      className="w-8 h-[2px]"
                       style={{ backgroundColor: category.accent }}
                     />
                     <span
-                      className="text-xs md:text-sm font-bold tracking-[0.15em] md:tracking-[0.2em]"
+                      className="text-sm font-bold tracking-[0.2em]"
                       style={{ color: category.accent }}
                     >
                       {category.subtitle}
                     </span>
                   </motion.div>
 
-                  {/* Title - Simple on mobile, animated on desktop */}
+                  {/* Title */}
                   <motion.h2
-                    className="text-3xl md:text-7xl font-black text-white mb-3 md:mb-6 tracking-tight leading-[1.1] md:leading-[0.95]"
+                    className="text-7xl font-black text-white mb-6 tracking-tight leading-[0.95]"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.3 }}
@@ -297,7 +746,7 @@ const HorizontalScrollSection = () => {
 
                   {/* Description */}
                   <motion.p
-                    className="text-sm md:text-lg text-gray-400 mb-4 md:mb-8 max-w-md leading-relaxed"
+                    className="text-lg text-gray-400 mb-8 max-w-md leading-relaxed"
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
@@ -307,19 +756,19 @@ const HorizontalScrollSection = () => {
 
                   {/* Products Row */}
                   <motion.div
-                    className="mb-4 md:mb-10"
+                    className="mb-10"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                   >
-                    <div className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider mb-2 md:mb-3">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-3">
                       {category.isExploreAll ? "Browse" : "Popular Products"}
                     </div>
-                    <div className="flex flex-wrap gap-1.5 md:gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {category.products.map((product, i) => (
                         <span
                           key={i}
-                          className="px-2.5 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-bold border transition-all duration-300 hover:scale-105 cursor-default"
+                          className="px-4 py-2 text-sm font-bold border transition-all duration-300 hover:scale-105 cursor-default"
                           style={{
                             borderColor: `${category.accent}50`,
                             color: category.accent,
@@ -340,7 +789,7 @@ const HorizontalScrollSection = () => {
                   >
                     <LocalizedClientLink href={category.href}>
                       <button
-                        className="group relative w-full md:w-auto px-6 py-3 md:px-10 md:py-5 font-black text-sm md:text-lg tracking-wider overflow-hidden transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                        className="group relative px-10 py-5 font-black text-lg tracking-wider overflow-hidden transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
                         style={{
                           backgroundColor: category.accent,
                           border: `2px solid ${category.accent}`,
@@ -350,20 +799,20 @@ const HorizontalScrollSection = () => {
                         <span className="relative z-10">
                           {category.isExploreAll ? "VIEW ALL" : "EXPLORE"}
                         </span>
-                        <span className="relative z-10 ml-2 md:ml-3 inline-block">
+                        <span className="relative z-10 ml-3 inline-block">
                           →
                         </span>
                       </button>
                     </LocalizedClientLink>
                   </motion.div>
 
-                  {/* Decorative Elements - Hidden on mobile */}
+                  {/* Decorative Elements */}
                   <div
-                    className="hidden md:block absolute top-10 right-10 w-32 h-32 border opacity-20"
+                    className="absolute top-10 right-10 w-32 h-32 border opacity-20"
                     style={{ borderColor: category.accent }}
                   />
                   <div
-                    className="hidden md:block absolute bottom-10 right-20 w-16 h-16 opacity-10"
+                    className="absolute bottom-10 right-20 w-16 h-16 opacity-10"
                     style={{ backgroundColor: category.accent }}
                   />
                 </motion.div>
@@ -382,9 +831,9 @@ const HorizontalScrollSection = () => {
           ))}
         </motion.div>
 
-        {/* Scroll Hint - Hidden on mobile to save space */}
+        {/* Desktop Scroll Hint */}
         <motion.div
-          className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex-col items-center gap-2"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}

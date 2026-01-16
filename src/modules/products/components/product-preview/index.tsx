@@ -29,15 +29,15 @@ export default async function ProductPreview({
         className="h-full bg-[#111111] border border-gray-800 rounded-lg md:rounded-xl overflow-hidden md:hover:border-[#ccff00]/50 transition-all duration-300 shadow-lg md:hover:shadow-[#ccff00]/10 flex flex-col"
       >
         {/* IMAGE CONTAINER */}
-        <div className="relative p-2 sm:p-3 md:p-4 bg-gray-900/50 border-b border-gray-800 flex items-center justify-center aspect-square md:group-hover:bg-gray-800/50 transition-colors duration-300">
-          <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 p-2 sm:p-3 md:p-4">
-        <Thumbnail
-          thumbnail={product.thumbnail}
-          images={product.images}
-          size="full"
-          isFeatured={isFeatured}
+        <div className="relative p-2 sm:p-3 md:p-4 bg-gray-900/50 border-b border-gray-800 flex items-center justify-center aspect-square md:group-hover:bg-gray-800/50 transition-colors duration-300 overflow-hidden">
+          <div className="relative w-full h-full rounded-lg bg-gray-100 overflow-hidden">
+            <Thumbnail
+              thumbnail={product.thumbnail}
+              images={product.images}
+              size="full"
+              isFeatured={isFeatured}
               isContain
-              className="bg-transparent shadow-none p-0 rounded-none border-none h-full w-full md:hover:scale-110 transition-transform duration-500"
+              className="!bg-transparent !shadow-none !p-0 !rounded-none !border-none !overflow-hidden"
             />
           </div>
         </div>

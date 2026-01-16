@@ -30,7 +30,6 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
     <Container
       className={clx(
         "relative w-full overflow-hidden p-4 bg-gray-800/50 border border-gray-700 rounded-lg group-hover:border-gray-600 transition-all ease-in-out duration-150",
-        className,
         {
           "aspect-square": size !== "square",
           "aspect-[1/1]": size === "square",
@@ -38,7 +37,8 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
           "w-[290px]": size === "medium",
           "w-[440px]": size === "large",
           "w-full": size === "full",
-        }
+        },
+        className
       )}
       data-testid={dataTestid}
     >

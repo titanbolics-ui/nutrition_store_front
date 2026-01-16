@@ -180,9 +180,9 @@ const Hero = () => {
       {/* 4. FOREGROUND CONTENT (Text Overlay & Buttons) (Z-20) */}
 
       {/* "WORKOUT" TYPING TEXT (Over the athlete) */}
-      <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 text-center w-full">
+      <div className="absolute top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 text-center w-full px-4">
         <div
-          className="text-6xl medium:text-8xl font-black text-white tracking-tight drop-shadow-2xl mix-blend-difference"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-black text-white tracking-tight drop-shadow-2xl mix-blend-difference leading-[1.1]"
           onAnimationEnd={() => setShowWorkout(true)} // Trigger logic shim
         >
           <motion.div
@@ -194,7 +194,7 @@ const Hero = () => {
             <span className="relative">
               {workoutText}
               {!animationComplete && (
-                <span className="animate-pulse inline-block w-[4px] h-[0.8em] bg-[#ccff00] ml-2 align-middle" />
+                <span className="animate-pulse inline-block w-[3px] sm:w-[4px] h-[0.8em] bg-[#ccff00] ml-1 sm:ml-2 align-middle" />
               )}
             </span>
           </motion.div>

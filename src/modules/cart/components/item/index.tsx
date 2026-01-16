@@ -79,11 +79,12 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
           "!py-1 !px-1 sm:!p-2 align-top sm:align-middle": type === "preview",
         })}
       >
-        <div className="flex flex-col gap-y-0.5">
+        <div className="flex flex-col gap-y-0.5 min-w-0">
           <Text
-            className={clx("txt-medium-plus text-white", {
+            className={clx("txt-medium-plus text-white break-words", {
               "font-semibold text-xs sm:text-base leading-tight":
                 type === "preview",
+              "text-sm sm:text-base": type === "full",
             })}
             data-testid="product-title"
           >
@@ -97,13 +98,13 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       </Table.Cell>
 
       {type === "full" && (
-        <Table.Cell>
-          <div className="flex gap-2 items-center w-28">
+        <Table.Cell className="whitespace-nowrap">
+          <div className="flex gap-1 sm:gap-2 items-center">
             <DeleteButton id={item.id} data-testid="product-delete-button" />
             <CartItemSelect
               value={item.quantity}
               onChange={(value) => changeQuantity(parseInt(value.target.value))}
-              className="w-14 h-10 p-4"
+              className="w-12 sm:w-14 h-8 sm:h-10 p-2 sm:p-4"
               data-testid="product-select-button"
             >
               {/* TODO: Update this with the v2 way of managing inventory */}
