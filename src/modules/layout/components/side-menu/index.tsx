@@ -11,18 +11,20 @@ import { HttpTypes } from "@medusajs/types"
 
 // Main product categories
 const ProductCategories = [
-  { name: "COMPOUNDS", href: "/categories/injectable-steroids" },
+  { name: "INJECTABLES", href: "/categories/injectables" },
+  { name: "ORAL STEROIDS", href: "/categories/oral-steroids" },
   { name: "PEPTIDES", href: "/categories/peptides" },
   { name: "HGH", href: "/categories/hgh" },
-  { name: "PCT", href: "/categories/post-cycle-therapy" },
+  { name: "PCT", href: "/categories/pct" },
   { name: "ALL PRODUCTS", href: "/store" },
 ]
 
 // Service links
 const ServiceLinks = [
   { name: "Track My Order", href: "/account/orders" },
-  { name: "Lab Tests", href: "/categories/lab-tested" },
+  { name: "Lab Results", href: "/lab-results" },
   { name: "Shipping Info", href: "/shipping" },
+  { name: "Returns", href: "/returns" },
   { name: "Contact", href: "/contact" },
 ]
 

@@ -2,7 +2,6 @@ import { Text } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 export default function Footer() {
-
   return (
     <footer className="relative bg-black text-white border-t border-white/5 overflow-hidden">
       {/* WATERMARK LOGO */}
@@ -144,9 +143,9 @@ export default function Footer() {
                 <li>
                   <LocalizedClientLink
                     className="hover:text-[#ccff00] transition-colors"
-                    href="/lab-tests"
+                    href="/lab-results"
                   >
-                    Lab Tests
+                    Lab Results
                   </LocalizedClientLink>
                 </li>
               </ul>
