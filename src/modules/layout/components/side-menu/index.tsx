@@ -11,10 +11,10 @@ import { HttpTypes } from "@medusajs/types"
 
 // Main product categories
 const ProductCategories = [
-  { name: "COMPOUNDS", href: "/categories/compounds" },
+  { name: "COMPOUNDS", href: "/categories/injectable-steroids" },
   { name: "PEPTIDES", href: "/categories/peptides" },
   { name: "HGH", href: "/categories/hgh" },
-  { name: "PCT", href: "/store" },
+  { name: "PCT", href: "/categories/post-cycle-therapy" },
   { name: "ALL PRODUCTS", href: "/store" },
 ]
 
@@ -72,7 +72,7 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
                 leaveFrom="translate-x-0"
                 leaveTo="-translate-x-full"
               >
-                <Dialog.Panel 
+                <Dialog.Panel
                   data-testid="nav-menu-popup"
                   className="fixed left-0 top-0 h-full w-full max-w-xs bg-black flex flex-col"
                 >
