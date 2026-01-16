@@ -6,6 +6,7 @@ import BestSellers from "@modules/home/components/best-sellers"
 import OnyxStandard from "@modules/home/components/onyx-standard"
 import { getRegion } from "@lib/data/regions"
 import LabResults from "@modules/home/components/lab-tested-section"
+import HeroSnapContainer from "@modules/home/components/mobile-scroll-snap"
 
 export const metadata: Metadata = {
   title: "Onyx Genetics",
@@ -23,8 +24,10 @@ export default async function Home(props: {
 
   return (
     <>
-      <Hero />
-      <HorizontalScrollSection />
+      <HeroSnapContainer>
+        <Hero />
+        <HorizontalScrollSection />
+      </HeroSnapContainer>
       {region && <BestSellers region={region} />}
       <LabResults />
       <OnyxStandard />

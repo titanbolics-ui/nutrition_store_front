@@ -377,17 +377,31 @@ const HorizontalScrollSection = () => {
     return () => scrollContainer.removeEventListener("scroll", handleScroll)
   }, [isMobile])
 
-  // Detect when section comes into view
+  // Detect when section comes into view and auto-snap to it
   useEffect(() => {
     if (!isMobile || !sectionRef.current) return
+
+    let hasSnapped = false
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setSectionInView(true)
+          
+          // Auto-snap to section when it's 20-80% visible (scrolling down)
+          if (!hasSnapped && entry.intersectionRatio > 0.2 && entry.intersectionRatio < 0.8) {
+            hasSnapped = true
+            sectionRef.current?.scrollIntoView({ 
+              behavior: "smooth",
+              block: "start"
+            })
+          }
+        } else {
+          // Reset snap flag when section leaves view
+          hasSnapped = false
         }
       },
-      { threshold: 0.5 } // Trigger when 50% of section is visible
+      { threshold: [0.2, 0.5, 0.8] }
     )
 
     observer.observe(sectionRef.current)
@@ -416,7 +430,7 @@ const HorizontalScrollSection = () => {
     return (
       <section
         ref={sectionRef}
-        className="relative bg-[#0a0a0a] min-h-screen overflow-hidden py-20"
+        className="relative bg-[#0a0a0a] h-screen overflow-hidden py-20"
       >
         {/* Background Grid */}
         <div

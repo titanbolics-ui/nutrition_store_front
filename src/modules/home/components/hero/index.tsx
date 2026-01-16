@@ -78,7 +78,7 @@ const Hero = () => {
   }, [showWorkout, workoutPhase, workout])
 
   return (
-    <div className="relative w-full h-[90vh] overflow-hidden bg-[#0a0a0a] text-white selection:bg-[#ccff00] selection:text-black">
+    <div className="relative w-full h-screen md:h-[90vh] overflow-hidden bg-[#0a0a0a] text-white selection:bg-[#ccff00] selection:text-black">
       {/* 1. BACKGROUND & LIGHTING */}
       <div className="absolute inset-0 z-0">
         {/* Radial Spotlight */}
