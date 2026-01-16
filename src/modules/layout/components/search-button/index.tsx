@@ -47,9 +47,6 @@ export default function SearchButton({ products }: SearchButtonProps) {
           />
         </svg>
         <span className="hidden small:inline">Search</span>
-        <kbd className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono bg-gray-100 border border-gray-200 rounded">
-          ⌘K
-        </kbd>
       </button>
 
       <SearchModal
@@ -60,4 +57,3 @@ export default function SearchButton({ products }: SearchButtonProps) {
     </>
   )
 }
-

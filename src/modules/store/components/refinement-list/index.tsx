@@ -39,7 +39,7 @@ const RefinementList = ({
   }
 
   return (
-    <div className="flex small:flex-col gap-12 py-4 mb-8 small:px-0 pl-6 small:min-w-[250px] small:ml-[1.675rem]">
+    <div className="hidden md:flex md:flex-col gap-12 py-4 mb-8 md:px-0 md:min-w-[250px] md:ml-[1.675rem]">
       {categories && categories.length > 0 && (
         <CategoryMenu categories={categories} />
       )}

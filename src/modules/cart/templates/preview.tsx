@@ -17,13 +17,19 @@ const ItemsPreviewTemplate = ({ cart }: ItemsTemplateProps) => {
 
   return (
     <div
-      className={clx({
-        "pl-[1px] overflow-y-scroll overflow-x-hidden no-scrollbar max-h-[420px]":
-          hasOverflow,
-      })}
+      className={clx(
+        "border border-gray-800 rounded-xl overflow-hidden bg-gray-900/50 p-1 sm:p-2",
+        {
+          "pl-[1px] overflow-y-scroll overflow-x-hidden no-scrollbar max-h-[420px]":
+            hasOverflow,
+        }
+      )}
     >
-      <Table>
-        <Table.Body data-testid="items-table">
+      <Table className="w-full border-collapse">
+        <Table.Body
+          data-testid="items-table"
+          className="[&_tr:last-child_td]:border-b-0"
+        >
           {items
             ? items
                 .sort((a, b) => {

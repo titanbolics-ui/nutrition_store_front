@@ -263,18 +263,18 @@ export default function ProductActions({
         {/* Quantity selector and Add to cart button */}
         {/* Quantity counter allows selecting quantity before adding to cart */}
         <div className="flex items-center gap-x-4">
-          <div className="flex items-center border border-ui-border-base rounded-rounded">
+          <div className="flex items-center border border-gray-700 rounded-lg bg-gray-900">
             <button
               onClick={decreaseQuantity}
               disabled={quantity <= 1 || !!disabled || isAdding}
-              className="w-10 h-10 flex items-center justify-center text-ui-fg-subtle hover:text-ui-fg-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               type="button"
               data-testid="decrease-quantity-button"
             >
               −
             </button>
             <span
-              className="w-12 h-10 flex items-center justify-center text-base-regular"
+              className="w-12 h-10 flex items-center justify-center text-white font-medium"
               data-testid="quantity-value"
             >
               {quantity}
@@ -288,7 +288,7 @@ export default function ProductActions({
                   !!selectedVariant.manage_inventory &&
                   quantity >= (selectedVariant.inventory_quantity || 0))
               }
-              className="w-10 h-10 flex items-center justify-center text-ui-fg-subtle hover:text-ui-fg-base disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               type="button"
               data-testid="increase-quantity-button"
             >
@@ -306,7 +306,7 @@ export default function ProductActions({
               !isValidVariant
             }
             variant="primary"
-            className="flex-1 h-10"
+            className="flex-1 h-10 bg-[#ccff00] text-black font-bold hover:bg-[#b8e600] border-none shadow-[0_0_20px_rgba(204,255,0,0.3)] hover:shadow-[0_0_30px_rgba(204,255,0,0.5)] transition-all duration-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none"
             isLoading={isAdding}
             data-testid="add-product-button"
           >

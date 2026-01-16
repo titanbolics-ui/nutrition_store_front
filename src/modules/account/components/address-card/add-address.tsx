@@ -49,12 +49,12 @@ const AddAddress = ({
   return (
     <>
       <button
-        className="border border-ui-border-base rounded-rounded p-5 min-h-[220px] h-full w-full flex flex-col justify-between"
+        className="border border-gray-700 hover:border-gray-600 bg-gray-900/50 rounded-lg p-5 min-h-[220px] h-full w-full flex flex-col justify-between transition-colors"
         onClick={open}
         data-testid="add-address-button"
       >
-        <span className="text-base-semi">New address</span>
-        <Plus />
+        <span className="text-base-semi text-white">New address</span>
+        <Plus className="text-gray-400" />
       </button>
 
       <Modal isOpen={state} close={close} data-testid="add-address-modal">

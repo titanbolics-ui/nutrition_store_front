@@ -45,13 +45,25 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
   const maxQuantity = item.variant?.manage_inventory ? 10 : maxQtyFromInventory
 
   return (
-    <Table.Row className="w-full" data-testid="product-row">
-      <Table.Cell className="!pl-0 p-4 w-24">
+    <Table.Row
+      className={clx("w-full", {
+        "border-b border-gray-700/30 last:border-0": type === "preview",
+      })}
+      data-testid="product-row"
+    >
+      <Table.Cell
+        className={clx({
+          "!p-1 sm:!p-2 w-auto align-top sm:align-middle": type === "preview",
+          "py-2 px-1 sm:px-2 w-16 sm:w-20": type === "full",
+        })}
+      >
         <LocalizedClientLink
           href={`/products/${item.product_handle}`}
           className={clx("flex", {
-            "w-16": type === "preview",
-            "small:w-24 w-12": type === "full",
+            "w-10 h-10 sm:w-14 sm:h-14 aspect-square rounded-md overflow-hidden bg-gray-800":
+              type === "preview",
+            "w-14 h-14 sm:w-16 sm:h-16 rounded-md overflow-hidden bg-gray-800":
+              type === "full",
           })}
         >
           <Thumbnail
@@ -62,14 +74,26 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
         </LocalizedClientLink>
       </Table.Cell>
 
-      <Table.Cell className="text-left">
-        <Text
-          className="txt-medium-plus text-ui-fg-base"
-          data-testid="product-title"
-        >
-          {item.product_title}
-        </Text>
-        <LineItemOptions variant={item.variant} data-testid="product-variant" />
+      <Table.Cell
+        className={clx("text-left", {
+          "!py-1 !px-1 sm:!p-2 align-top sm:align-middle": type === "preview",
+        })}
+      >
+        <div className="flex flex-col gap-y-0.5">
+          <Text
+            className={clx("txt-medium-plus text-white", {
+              "font-semibold text-xs sm:text-base leading-tight":
+                type === "preview",
+            })}
+            data-testid="product-title"
+          >
+            {item.product_title}
+          </Text>
+          <LineItemOptions
+            variant={item.variant}
+            data-testid="product-variant"
+          />
+        </div>
       </Table.Cell>
 
       {type === "full" && (
@@ -88,15 +112,15 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
                   length: Math.min(maxQuantity, 10),
                 },
                 (_, i) => (
-                  <option value={i + 1} key={i}>
+                  <option
+                    value={i + 1}
+                    key={i}
+                    className="bg-gray-800 text-white"
+                  >
                     {i + 1}
                   </option>
                 )
               )}
-
-              <option value={1} key={1}>
-                1
-              </option>
             </CartItemSelect>
             {updating && <Spinner />}
           </div>
@@ -114,15 +138,20 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
         </Table.Cell>
       )}
 
-      <Table.Cell className="!pr-0">
+      <Table.Cell
+        className={clx("text-right", {
+          "!p-1 sm:!p-2 w-auto align-top sm:align-middle": type === "preview",
+        })}
+      >
         <span
-          className={clx("!pr-0", {
-            "flex flex-col items-end h-full justify-center": type === "preview",
+          className={clx({
+            "flex flex-col items-end justify-start sm:justify-center gap-y-0.5 sm:gap-y-1":
+              type === "preview",
           })}
         >
           {type === "preview" && (
-            <span className="flex gap-x-1 ">
-              <Text className="text-ui-fg-muted">{item.quantity}x </Text>
+            <span className="flex gap-x-1 text-gray-400 text-[10px] sm:text-sm">
+              <Text className="text-gray-500">{item.quantity}x </Text>
               <LineItemUnitPrice
                 item={item}
                 style="tight"

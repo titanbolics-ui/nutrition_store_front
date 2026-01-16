@@ -16,7 +16,7 @@ const CategoryMenu = ({ categories }: CategoryMenuProps) => {
 
   return (
     <div className="flex flex-col gap-y-4">
-      <Text className="txt-compact-small-plus text-ui-fg-muted uppercase tracking-wider font-bold">
+      <Text className="txt-compact-small-plus text-white uppercase tracking-wider font-bold">
         Categories
       </Text>
       <ul className="flex flex-col gap-y-1">
@@ -47,9 +47,6 @@ const CategoryItem = ({
   // Стан відкриття
   const [open, setOpen] = useState(isActive || isChildActive)
 
-  // ⚡ ГОЛОВНЕ ВИПРАВЛЕННЯ:
-  // Ми додаємо else { setOpen(false) }.
-  // Це забезпечує ефект "Акордеона": коли ви йдете на іншу категорію, ця автоматично закриється.
   useEffect(() => {
     if (isActive || isChildActive) {
       setOpen(true)
@@ -71,23 +68,21 @@ const CategoryItem = ({
     <li className="select-none flex flex-col">
       <div
         className={clx(
-          "flex items-center justify-between py-1 pr-2 rounded-md transition-colors group",
-          isActive ? "bg-ui-bg-base shadow-sm" : "hover:bg-ui-bg-subtle"
+          "flex items-center justify-between py-1 pr-2 rounded-sm transition-all group",
+          // Активний стан: Neon Green border
+          isActive
+            ? "border-l-2 border-[#ccff00] pl-2 bg-white/5"
+            : "hover:bg-white/5 hover:pl-1 border-l-2 border-transparent"
         )}
-        style={{ paddingLeft: `${paddingLeft}px` }}
+        style={{ paddingLeft: isActive ? undefined : `${paddingLeft}px` }}
       >
-        {/* 
-             👇 ПРИБРАНО onClick={() => setOpen(true)} 
-             Тепер відкриттям керує тільки URL (useEffect).
-             Це усуває "блимання" при переході.
-          */}
         <LocalizedClientLink
           href={`/categories/${category.handle}`}
           className={clx(
             "flex-1 py-1 text-sm font-medium transition-colors",
             isActive || isChildActive
-              ? "text-ui-fg-base"
-              : "text-ui-fg-subtle group-hover:text-ui-fg-base"
+              ? "text-[#ccff00]"
+              : "text-gray-400 group-hover:text-white"
           )}
         >
           {category.name}
@@ -96,12 +91,12 @@ const CategoryItem = ({
         {hasChildren && (
           <button
             onClick={handleToggle}
-            className="p-1 rounded-md text-ui-fg-muted hover:text-ui-fg-base hover:bg-ui-bg-base-pressed transition-colors"
+            className="p-1 rounded-md text-gray-500 hover:text-white transition-colors"
           >
             <ChevronDownMini
               className={clx(
                 "transition-transform duration-200",
-                open ? "-rotate-180 text-ui-fg-base" : ""
+                open ? "-rotate-180 text-white" : ""
               )}
             />
           </button>
@@ -115,7 +110,7 @@ const CategoryItem = ({
             open ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
           )}
         >
-          <ul className="flex flex-col mt-1 gap-y-1 border-l border-ui-border-base ml-2">
+          <ul className="flex flex-col mt-1 gap-y-1 border-l border-white/10 ml-2">
             {category.category_children.map((child) => (
               <CategoryItem key={child.id} category={child} depth={depth + 1} />
             ))}

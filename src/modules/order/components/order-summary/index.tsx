@@ -18,23 +18,23 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
   }
 
   return (
-    <div>
-      <h2 className="text-base-semi">Order Summary</h2>
-      <div className="text-small-regular text-ui-fg-base my-2">
-        <div className="flex items-center justify-between text-base-regular text-ui-fg-base mb-2">
+    <div className="mt-4">
+      <h2 className="text-base-semi text-white mb-4">Order Summary</h2>
+      <div className="text-small-regular text-gray-400">
+        <div className="flex items-center justify-between text-base-regular text-gray-300 mb-3">
           <span>Subtotal</span>
           <span>{getAmount(order.subtotal)}</span>
         </div>
-        <div className="flex flex-col gap-y-1">
+        <div className="flex flex-col gap-y-2">
           {order.discount_total > 0 && (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between text-green-400">
               <span>Discount</span>
               <span>- {getAmount(order.discount_total)}</span>
             </div>
           )}
           {order.gift_card_total > 0 && (
-            <div className="flex items-center justify-between">
-              <span>Discount</span>
+            <div className="flex items-center justify-between text-green-400">
+              <span>Gift Card</span>
               <span>- {getAmount(order.gift_card_total)}</span>
             </div>
           )}
@@ -47,10 +47,13 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
             <span>{getAmount(order.tax_total)}</span>
           </div>
         </div>
-        <div className="h-px w-full border-b border-gray-200 border-dashed my-4" />
-        <div className="flex items-center justify-between text-base-regular text-ui-fg-base mb-2">
-          <span>Total</span>
-          <span>{getAmount(order.total)}</span>
+        
+        {/* Total - виділений блок */}
+        <div className="mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 sm:py-4 bg-[#b8ff2b]/10 border-t border-b border-[#b8ff2b]/20">
+          <div className="flex items-center justify-between">
+            <span className="text-white font-bold text-base sm:text-lg">Total</span>
+            <span className="text-[#b8ff2b] font-bold text-lg sm:text-xl">{getAmount(order.total)}</span>
+          </div>
         </div>
       </div>
     </div>

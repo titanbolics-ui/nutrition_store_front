@@ -1,5 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
-import { Button, Container } from "@medusajs/ui"
+import { Button } from "@medusajs/ui"
 import Checkbox from "@modules/common/components/checkbox"
 import Input from "@modules/common/components/input"
 import { mapKeys } from "lodash"
@@ -116,8 +116,8 @@ const ShippingAddress = ({
   return (
     <>
       {customer && (addressesInRegion?.length || 0) > 0 && (
-        <Container className="mb-6 flex flex-col gap-y-4 p-5">
-          <p className="text-small-regular">
+        <div className="mb-6 flex flex-col gap-y-4 p-5 bg-gray-900 border border-gray-800 rounded-lg">
+          <p className="text-small-regular text-gray-300">
             {`Hi ${customer.first_name}, do you want to use one of your saved addresses?`}
           </p>
           <div className="flex gap-3 items-end">
@@ -137,14 +137,14 @@ const ShippingAddress = ({
                 type="button"
                 variant="secondary"
                 onClick={handleUseSavedAddress}
-                className="whitespace-nowrap"
+                className="whitespace-nowrap bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
                 data-testid="use-saved-address-button"
               >
                 Use saved address
               </Button>
             )}
           </div>
-        </Container>
+        </div>
       )}
       <div className="grid grid-cols-2 gap-4">
         <Input

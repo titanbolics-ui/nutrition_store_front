@@ -14,21 +14,24 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
           return (
             <Container
               key={image.id}
-              className="relative aspect-square w-full overflow-hidden bg-ui-bg-subtle"
+              className="relative aspect-square w-full overflow-hidden bg-gray-900 rounded-xl border border-gray-800 p-4"
               id={image.id}
             >
               {!!image.url && (
-                <Image
-                  src={image.url}
-                  priority={index <= 2 ? true : false}
-                  className="absolute inset-0 rounded-rounded"
-                  alt={`Product image ${index + 1}`}
-                  fill
-                  sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-                  style={{
-                    objectFit: "cover",
-                  }}
-                />
+                <div className="relative w-full h-full bg-white/95 rounded-lg overflow-hidden shadow-inner">
+                  <Image
+                    src={image.url}
+                    priority={index <= 2 ? true : false}
+                    className="absolute inset-0 rounded-lg"
+                    alt={`Product image ${index + 1}`}
+                    fill
+                    sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
+                    style={{
+                      objectFit: "contain",
+                      padding: "1rem",
+                    }}
+                  />
+                </div>
               )}
             </Container>
           )

@@ -56,12 +56,12 @@ const ProductSpecs = ({ product }: ProductSpecsProps) => {
       {availableSpecs.map((spec) => (
         <div
           key={spec.key}
-          className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+          className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0"
         >
-          <span className="font-semibold text-ui-fg-base text-sm">
+          <span className="text-gray-400 text-sm">
             {spec.label}
           </span>
-          <span className="text-ui-fg-subtle text-sm">
+          <span className="text-white font-medium text-sm">
             {/* Додаємо toString(), про всяк випадок, якщо там число */}
             {specs[spec.key]?.toString()}
           </span>

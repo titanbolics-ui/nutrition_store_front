@@ -1,10 +1,10 @@
 import { Text } from "@medusajs/ui"
-import { listProducts } from "@lib/data/products"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
+import QuickAddButton from "./quick-add-button"
 
 export default async function ProductPreview({
   product,
@@ -15,34 +15,57 @@ export default async function ProductPreview({
   isFeatured?: boolean
   region: HttpTypes.StoreRegion
 }) {
-  // const pricedProduct = await listProducts({
-  //   regionId: region.id,
-  //   queryParams: { id: [product.id!] },
-  // }).then(({ response }) => response.products[0])
-
-  // if (!pricedProduct) {
-  //   return null
-  // }
-
   const { cheapestPrice } = getProductPrice({
     product,
   })
 
   return (
-    <LocalizedClientLink href={`/products/${product.handle}`} className="group">
-      <div data-testid="product-wrapper">
+    <LocalizedClientLink
+      href={`/products/${product.handle}`}
+      className="group block h-full"
+    >
+      <div
+        data-testid="product-wrapper"
+        className="h-full bg-[#111111] border border-gray-800 rounded-lg md:rounded-xl overflow-hidden md:hover:border-[#ccff00]/50 transition-all duration-300 shadow-lg md:hover:shadow-[#ccff00]/10 flex flex-col"
+      >
+        {/* IMAGE CONTAINER */}
+        <div className="relative p-2 sm:p-3 md:p-4 bg-gray-900/50 border-b border-gray-800 flex items-center justify-center aspect-square md:group-hover:bg-gray-800/50 transition-colors duration-300">
+          <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100 p-2 sm:p-3 md:p-4">
         <Thumbnail
           thumbnail={product.thumbnail}
           images={product.images}
           size="full"
           isFeatured={isFeatured}
-        />
-        <div className="flex txt-compact-medium mt-4 justify-between">
-          <Text className="text-ui-fg-subtle" data-testid="product-title">
-            {product.title}
-          </Text>
-          <div className="flex items-center gap-x-2">
-            {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
+              isContain
+              className="bg-transparent shadow-none p-0 rounded-none border-none h-full w-full md:hover:scale-110 transition-transform duration-500"
+            />
+          </div>
+        </div>
+
+        {/* INFO CONTAINER */}
+        <div className="p-3 sm:p-4 md:p-5 flex flex-col flex-grow justify-between gap-2 sm:gap-3 md:gap-4 bg-[#111111]">
+          <div>
+            <div className="text-[#ccff00]/70 text-[8px] sm:text-[10px] uppercase tracking-widest font-mono mb-0.5 sm:mb-1">
+              {product.collection?.title || "Spectrum Pharma"}
+            </div>
+            <Text
+              className="text-gray-200 text-xs sm:text-sm md:text-base font-bold leading-tight uppercase tracking-normal md:group-hover:text-[#ccff00] transition-colors line-clamp-3"
+              data-testid="product-title"
+            >
+              {product.title}
+            </Text>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-gray-800 pt-2 sm:pt-3 md:pt-4 mt-auto">
+            <div className="font-mono font-black text-base sm:text-lg md:text-xl tracking-tight drop-shadow-[0_0_8px_rgba(204,255,0,0.3)]">
+              {cheapestPrice && (
+                <PreviewPrice
+                  price={cheapestPrice}
+                  className="text-[#ccff00]"
+                />
+              )}
+            </div>
+            <QuickAddButton product={product} />
           </div>
         </div>
       </div>

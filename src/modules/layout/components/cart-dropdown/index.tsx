@@ -99,15 +99,17 @@ const CartDropdown = ({
         >
           <PopoverPanel
             static
-            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-white border-x border-b border-gray-200 w-[420px] text-ui-fg-base"
+            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-[#111111] border border-gray-800 w-[420px] text-white shadow-2xl rounded-b-lg"
             data-testid="nav-cart-dropdown"
           >
-            <div className="p-4 flex items-center justify-center">
-              <h3 className="text-large-semi">Cart</h3>
+            <div className="p-4 flex items-center justify-center border-b border-gray-800">
+              <h3 className="text-large-semi font-bold uppercase tracking-wider">
+                Cart
+              </h3>
             </div>
             {cartState && cartState.items?.length ? (
               <>
-                <div className="overflow-y-scroll max-h-[402px] px-4 grid grid-cols-1 gap-y-8 no-scrollbar p-px">
+                <div className="overflow-y-scroll max-h-[402px] px-4 grid grid-cols-1 gap-y-8 no-scrollbar p-px py-4">
                   {cartState.items
                     .sort((a, b) => {
                       return (a.created_at ?? "") > (b.created_at ?? "")
@@ -122,12 +124,14 @@ const CartDropdown = ({
                       >
                         <LocalizedClientLink
                           href={`/products/${item.product_handle}`}
-                          className="w-24"
+                          className="w-24 bg-white/5 rounded-lg overflow-hidden border border-gray-800"
                         >
                           <Thumbnail
                             thumbnail={item.thumbnail}
                             images={item.variant?.product?.images}
                             size="square"
+                            className="bg-transparent"
+                            isContain
                           />
                         </LocalizedClientLink>
                         <div className="flex flex-col justify-between flex-1">
@@ -138,23 +142,27 @@ const CartDropdown = ({
                                   <LocalizedClientLink
                                     href={`/products/${item.product_handle}`}
                                     data-testid="product-link"
+                                    className="hover:text-[#ccff00] transition-colors font-bold"
                                   >
                                     {item.title}
                                   </LocalizedClientLink>
                                 </h3>
-                                <LineItemOptions
-                                  variant={item.variant}
-                                  data-testid="cart-item-variant"
-                                  data-value={item.variant}
-                                />
+                                <div className="text-gray-400">
+                                  <LineItemOptions
+                                    variant={item.variant}
+                                    data-testid="cart-item-variant"
+                                    data-value={item.variant}
+                                  />
+                                </div>
                                 <span
                                   data-testid="cart-item-quantity"
                                   data-value={item.quantity}
+                                  className="text-gray-400 text-small-regular"
                                 >
                                   Quantity: {item.quantity}
                                 </span>
                               </div>
-                              <div className="flex justify-end">
+                              <div className="flex justify-end text-[#ccff00] font-mono font-bold">
                                 <LineItemPrice
                                   item={item}
                                   style="tight"
@@ -165,7 +173,7 @@ const CartDropdown = ({
                           </div>
                           <DeleteButton
                             id={item.id}
-                            className="mt-1"
+                            className="mt-1 text-gray-500 hover:text-white transition-colors"
                             data-testid="cart-item-remove-button"
                           >
                             Remove
@@ -174,14 +182,16 @@ const CartDropdown = ({
                       </div>
                     ))}
                 </div>
-                <div className="p-4 flex flex-col gap-y-4 text-small-regular">
-                  <div className="flex items-center justify-between">
-                    <span className="text-ui-fg-base font-semibold">
+                <div className="p-4 flex flex-col gap-y-4 text-small-regular border-t border-gray-800 bg-[#111111]">
+                  <div className="flex items-center justify-between text-white">
+                    <span className="font-semibold">
                       Subtotal{" "}
-                      <span className="font-normal">(excl. taxes)</span>
+                      <span className="font-normal text-gray-400">
+                        (excl. taxes)
+                      </span>
                     </span>
                     <span
-                      className="text-large-semi"
+                      className="text-large-semi text-[#ccff00] font-mono font-bold"
                       data-testid="cart-subtotal"
                       data-value={subtotal}
                     >
@@ -193,7 +203,7 @@ const CartDropdown = ({
                   </div>
                   <LocalizedClientLink href="/cart" passHref>
                     <Button
-                      className="w-full"
+                      className="w-full bg-white text-black hover:bg-gray-200 font-bold uppercase tracking-wider border-none"
                       size="large"
                       data-testid="go-to-cart-button"
                     >
@@ -205,15 +215,22 @@ const CartDropdown = ({
             ) : (
               <div>
                 <div className="flex py-16 flex-col gap-y-4 items-center justify-center">
-                  <div className="bg-gray-900 text-small-regular flex items-center justify-center w-6 h-6 rounded-full text-white">
+                  <div className="bg-[#ccff00] text-small-regular flex items-center justify-center w-6 h-6 rounded-full text-black font-bold">
                     <span>0</span>
                   </div>
-                  <span>Your shopping bag is empty.</span>
+                  <span className="text-gray-400">
+                    Your shopping bag is empty.
+                  </span>
                   <div>
                     <LocalizedClientLink href="/store">
                       <>
                         <span className="sr-only">Go to all products page</span>
-                        <Button onClick={close}>Explore products</Button>
+                        <Button
+                          onClick={close}
+                          className="bg-white text-black hover:bg-gray-200 font-bold uppercase tracking-wider border-none"
+                        >
+                          Explore products
+                        </Button>
                       </>
                     </LocalizedClientLink>
                   </div>
