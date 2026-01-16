@@ -18,7 +18,7 @@ const ItemsPreviewTemplate = ({ cart }: ItemsTemplateProps) => {
   return (
     <div
       className={clx(
-        "border border-gray-800 rounded-xl overflow-hidden bg-gray-900/50 p-4 sm:p-5",
+        "border border-gray-800 rounded-xl overflow-hidden bg-gray-900/50 p-1 sm:p-2",
         {
           "pl-[1px] overflow-y-scroll overflow-x-hidden no-scrollbar max-h-[420px]":
             hasOverflow,
