@@ -28,6 +28,7 @@
     "lodash": "^4.17.21",
     "lucide-react": "^0.561.0",
     "next": "^16.0.10",
+    "nextjs-toploader": "^3.9.17",
     "pg": "^8.11.3",
     "posthog-js": "^1.309.1",
     "posthog-node": "^5.17.4",
