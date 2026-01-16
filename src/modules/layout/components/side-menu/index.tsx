@@ -11,7 +11,7 @@ import { HttpTypes } from "@medusajs/types"
 
 // Main product categories
 const ProductCategories = [
-  { name: "INJECTABLES", href: "/categories/injectables" },
+  { name: "INJECTABLES", href: "/categories/injectable-steroids" },
   { name: "ORAL STEROIDS", href: "/categories/oral-steroids" },
   { name: "PEPTIDES", href: "/categories/peptides" },
   { name: "HGH", href: "/categories/hgh" },
