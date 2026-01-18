@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
 import { useRouter } from "next/navigation"
+import { useFlyToCart } from "@lib/context/fly-to-cart-context"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -35,6 +36,8 @@ export default function ProductActions({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { triggerFlyToCart } = useFlyToCart()
+  const addToCartButtonRef = useRef<HTMLButtonElement>(null)
 
   const [options, setOptions] = useState<Record<string, string | undefined>>({})
   const [isAdding, setIsAdding] = useState(false)
@@ -167,10 +170,18 @@ export default function ProductActions({
   const inView = useIntersection(actionsRef, "0px")
 
   // Add the selected variant to the cart with specified quantity
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (buttonElement?: HTMLElement) => {
     if (!selectedVariant?.id) return null
 
     setIsAdding(true)
+
+    // Trigger fly-to-cart animation
+    const thumbnail = product.thumbnail || product.images?.[0]?.url
+    if (buttonElement && thumbnail) {
+      triggerFlyToCart(thumbnail, buttonElement)
+      // Small delay to let animation start before heavy API call
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
 
     await addToCart({
       variantId: selectedVariant.id,
@@ -297,7 +308,8 @@ export default function ProductActions({
           </div>
 
           <Button
-            onClick={handleAddToCart}
+            ref={addToCartButtonRef}
+            onClick={(e) => handleAddToCart(e.currentTarget as HTMLElement)}
             disabled={
               !inStock ||
               !selectedVariant ||

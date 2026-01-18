@@ -17,7 +17,7 @@ type MobileActionsProps = {
   options: Record<string, string | undefined>
   updateOptions: (title: string, value: string) => void
   inStock?: boolean
-  handleAddToCart: () => void
+  handleAddToCart: (buttonElement?: HTMLElement) => void
   isAdding?: boolean
   show: boolean
   optionsDisabled: boolean
@@ -153,7 +153,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                   </button>
                 </div>
                 <Button
-                  onClick={handleAddToCart}
+                  onClick={(e) => handleAddToCart(e.currentTarget as HTMLElement)}
                   disabled={!inStock || !variant || !isValidVariant}
                   className="flex-1 bg-[#ccff00] text-black font-bold hover:bg-[#b8e600] border-none shadow-[0_0_20px_rgba(204,255,0,0.3)] disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none"
                   isLoading={isAdding}

@@ -2,8 +2,9 @@
 
 import { addToCart } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { useFlyToCart } from "@lib/context/fly-to-cart-context"
 
 type QuickAddButtonProps = {
   product: HttpTypes.StoreProduct
@@ -14,6 +15,8 @@ export default function QuickAddButton({ product }: QuickAddButtonProps) {
   const [showSuccess, setShowSuccess] = useState(false)
   const countryCode = useParams().countryCode as string
   const router = useRouter()
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const { triggerFlyToCart } = useFlyToCart()
 
   // Check if product has a simple variant (single option with single value, or just one variant)
   const isSimple = 
@@ -35,6 +38,12 @@ export default function QuickAddButton({ product }: QuickAddButtonProps) {
     // Simple product - add to cart directly
     setIsAdding(true)
     
+    // Trigger fly animation
+    const thumbnail = product.thumbnail || product.images?.[0]?.url
+    if (buttonRef.current && thumbnail) {
+      triggerFlyToCart(thumbnail, buttonRef.current)
+    }
+    
     try {
       await addToCart({
         variantId: firstVariant.id,
@@ -52,9 +61,14 @@ export default function QuickAddButton({ product }: QuickAddButtonProps) {
 
   return (
     <button
+      ref={buttonRef}
       onClick={handleClick}
       disabled={isAdding}
-      className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full border border-gray-600 bg-transparent flex items-center justify-center text-white hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] transition-all duration-300 shadow-lg hover:shadow-[0_0_15px_rgba(204,255,0,0.4)] disabled:opacity-50 disabled:cursor-wait"
+      className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full border flex items-center justify-center transition-all duration-300 shadow-lg disabled:cursor-wait ${
+        showSuccess 
+          ? "bg-[#ccff00] border-[#ccff00] text-black" 
+          : "border-gray-600 bg-transparent text-white hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] hover:shadow-[0_0_15px_rgba(204,255,0,0.4)]"
+      }`}
     >
       {isAdding ? (
         <svg
@@ -84,7 +98,7 @@ export default function QuickAddButton({ product }: QuickAddButtonProps) {
           viewBox="0 0 24 24"
           strokeWidth={2.5}
           stroke="currentColor"
-          className="w-4 h-4 sm:w-5 sm:h-5 text-[#ccff00]"
+          className="w-4 h-4 sm:w-5 sm:h-5"
         >
           <path
             strokeLinecap="round"
@@ -93,18 +107,19 @@ export default function QuickAddButton({ product }: QuickAddButtonProps) {
           />
         </svg>
       ) : (
+        // Cart icon instead of +
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
-          strokeWidth={2.5}
+          strokeWidth={2}
           stroke="currentColor"
           className="w-4 h-4 sm:w-5 sm:h-5"
         >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M12 4.5v15m7.5-7.5h-15"
+            d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
           />
         </svg>
       )}
