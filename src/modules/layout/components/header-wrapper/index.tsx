@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useFlyToCart } from "@lib/context/fly-to-cart-context"
 
 interface HeaderWrapperProps {
   children: React.ReactNode
@@ -10,6 +11,7 @@ export default function HeaderWrapper({ children }: HeaderWrapperProps) {
   const [isVisible, setIsVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   const ticking = useRef(false)
+  const { isAnimating } = useFlyToCart()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,10 +50,13 @@ export default function HeaderWrapper({ children }: HeaderWrapperProps) {
     }
   }, [lastScrollY])
 
+  // Force show header when fly-to-cart animation is active
+  const shouldShow = isVisible || isAnimating
+
   return (
     <div
       className={`fixed top-0 inset-x-0 z-50 transition-transform duration-300 ease-in-out ${
-        isVisible ? "translate-y-0" : "-translate-y-full"
+        shouldShow ? "translate-y-0" : "-translate-y-full"
       }`}
     >
       {children}

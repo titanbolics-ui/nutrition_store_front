@@ -2,6 +2,7 @@ import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import { PostHogProvider } from "./providers/posthog-provider"
 import { PostHogIdentifier } from "./providers/posthog-identifier"
+import { FlyToCartWrapper } from "./providers/fly-to-cart-wrapper"
 import NextTopLoader from "nextjs-toploader"
 import "styles/globals.css"
 
@@ -31,7 +32,9 @@ export default function RootLayout({
         />
         <PostHogProvider>
           <PostHogIdentifier />
-          <main className="relative min-h-screen">{children}</main>
+          <FlyToCartWrapper>
+            <main className="relative min-h-screen">{children}</main>
+          </FlyToCartWrapper>
         </PostHogProvider>
       </body>
     </html>

@@ -15,7 +15,8 @@ import LineItemPrice from "@modules/common/components/line-item-price"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "@modules/products/components/thumbnail"
 import { usePathname } from "next/navigation"
-import { Fragment, useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState, useCallback } from "react"
+import { useFlyToCart } from "@lib/context/fly-to-cart-context"
 
 const CartDropdown = ({
   cart: cartState,
@@ -26,6 +27,15 @@ const CartDropdown = ({
     undefined
   )
   const [cartDropdownOpen, setCartDropdownOpen] = useState(false)
+  const { setCartIconElement, isAnimating } = useFlyToCart()
+
+  // Use callback ref to register the cart icon element
+  const cartIconRefCallback = useCallback(
+    (node: HTMLDivElement | null) => {
+      setCartIconElement(node)
+    },
+    [setCartIconElement]
+  )
 
   const open = () => setCartDropdownOpen(true)
   const close = () => setCartDropdownOpen(false)
@@ -87,10 +97,17 @@ const CartDropdown = ({
             data-testid="nav-cart-link"
           >
             {/* Cart Icon */}
-            <div className="relative">
+            <div
+              ref={cartIconRefCallback}
+              className={`relative transition-transform ${
+                isAnimating ? "animate-pulse scale-125" : ""
+              }`}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6 transition-transform group-hover:scale-110"
+                className={`w-6 h-6 transition-transform group-hover:scale-110 ${
+                  isAnimating ? "text-[#ccff00]" : ""
+                }`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -104,9 +121,17 @@ const CartDropdown = ({
               </svg>
               {/* Badge */}
               {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-[#ccff00] text-black rounded-full px-1">
+                <span
+                  className={`absolute -top-2 -right-2 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-[#ccff00] text-black rounded-full px-1 transition-transform ${
+                    isAnimating ? "scale-125" : ""
+                  }`}
+                >
                   {totalItems > 99 ? "99+" : totalItems}
                 </span>
+              )}
+              {/* Pulse ring effect when item arrives */}
+              {isAnimating && (
+                <span className="absolute inset-0 rounded-full animate-ping bg-[#ccff00]/30" />
               )}
             </div>
             {/* Text for desktop */}
