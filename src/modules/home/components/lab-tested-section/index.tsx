@@ -109,13 +109,14 @@ const LabResults = () => {
         {/* Cards Grid */}
         <div className="grid grid-cols-1 small:grid-cols-3 gap-6">
           {LATEST_RESULTS.map((item, index) => (
-            <motion.div
+            <motion.button
               key={item.id}
+              onClick={() => setSelectedResult(item)}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group relative bg-gray-900/40 border border-white/10 p-6 hover:border-emerald-500/50 transition-colors duration-300 backdrop-blur-sm flex flex-col justify-between"
+              className="group relative bg-gray-900/40 border border-white/10 p-6 hover:border-emerald-500/50 transition-colors duration-300 backdrop-blur-sm flex flex-col justify-between text-left cursor-pointer"
             >
               <div>
                 {/* Card Header */}
@@ -151,24 +152,21 @@ const LabResults = () => {
                 </div>
               </div>
 
-              {/* Action Button (Trigger Modal) */}
+              {/* Footer */}
               <div className="pt-6 border-t border-white/5 flex justify-between items-center mt-auto">
                 <div className="text-xs text-gray-500 font-mono">
                   {item.date}
                 </div>
 
-                {/* Змінили кнопку на View Report */}
-                <button
-                  onClick={() => setSelectedResult(item)}
-                  className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider hover:text-emerald-400 transition-colors"
-                >
+                {/* View Report indicator */}
+                <span className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider group-hover:text-emerald-400 transition-colors">
                   View Report <Eye className="w-4 h-4" />
-                </button>
+                </span>
               </div>
 
               {/* Hover Glow */}
               <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            </motion.div>
+            </motion.button>
           ))}
         </div>
 
