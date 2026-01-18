@@ -8067,6 +8067,7 @@ __metadata:
     tailwindcss-radix: "npm:^2.8.0"
     typescript: "npm:^5.3.2"
     webpack: "npm:^5"
+    yet-another-react-lightbox: "npm:^3.28.0"
   languageName: unknown
   linkType: soft
 
@@ -10303,5 +10304,22 @@ __metadata:
   version: 5.0.0
   resolution: "yallist@npm:5.0.0"
   checksum: 10/1884d272d485845ad04759a255c71775db0fac56308764b4c77ea56a20d56679fad340213054c8c9c9c26fcfd4c4b2a90df993b7e0aaf3cdb73c618d1d1a802a
+  languageName: node
+  linkType: hard
+
+"yet-another-react-lightbox@npm:^3.28.0":
+  version: 3.28.0
+  resolution: "yet-another-react-lightbox@npm:3.28.0"
+  peerDependencies:
+    "@types/react": ^16 || ^17 || ^18 || ^19
+    "@types/react-dom": ^16 || ^17 || ^18 || ^19
+    react: ^16.8.0 || ^17 || ^18 || ^19
+    react-dom: ^16.8.0 || ^17 || ^18 || ^19
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    "@types/react-dom":
+      optional: true
+  checksum: 10/566d14cb96dfbf3364ee47caf3e78fc1f0b4d12b136a43c86748dd456f0fc8d71697815edbd2a7a237c1532510c452febae3a414ebe05c520090c1654cff8ed3
   languageName: node
   linkType: hard
