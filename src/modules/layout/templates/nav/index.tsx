@@ -35,13 +35,13 @@ export default async function Nav() {
                 COMPOUNDS
               </LocalizedClientLink>
               <LocalizedClientLink
-                href="/store"
+                href="/categories/peptides"
                 className="hover:text-[#ccff00] transition-colors duration-300"
               >
                 PEPTIDES
               </LocalizedClientLink>
               <LocalizedClientLink
-                href="/store"
+                href="/categories/hgh"
                 className="hover:text-[#ccff00] transition-colors duration-300"
               >
                 HGH

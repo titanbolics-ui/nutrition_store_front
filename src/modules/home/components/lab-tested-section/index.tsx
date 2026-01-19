@@ -25,7 +25,7 @@ const LATEST_RESULTS = [
     status: "PASS",
     imageSrc:
       "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/TestC.png",
-    pdfLink: "#",
+    pdfLink: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/TestC.png",
   },
   {
     id: 2,
@@ -37,7 +37,7 @@ const LATEST_RESULTS = [
     status: "PASS",
     imageSrc:
       "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/test%20e.jpg",
-    pdfLink: "#",
+    pdfLink: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/test%20e.jpg",
   },
   {
     id: 3,
@@ -49,7 +49,7 @@ const LATEST_RESULTS = [
     status: "PASS",
     imageSrc:
       "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/Test-oxan.png",
-    pdfLink: "#",
+    pdfLink: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/Test-oxan.png",
   },
 ]
 
@@ -224,15 +224,14 @@ const LabResults = () => {
                     VERIFIED BY JANOSHIK ANALYTICS
                   </span>
 
-                  {/* 3. Кнопка скачування */}
+                  {/* 3. Кнопка відкриття в новій вкладці */}
                   <a
                     href={selectedResult.pdfLink}
                     target="_blank"
-                    rel="noreferrer" // або rel="noopener noreferrer"
-                    download // Цей атрибут форсує скачування (якщо сервер дозволяє)
+                    rel="noopener noreferrer"
                     className="flex items-center gap-2 text-xs font-bold text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded transition-colors uppercase tracking-wider"
                   >
-                    Download PDF <Download className="w-4 h-4" />
+                    View Full Size <Download className="w-4 h-4" />
                   </a>
                 </div>
               </motion.div>

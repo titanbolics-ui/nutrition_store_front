@@ -13,32 +13,31 @@ import {
   FlaskConical,
 } from "lucide-react"
 
-// ---MOCK DATA TODO: Replace with actual data ---
+// Lab Results Data with real images
 const ALL_RESULTS = [
   {
     id: 1,
-    name: "Testosterone Cypionate 250",
+    name: "Testosterone Cypionate 250mg/ml",
     brand: "ZPHC",
     concentration: "242.53 mg/ml",
     date: "Jan 26, 2024",
-    batch: "Z10TC-01",
+    batch: "Z101TC-01",
     status: "PASS",
-    // TODO: Replace with actual image/pdf
     imageSrc:
-      "https://placehold.co/600x800/f3f4f6/111?text=Test+Cypionate+Report",
-    pdfLink: "#",
+      "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/TestC.png",
+    pdfLink: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/TestC.png",
   },
   {
     id: 2,
-    name: "Testosterone Enanthate 250",
+    name: "Testosterone Enanthate 250mg/ml",
     brand: "ZPHC",
     concentration: "241.69 mg/ml",
     date: "Jan 26, 2024",
-    batch: "Z10TE-01",
+    batch: "Z101TE-01",
     status: "PASS",
     imageSrc:
-      "https://placehold.co/600x800/f3f4f6/111?text=Test+Enanthate+Report",
-    pdfLink: "#",
+      "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/test%20e.jpg",
+    pdfLink: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/test%20e.jpg",
   },
   {
     id: 3,
@@ -46,32 +45,11 @@ const ALL_RESULTS = [
     brand: "ZPHC",
     concentration: "10.62 mg",
     date: "Jan 26, 2024",
-    batch: "Z1010X-01",
+    batch: "Z101OX-01",
     status: "PASS",
-    imageSrc: "https://placehold.co/600x800/f3f4f6/111?text=Oxandrolone+Report",
-    pdfLink: "#",
-  },
-  {
-    id: 4,
-    name: "Dianabol 10mg",
-    brand: "Spectrum Pharma",
-    concentration: "10.1 mg",
-    date: "Feb 14, 2024",
-    batch: "SP-DB-002",
-    status: "PASS",
-    imageSrc: "https://placehold.co/600x800/f3f4f6/111?text=Dianabol+Report",
-    pdfLink: "#",
-  },
-  {
-    id: 5,
-    name: "Arimidex 1mg",
-    brand: "Spectrum Pharma",
-    concentration: "0.98 mg",
-    date: "Feb 14, 2024",
-    batch: "SP-AR-005",
-    status: "PASS",
-    imageSrc: "https://placehold.co/600x800/f3f4f6/111?text=Arimidex+Report",
-    pdfLink: "#",
+    imageSrc:
+      "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/Test-oxan.png",
+    pdfLink: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/onyxgenetics/Test-oxan.png",
   },
 ]
 
@@ -274,11 +252,10 @@ export default function LabResultsPage() {
                 <a
                   href={selectedResult.pdfLink}
                   target="_blank"
-                  rel="noreferrer"
-                  download
+                  rel="noopener noreferrer"
                   className="flex items-center gap-2 text-xs font-bold text-white bg-black hover:bg-emerald-600 px-5 py-3 transition-colors uppercase tracking-wider rounded-sm"
                 >
-                  Download PDF <Download className="w-4 h-4" />
+                  View Full Size <Download className="w-4 h-4" />
                 </a>
               </div>
             </motion.div>
