@@ -32,9 +32,25 @@ export function trackCheckoutEmailEntered(
   isGuest: boolean
 ) {
   if (typeof window !== "undefined" && (posthog as any).__loaded) {
+    // Ідентифікуємо користувача по email
+    if (isGuest) {
+      // Для гостей використовуємо email як distinct_id
+      posthog.identify(email, {
+        email: email,
+        is_guest: true,
+        cart_id: cartId,
+      })
+    } else {
+      // Для зареєстрованих користувачів просто оновлюємо email
+      posthog.setPersonProperties({
+        email: email,
+      })
+    }
+
+    // Записуємо подію про введення email
     posthog.capture("checkout_email_entered", {
       cart_id: cartId,
-      email: email, // PostHog automatically handles email for identify
+      email: email,
       is_guest: isGuest,
     })
   }
