@@ -10,6 +10,7 @@ import { OrderTracking } from "@modules/order/components/order-tracking"
 import ShippingDetails from "@modules/order/components/shipping-details"
 import PaymentDetails from "@modules/order/components/payment-details"
 import ChangellyWidget from "@modules/order/components/changelly-widget"
+import PaymentInstructions from "@modules/order/components/payment-instructions"
 import { HttpTypes } from "@medusajs/types"
 
 type OrderCompletedTemplateProps = {
@@ -48,6 +49,7 @@ export default async function OrderCompletedTemplate({
           <ShippingDetails order={order} />
           <PaymentDetails order={order} />
           <ChangellyWidget order={order} />
+          <PaymentInstructions order={order} />
           <Help />
         </div>
       </div>

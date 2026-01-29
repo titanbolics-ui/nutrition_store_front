@@ -2,13 +2,17 @@
 
 import { HttpTypes } from "@medusajs/types"
 import { isCardManual } from "@lib/constants"
-import { CreditCard } from "lucide-react"
+import { CreditCard, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react"
 
 type ChangellyWidgetProps = {
   order: HttpTypes.StoreOrder
 }
 
 const ChangellyWidget = ({ order }: ChangellyWidgetProps) => {
+  const [isClient, setIsClient] = useState(false)
+  const [showWidget, setShowWidget] = useState(false)
+
   const payment = order.payment_collections?.[0]?.payments?.[0]
   const providerId =
     payment?.provider_id ||
@@ -16,7 +20,18 @@ const ChangellyWidget = ({ order }: ChangellyWidgetProps) => {
     ""
 
   // Only show for Card Manual payments
-  if (!isCardManual(providerId)) {
+  const shouldShow = isCardManual(providerId)
+
+  // Delay widget load to avoid hydration issues and 425 errors
+  useEffect(() => {
+    setIsClient(true)
+    if (shouldShow) {
+      const timer = setTimeout(() => setShowWidget(true), 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [shouldShow])
+
+  if (!shouldShow) {
     return null
   }
 
@@ -37,6 +52,11 @@ const ChangellyWidget = ({ order }: ChangellyWidgetProps) => {
   const paymentId = order.id
 
   const widgetUrl = `https://widget.changelly.com?from=usd&to=btc&amount=${amountWithFee}&address=${btcAddress}&fromDefault=usd&toDefault=btc&merchant_id=${merchantId}&payment_id=${paymentId}&v=3`
+
+  // Don't render anything on server
+  if (!isClient) {
+    return null
+  }
 
   return (
     <div className="mt-8">
@@ -98,17 +118,26 @@ const ChangellyWidget = ({ order }: ChangellyWidgetProps) => {
           </p>
         </div>
         
-        <iframe
-          width="100%"
-          height="500"
-          frameBorder="0"
-          allow="camera"
-          src={widgetUrl}
-          className="bg-gray-900"
-          title="Changelly Bitcoin Payment Widget"
-        >
-          Can&apos;t load widget
-        </iframe>
+        {showWidget ? (
+          <iframe
+            width="100%"
+            height="500"
+            frameBorder="0"
+            allow="camera"
+            src={widgetUrl}
+            className="bg-gray-900"
+            title="Changelly Bitcoin Payment Widget"
+          >
+            Can&apos;t load widget
+          </iframe>
+        ) : (
+          <div className="h-[500px] bg-gray-900 flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-3" />
+              <p className="text-gray-400 text-sm">Loading payment widget...</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
