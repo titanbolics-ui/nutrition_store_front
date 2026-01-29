@@ -4,6 +4,7 @@ import {
   isCashApp,
   isCryptoManual,
   isPaypalManual,
+  isCardManual,
   isStripeLike,
 } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
@@ -58,6 +59,12 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     case isCashApp(providerId):
       return (
         <CashAppPaymentButton notReady={notReady} data-testid={dataTestId} />
+      )
+
+    // 5. CARD MANUAL
+    case isCardManual(providerId):
+      return (
+        <CardManualPaymentButton notReady={notReady} data-testid={dataTestId} />
       )
 
     default:
@@ -199,6 +206,57 @@ const CashAppPaymentButton = ({ notReady }: { notReady: boolean }) => {
       {!notReady && (
         <p className="text-[11px] text-green-700 mt-2 text-center font-medium bg-green-50 py-1 px-2 rounded">
           ⚡ Instant confirmation. Card accepted.
+        </p>
+      )}
+    </>
+  )
+}
+
+// COMPONENT FOR CARD MANUAL (Credit/Debit Card)
+const CardManualPaymentButton = ({
+  notReady,
+  "data-testid": dataTestId,
+}: {
+  notReady: boolean
+  "data-testid"?: string
+}) => {
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const onPaymentCompleted = async () => {
+    await placeOrder()
+      .catch((err) => {
+        setErrorMessage(err.message)
+      })
+      .finally(() => {
+        setSubmitting(false)
+      })
+  }
+
+  const handlePayment = () => {
+    setSubmitting(true)
+    onPaymentCompleted()
+  }
+
+  return (
+    <>
+      <Button
+        disabled={notReady}
+        isLoading={submitting}
+        onClick={handlePayment}
+        size="large"
+        className="w-full h-14 text-base font-bold uppercase tracking-wider bg-[#1A1A2E] hover:bg-[#16162A] text-white border-none transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+        data-testid={dataTestId}
+      >
+        Place Order & Pay with Card
+      </Button>
+      <ErrorMessage
+        error={errorMessage}
+        data-testid="card-manual-payment-error-message"
+      />
+      {!notReady && (
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          Card payment details will be sent to your email.
         </p>
       )}
     </>

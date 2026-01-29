@@ -1,0 +1,99 @@
+"use client"
+
+import { HttpTypes } from "@medusajs/types"
+import { isCardManual } from "@lib/constants"
+import { CreditCard } from "lucide-react"
+
+type ChangellyWidgetProps = {
+  order: HttpTypes.StoreOrder
+}
+
+const ChangellyWidget = ({ order }: ChangellyWidgetProps) => {
+  const payment = order.payment_collections?.[0]?.payments?.[0]
+  const providerId =
+    payment?.provider_id ||
+    order.payment_collections?.[0]?.payment_sessions?.[0]?.provider_id ||
+    ""
+
+  // Only show for Card Manual payments
+  if (!isCardManual(providerId)) {
+    return null
+  }
+
+  // Convert order total from cents to dollars
+  const amountInDollars = (order.total).toFixed(2)
+  
+  // Get BTC wallet address from environment variable
+  const btcAddress = process.env.NEXT_PUBLIC_BTC_WALLET_ADDRESS || ""
+  
+  // Merchant ID from the provided iframe
+  const merchantId = "m3Q63BcQ_D9lAdwu"
+  
+  // Use order ID as payment reference
+  const paymentId = order.id
+
+  const widgetUrl = `https://widget.changelly.com?from=usd&to=btc&amount=${amountInDollars}&address=${btcAddress}&fromDefault=usd&toDefault=btc&merchant_id=${merchantId}&payment_id=${paymentId}&v=3`
+
+  return (
+    <div className="mt-8">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-blue-500/10 rounded-lg">
+          <CreditCard className="w-6 h-6 text-blue-400" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-white">
+            Complete Your Payment
+          </h3>
+          <p className="text-sm text-gray-400">
+            Pay securely with your credit or debit card
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <span className="text-gray-400 text-sm">Total amount:</span>
+          <span className="text-2xl font-bold text-[#b8ff2b]">
+            ${amountInDollars} USD
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-blue-500/30 rounded-xl overflow-hidden shadow-lg shadow-blue-500/5">
+        <div className="bg-blue-500/10 px-4 py-3 border-b border-blue-500/20">
+          <p className="text-sm text-blue-300 font-medium flex items-center gap-2">
+            <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+            Secure payment powered by Changelly
+          </p>
+        </div>
+        
+        <iframe
+          width="100%"
+          height="500"
+          frameBorder="0"
+          allow="camera"
+          src={widgetUrl}
+          className="bg-gray-900"
+          title="Changelly Bitcoin Payment Widget"
+        >
+          Can&apos;t load widget
+        </iframe>
+      </div>
+
+      <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+        <p className="text-blue-400 text-sm font-medium mb-2">
+          ℹ️ How it works:
+        </p>
+        <ul className="text-xs text-gray-400 space-y-1 list-disc list-inside">
+          <li>Enter your card details in the secure widget above</li>
+          <li>Complete the payment process</li>
+          <li>Your order will be processed once payment is confirmed</li>
+          <li>You will receive a confirmation email shortly</li>
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+export default ChangellyWidget
+
