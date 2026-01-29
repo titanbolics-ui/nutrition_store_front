@@ -47,6 +47,10 @@ export const paymentInfoMap: Record<
   "pp_cash-app_cash-app": {
     title: "Cash App",
     icon: <CashApp />,
+  }, 
+  "pp_card-manual_card-manual": {
+    title: "Credit / Debit Card",
+    icon: <CreditCard />,
   },
 
   // Add more payment providers here
@@ -79,6 +83,9 @@ export const isManual = (providerId?: string) => {
   return isPaypalManual(providerId) || isCryptoManual(providerId)
 }
 
+export const isCardManual = (providerId?: string) => {
+  return providerId?.startsWith("pp_card-manual_card-manual")
+}
 // Add currencies that don't need to be divided by 100
 export const noDivisionCurrencies = [
   "krw",
