@@ -78,41 +78,59 @@ const PAYMENT_METHODS = [
     benefit: "Anonymous",
     className: "h-8 sm:h-10 w-auto",
   },
+  {
+    name: "Mastercard",
+    src: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/Mastercard-logo.svg",
+    benefit: "Mastercard",
+    className: "h-8 sm:h-10 w-auto",
+  },
+  {
+    name: "Visa",
+    src: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/Visa_Inc._logo.svg",
+    benefit: "Visa",
+    className: "h-8 sm:h-10 w-auto",
+  }
 ]
 
 export default function Footer() {
+  const scrollingMethods = [...PAYMENT_METHODS, ...PAYMENT_METHODS, ...PAYMENT_METHODS]
+
   return (
     <>
       {/* SECURE PAYMENTS SECTION */}
-      <section className="bg-black py-6 sm:py-10 border-t border-white/5">
-        <div className="content-container">
-          <h3 className="text-center text-xs font-bold tracking-[0.3em] text-gray-500 uppercase mb-6 sm:mb-8">
+      <section className="bg-black py-6 sm:py-10 border-t border-white/5 overflow-hidden">
+        <div className="w-full">
+          <h3 className="text-center text-xs font-bold tracking-[0.3em] text-gray-500 uppercase mb-8">
             Secure Payments
           </h3>
-          <div className="flex justify-center items-center gap-6 sm:gap-12 lg:gap-20">
-            {PAYMENT_METHODS.map((method) => (
-              <div
-                key={method.name}
-                className="flex flex-col items-center gap-2"
-              >
-                <div className="relative h-8 sm:h-10 flex items-center justify-center">
-                  {method.icon ? (
-                    <div className="text-white">
-                      <method.icon />
-                    </div>
-                  ) : (
-                    <img
-                      src={method.src}
-                      alt={method.name}
-                      className={`${method.className} object-contain`}
-                    />
-                  )}
+          
+          {/* Container for scrolling methods */}
+          <div className="relative flex overflow-x-hidden">
+            <div className="animate-marquee flex items-center gap-12 sm:gap-20">
+              {scrollingMethods.map((method, index) => (
+                <div
+                  key={`${method.name}-${index}`}
+                  className="flex flex-col items-center gap-3 min-w-[100px] sm:min-w-[150px]"
+                >
+                  <div className="relative h-8 sm:h-10 flex items-center justify-center  opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                    {method.icon ? (
+                      <div className="text-white">
+                        <method.icon />
+                      </div>
+                    ) : (
+                      <img
+                        src={method.src}
+                        alt={method.name}
+                        className={`${method.className} object-contain`}
+                      />
+                    )}
+                  </div>
+                  <span className="text-[9px] sm:text-[10px] text-gray-600 uppercase tracking-widest font-bold whitespace-nowrap">
+                    {method.benefit}
+                  </span>
                 </div>
-                <span className="text-[9px] sm:text-[10px] text-grey uppercase tracking-wide font-bold">
-                  {method.benefit}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
