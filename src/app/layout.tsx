@@ -5,6 +5,7 @@ import { PostHogIdentifier } from "./providers/posthog-identifier"
 import { FlyToCartWrapper } from "./providers/fly-to-cart-wrapper"
 import NextTopLoader from "nextjs-toploader"
 import "styles/globals.css"
+import { Suspense } from "react"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
@@ -31,7 +32,9 @@ export default function RootLayout({
           shadow="0 0 10px #ccff00, 0 0 5px #ccff00"
         />
         <PostHogProvider>
+        <Suspense fallback={null}>
           <PostHogIdentifier />
+        </Suspense>
           <FlyToCartWrapper>
             <main className="relative min-h-screen">{children}</main>
           </FlyToCartWrapper>
