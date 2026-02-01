@@ -5,6 +5,7 @@ import { HttpTypes } from "@medusajs/types"
 import { useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useFlyToCart } from "@lib/context/fly-to-cart-context"
+import posthog from "posthog-js"
 
 type QuickAddButtonProps = {
   product: HttpTypes.StoreProduct
@@ -50,6 +51,15 @@ export default function QuickAddButton({ product }: QuickAddButtonProps) {
         quantity: 1,
         countryCode,
       })
+
+      if (typeof window !== "undefined" && (posthog as any).__loaded) {
+        posthog.capture("product_added_to_cart", {
+          product_id: product.id,
+          product_name: product.title,
+          product_quantity: 1,
+        })
+      }
+      
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 1500)
     } catch (error) {

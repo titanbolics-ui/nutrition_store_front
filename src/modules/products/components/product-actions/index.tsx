@@ -13,6 +13,7 @@ import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
 import { useRouter } from "next/navigation"
 import { useFlyToCart } from "@lib/context/fly-to-cart-context"
+import posthog from "posthog-js"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -188,6 +189,14 @@ export default function ProductActions({
       quantity: quantity, // Use quantity from state instead of hardcoded 1
       countryCode,
     })
+
+    if (typeof window !== "undefined" && (posthog as any).__loaded) {
+      posthog.capture("product_added_to_cart", {
+        product_id: product.id,
+        product_name: product.title,
+        product_quantity: quantity,
+      })
+    }
 
     setIsAdding(false)
   }
