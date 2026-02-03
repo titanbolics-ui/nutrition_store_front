@@ -4,7 +4,7 @@ import React, { useContext, useMemo, type JSX } from "react"
 
 import Radio from "@modules/common/components/radio"
 
-import { isCashApp, isManual } from "@lib/constants"
+import { isCardManual, isCashApp, isManual } from "@lib/constants"
 import SkeletonCardDetails from "@modules/skeletons/components/skeleton-card-details"
 import { CardElement } from "@stripe/react-stripe-js"
 import { StripeCardElementOptions } from "@stripe/stripe-js"
@@ -30,6 +30,9 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
 
   const isCashAppProvider = isCashApp(paymentProviderId)
 
+  const isCardManualProvider = isCardManual(paymentProviderId)
+  console.log("isCardManualProvider", isCardManualProvider)
+
   return (
     <RadioGroupOption
       key={paymentProviderId}
@@ -38,6 +41,11 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
       className={clx(
         "flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-xl px-8 mb-2 transition-all duration-200 focus:outline-none",
         {
+
+          // Стилі для карт вручну
+          "border-blue-500 bg-blue-900/5 ring-1 ring-blue-500":
+          isCardManualProvider && selectedPaymentOptionId === paymentProviderId,
+
           // Стилі для звичайних методів
           "border-gray-700 bg-gray-900 hover:border-gray-500":
             !isCashAppProvider && selectedPaymentOptionId !== paymentProviderId,
@@ -71,7 +79,21 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
                   Fastest
                 </span>
               )}
+
+              {/* Бейдж для карт вручну */}
+              {isCardManualProvider && (
+                <span className="bg-blue-500 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ml-2">
+                  Secure Bridge
+                </span>
+              )}
             </Text>
+
+            {/* Підзаголовок для Картки */}
+            {isCardManualProvider && (
+              <Text className="text-[11px] text-gray-400 mt-0.5">
+                Bank-safe anonymous processing
+              </Text>
+            )}
 
             {/* Підзаголовок для Cash App (видимий завжди) */}
             {isCashAppProvider && (
@@ -86,10 +108,27 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
           )}
         </div>
 
-        <span className="justify-self-end text-white">
-          {paymentInfoMap[paymentProviderId]?.icon}
-        </span>
-      </div>
+          <span className="justify-self-end text-white">
+            {paymentInfoMap[paymentProviderId]?.icon}
+          </span>
+        </div>
+
+        {/* 🔵 СИНІЙ БЛОК ІНСТРУКЦІЇ ДЛЯ КАРТКИ (Знімаємо заперечення) */}
+        {isCardManualProvider && selectedPaymentOptionId === paymentProviderId && (
+        <div className="mt-3 pt-3 border-t border-blue-500/30">
+          <div className="bg-gray-900 p-3 rounded border border-blue-800 shadow-sm">
+            <p className="text-[12px] text-blue-400 font-medium mb-1">
+              🛡️ Secure Payment Protocol:
+            </p>
+            <ul className="list-disc list-inside text-[11px] text-gray-400 space-y-1 pl-1">
+              <li>Uses a secure Card-to-Crypto bridge for anonymity.</li>
+              <li>Your bank will only see a standard digital purchase.</li>
+              <li>First-time setup may require a quick 1-minute ID check.</li>
+              <li><span className="text-white italic">Need a no-ID route? Choose PayPal/Cash method instead.</span></li>
+            </ul>
+          </div>
+        </div>
+      )}
 
       {/* 🟢 ЗЕЛЕНИЙ БЛОК ІНСТРУКЦІЇ (Тільки коли вибрано Cash App) */}
       {isCashAppProvider && selectedPaymentOptionId === paymentProviderId && (
