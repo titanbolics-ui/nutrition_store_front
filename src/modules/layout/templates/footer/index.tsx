@@ -77,24 +77,10 @@ const PAYMENT_METHODS = [
     src: "https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg",
     benefit: "Anonymous",
     className: "h-8 sm:h-10 w-auto",
-  },
-  {
-    name: "Mastercard",
-    src: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/Mastercard-logo.svg",
-    benefit: "Mastercard",
-    className: "h-8 sm:h-10 w-auto",
-  },
-  {
-    name: "Visa",
-    src: "https://pub-180ab5eb49854df5a790e2b99c1c0be9.r2.dev/Visa_Inc._logo.svg",
-    benefit: "Visa",
-    className: "h-8 sm:h-10 w-auto",
   }
 ]
 
 export default function Footer() {
-  const scrollingMethods = [...PAYMENT_METHODS, ...PAYMENT_METHODS, ...PAYMENT_METHODS]
-
   return (
     <>
       {/* SECURE PAYMENTS SECTION */}
@@ -104,33 +90,31 @@ export default function Footer() {
             Secure Payments
           </h3>
           
-          {/* Container for scrolling methods */}
-          <div className="relative flex overflow-x-hidden">
-            <div className="animate-marquee flex items-center gap-12 sm:gap-20">
-              {scrollingMethods.map((method, index) => (
+          {/* Static payment methods */}
+          <div className="grid grid-cols-1 xsmall:grid-cols-3 gap-6 sm:gap-10 place-items-center max-w-3xl mx-auto px-4">
+              {PAYMENT_METHODS.map((method) => (
                 <div
-                  key={`${method.name}-${index}`}
-                  className="flex flex-col items-center gap-3 min-w-[100px] sm:min-w-[150px]"
+                  key={method.name}
+                  className="flex flex-col items-center gap-3 w-full min-w-0"
                 >
-                  <div className="relative h-8 sm:h-10 flex items-center justify-center  opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                  <div className="relative h-8 sm:h-10 w-full max-w-[140px] flex items-center justify-center opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
                     {method.icon ? (
-                      <div className="text-white">
+                      <div className="text-white w-full flex justify-center">
                         <method.icon />
                       </div>
                     ) : (
                       <img
                         src={method.src}
                         alt={method.name}
-                        className={`${method.className} object-contain`}
+                        className={`${method.className} object-contain max-w-full`}
                       />
                     )}
                   </div>
-                  <span className="text-[9px] sm:text-[10px] text-gray-600 uppercase tracking-widest font-bold whitespace-nowrap">
+                  <span className="text-[9px] sm:text-[10px] text-gray-600 uppercase tracking-widest font-bold text-center leading-tight">
                     {method.benefit}
                   </span>
                 </div>
               ))}
-            </div>
           </div>
         </div>
       </section>
