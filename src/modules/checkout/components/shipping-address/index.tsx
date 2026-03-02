@@ -1,22 +1,25 @@
 import { HttpTypes } from "@medusajs/types"
-import { Button } from "@medusajs/ui"
 import Checkbox from "@modules/common/components/checkbox"
 import Input from "@modules/common/components/input"
 import { mapKeys } from "lodash"
 import React, { useEffect, useMemo, useState } from "react"
-import AddressSelect from "../address-select"
 import CountrySelect from "../country-select"
+import compareAddresses from "@lib/util/compare-addresses"
 
 const ShippingAddress = ({
   customer,
   cart,
   checked,
   onChange,
+  saveAddress,
+  onToggleSaveAddress,
 }: {
   customer: HttpTypes.StoreCustomer | null
   cart: HttpTypes.StoreCart | null
   checked: boolean
   onChange: () => void
+  saveAddress: boolean
+  onToggleSaveAddress: () => void
 }) => {
   const [formData, setFormData] = useState<Record<string, any>>({
     "shipping_address.first_name": cart?.shipping_address?.first_name || "",
@@ -116,33 +119,58 @@ const ShippingAddress = ({
   return (
     <>
       {customer && (addressesInRegion?.length || 0) > 0 && (
-        <div className="mb-6 flex flex-col gap-y-4 p-5 bg-gray-900 border border-gray-800 rounded-lg">
-          <p className="text-small-regular text-gray-300">
-            {`Hi ${customer.first_name}, do you want to use one of your saved addresses?`}
+        <div className="mb-6 flex flex-col gap-y-3 p-4 bg-gray-900 border border-gray-800 rounded-lg">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+            Saved addresses
           </p>
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <AddressSelect
-                addresses={customer.addresses}
-                addressInput={
-                  mapKeys(formData, (_, key) =>
-                    key.replace("shipping_address.", "")
-                  ) as HttpTypes.StoreCartAddress
-                }
-                onSelect={setFormAddress}
-              />
-            </div>
-            {defaultAddress && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleUseSavedAddress}
-                className="whitespace-nowrap bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
-                data-testid="use-saved-address-button"
-              >
-                Use saved address
-              </Button>
-            )}
+          <div className="flex flex-col gap-2">
+            {addressesInRegion!.map((address) => {
+              const currentInput = mapKeys(formData, (_, key) =>
+                key.replace("shipping_address.", "")
+              ) as HttpTypes.StoreCartAddress
+              const isActive = compareAddresses(address, currentInput)
+
+              return (
+                <button
+                  key={address.id}
+                  type="button"
+                  onClick={() =>
+                    setFormAddress(
+                      address as HttpTypes.StoreCartAddress,
+                      customer.email
+                    )
+                  }
+                  className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${
+                    isActive
+                      ? "border-[#ccff00]/50 bg-[#ccff00]/5 text-white"
+                      : "border-gray-700 bg-gray-800/50 text-gray-300 hover:border-gray-600 hover:bg-gray-800"
+                  }`}
+                  data-testid="saved-address-button"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-semibold text-white">
+                        {address.first_name} {address.last_name}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {address.address_1}
+                        {address.address_2 ? `, ${address.address_2}` : ""}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {address.postal_code}, {address.city}
+                        {address.province ? `, ${address.province}` : ""}{" "}
+                        {address.country_code?.toUpperCase()}
+                      </span>
+                    </div>
+                    {isActive && (
+                      <span className="shrink-0 mt-0.5 text-[10px] font-bold uppercase tracking-wider text-[#ccff00] bg-[#ccff00]/10 px-2 py-0.5 rounded">
+                        Selected
+                      </span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
@@ -218,7 +246,23 @@ const ShippingAddress = ({
           data-testid="shipping-province-input"
         />
       </div>
-      <div className="my-8">
+      <div className="my-6 flex flex-col gap-3">
+        {customer && (
+          <>
+            <input
+              type="hidden"
+              name="save_address"
+              value={saveAddress ? "on" : "off"}
+            />
+            <Checkbox
+              label="Save this address to my address book"
+              name="save_address_display"
+              checked={saveAddress}
+              onChange={onToggleSaveAddress}
+              data-testid="save-address-checkbox"
+            />
+          </>
+        )}
         <Checkbox
           label="Billing address same as shipping address"
           name="same_as_billing"

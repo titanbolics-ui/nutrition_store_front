@@ -657,19 +657,21 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
       throw new Error("No existing cart found when setting addresses")
     }
 
+    const shippingAddress = {
+      first_name: formData.get("shipping_address.first_name"),
+      last_name: formData.get("shipping_address.last_name"),
+      address_1: formData.get("shipping_address.address_1"),
+      address_2: "",
+      company: formData.get("shipping_address.company"),
+      postal_code: formData.get("shipping_address.postal_code"),
+      city: formData.get("shipping_address.city"),
+      country_code: formData.get("shipping_address.country_code"),
+      province: formData.get("shipping_address.province"),
+      phone: formData.get("shipping_address.phone"),
+    }
+
     const data = {
-      shipping_address: {
-        first_name: formData.get("shipping_address.first_name"),
-        last_name: formData.get("shipping_address.last_name"),
-        address_1: formData.get("shipping_address.address_1"),
-        address_2: "",
-        company: formData.get("shipping_address.company"),
-        postal_code: formData.get("shipping_address.postal_code"),
-        city: formData.get("shipping_address.city"),
-        country_code: formData.get("shipping_address.country_code"),
-        province: formData.get("shipping_address.province"),
-        phone: formData.get("shipping_address.phone"),
-      },
+      shipping_address: shippingAddress,
       email: formData.get("email"),
     } as any
 
@@ -690,6 +692,24 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
         phone: formData.get("billing_address.phone"),
       }
     await updateCart(data)
+
+    // Save address to customer's address book if requested
+    if (formData.get("save_address") === "on") {
+      try {
+        const headers = await getAuthHeaders()
+        if (headers && Object.keys(headers).length > 0) {
+          await sdk.store.customer.createAddress(
+            shippingAddress as HttpTypes.StoreCreateCustomerAddress,
+            {},
+            headers
+          )
+          const customerCacheTag = await getCacheTag("customers")
+          revalidateTag(customerCacheTag)
+        }
+      } catch {
+        // Silently ignore — address save failure should not block checkout
+      }
+    }
   } catch (e: any) {
     return e.message
   }
