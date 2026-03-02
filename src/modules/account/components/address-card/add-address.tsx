@@ -15,9 +15,11 @@ import { addCustomerAddress } from "@lib/data/customer"
 const AddAddress = ({
   region,
   addresses,
+  countryCode,
 }: {
   region: HttpTypes.StoreRegion
   addresses: HttpTypes.StoreCustomerAddress[]
+  countryCode?: string
 }) => {
   const [successState, setSuccessState] = useState(false)
   const { state, open, close: closeModal } = useToggleState(false)
@@ -126,6 +128,7 @@ const AddAddress = ({
                 name="country_code"
                 required
                 autoComplete="country"
+                defaultValue={countryCode}
                 data-testid="country-select"
               />
               <Input

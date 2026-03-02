@@ -37,6 +37,10 @@ const Addresses = ({
       : true
   )
 
+  const { state: saveAddress, toggle: toggleSaveAddress } = useToggleState(
+    !!customer
+  )
+
   const handleEdit = () => {
     router.push(pathname + "?step=address")
   }
@@ -96,6 +100,8 @@ const Addresses = ({
               checked={sameAsBilling}
               onChange={toggleSameAsBilling}
               cart={cart}
+              saveAddress={saveAddress}
+              onToggleSaveAddress={toggleSaveAddress}
             />
 
             {!sameAsBilling && (

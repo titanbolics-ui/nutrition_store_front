@@ -32,7 +32,7 @@ export default async function Addresses(props: {
           like. Saving your addresses will make them available during checkout.
         </p>
       </div>
-      <AddressBook customer={customer} region={region} />
+      <AddressBook customer={customer} region={region} countryCode={countryCode} />
     </div>
   )
 }
