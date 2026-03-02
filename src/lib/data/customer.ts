@@ -108,22 +108,38 @@ export async function login(_currentState: unknown, formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
 
+  // Step 1: Authenticate
   try {
-    await sdk.auth
-      .login("customer", "emailpass", { email, password })
-      .then(async (token) => {
-        await setAuthToken(token as string)
-        const customerCacheTag = await getCacheTag("customers")
-        revalidateTag(customerCacheTag)
-      })
+    const token = await sdk.auth.login("customer", "emailpass", { email, password })
+    if (typeof token !== "string" || !token) {
+      return "Login failed. Please try again."
+    }
+    await setAuthToken(token)
   } catch (error: any) {
     return error.toString()
   }
 
+  // Step 2: Verify customer record exists (auth identity may exist without a customer record)
+  try {
+    const headers = await getAuthHeaders()
+    await sdk.client.fetch<{ customer: HttpTypes.StoreCustomer }>(
+      `/store/customers/me`,
+      { method: "GET", headers }
+    )
+  } catch {
+    // Auth OK but no customer record — clean up token to avoid broken session
+    await removeAuthToken()
+    return "No account found for this email. Your account may have been removed. Please register a new account or contact support."
+  }
+
+  // Step 3: Revalidate and transfer cart
+  const customerCacheTag = await getCacheTag("customers")
+  revalidateTag(customerCacheTag)
+
   try {
     await transferCart()
-  } catch (error: any) {
-    return error.toString()
+  } catch {
+    // Non-critical, ignore
   }
 }
 
@@ -289,27 +305,52 @@ export async function resetPasswordConfirm(
   const password = formData.get("password") as string
   const token = formData.get("token") as string
   const email = formData.get("email") as string
+  const countryCode = formData.get("country_code") as string
 
   if (!password || !token || !email) {
     return { success: false, error: "Missing required fields" }
   }
 
+  const decodedEmail = decodeURIComponent(email)
+  const cc = countryCode || "us"
+
+  // Step 1: Update the password via the reset token
   try {
     await sdk.auth.updateProvider(
       "customer",
       "emailpass",
-      {
-        email: decodeURIComponent(email),
-        password,
-      },
+      { email: decodedEmail, password },
       token
     )
-
-    return { success: true, error: null }
   } catch (error: any) {
     return {
       success: false,
-      error: error.message || "Failed to reset password",
+      error:
+        error.message ||
+        "Failed to reset password. The link may have expired.",
     }
   }
+
+  // Step 2: Try to auto-login with the new password
+  try {
+    const loginResult = await sdk.auth.login("customer", "emailpass", {
+      email: decodedEmail,
+      password,
+    })
+
+    // sdk.auth.login returns a string JWT for emailpass provider
+    if (typeof loginResult === "string" && loginResult.length > 0) {
+      await setAuthToken(loginResult)
+      const customerCacheTag = await getCacheTag("customers")
+      revalidateTag(customerCacheTag)
+      // Logged in successfully — go straight to account
+      redirect(`/${cc}/account`)
+    }
+  } catch {
+    // Auto-login failed — that's OK, redirect to login page
+  }
+
+  // Step 3: Auto-login failed or returned unexpected value
+  // Redirect to account login page so user can login manually
+  redirect(`/${cc}/account?reset=success`)
 }

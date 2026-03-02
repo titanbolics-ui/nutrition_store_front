@@ -1,7 +1,7 @@
 "use client"
 
-import { useActionState, useEffect, useState } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useActionState, useState } from "react"
+import { useSearchParams, usePathname } from "next/navigation"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import Input from "@modules/common/components/input"
 import { SubmitButton } from "@modules/checkout/components/submit-button"
@@ -18,19 +18,13 @@ const ResetPasswordForm = () => {
   const [clientError, setClientError] = useState<string | null>(null)
 
   const searchParams = useSearchParams()
-  const router = useRouter()
+  const pathname = usePathname()
 
   const token = searchParams.get("token")
   const email = searchParams.get("email")
 
-  useEffect(() => {
-    if (state.success) {
-      const timer = setTimeout(() => {
-        router.push("/account")
-      }, 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [state.success, router])
+  // Extract countryCode from pathname: /us/reset-password → "us"
+  const countryCode = pathname.split("/")[1] || "us"
 
   const handleClientValidation = (e: React.FormEvent<HTMLFormElement>) => {
     setClientError(null)
@@ -51,8 +45,8 @@ const ResetPasswordForm = () => {
   if (!token || !email) {
     return (
       <div className="max-w-sm w-full flex flex-col items-center py-24">
-        <h1 className="text-large-semi uppercase mb-6">Invalid Link</h1>
-        <p className="text-center text-base-regular text-ui-fg-base mb-8">
+        <h1 className="text-large-semi uppercase mb-6 text-white">Invalid Link</h1>
+        <p className="text-center text-base-regular text-gray-400 mb-8">
           This password reset link is invalid or has expired. Please request a
           new password reset link.
         </p>
@@ -60,23 +54,10 @@ const ResetPasswordForm = () => {
     )
   }
 
-  if (state.success) {
-    return (
-      <div className="max-w-sm w-full flex flex-col items-center py-24">
-        <h1 className="text-large-semi uppercase mb-6">
-          Password Reset Successful
-        </h1>
-        <p className="text-center text-base-regular text-ui-fg-base mb-8">
-          Your password has been successfully reset. Redirecting to login...
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div className="max-w-sm w-full flex flex-col items-center py-24">
-      <h1 className="text-large-semi uppercase mb-6">Reset Password</h1>
-      <p className="text-center text-base-regular text-ui-fg-base mb-8">
+      <h1 className="text-large-semi uppercase mb-6 text-white">Reset Password</h1>
+      <p className="text-center text-base-regular text-gray-400 mb-8">
         Enter your new password below.
       </p>
 
@@ -85,9 +66,9 @@ const ResetPasswordForm = () => {
         action={formAction}
         onSubmit={handleClientValidation}
       >
-        {/* Hidden fields for context transfer to Server Action */}
         <input type="hidden" name="token" value={token} />
         <input type="hidden" name="email" value={email} />
+        <input type="hidden" name="country_code" value={countryCode} />
 
         <div className="flex flex-col w-full gap-y-2">
           <Input
@@ -110,10 +91,9 @@ const ResetPasswordForm = () => {
           />
         </div>
 
-        {/* Display errors (client or server) */}
-        {(clientError || state.error) && (
-          <div className="mt-2">
-            <ErrorMessage error={clientError || state.error} />
+        {(clientError || state?.error) && (
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <ErrorMessage error={clientError || state?.error} />
           </div>
         )}
 
