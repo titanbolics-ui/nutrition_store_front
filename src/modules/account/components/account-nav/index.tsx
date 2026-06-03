@@ -34,14 +34,14 @@ const AccountNav = ({
       <div className="small:hidden" data-testid="mobile-account-nav">
         {route !== `/${countryCode}/account` ? (
           <LocalizedClientLink
-            href="/account"
-            className="flex items-center gap-x-2 text-small-regular py-2"
+            href={route.includes("/orders/details") ? "/account/orders" : "/account"}
+            className="inline-flex items-center gap-2 px-4 py-3 text-sm font-medium text-[#b8ff2b]"
             data-testid="account-main-link"
           >
-            <>
-              <ChevronDown className="transform rotate-90" />
-              <span>Account</span>
-            </>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span>{route.includes("/orders/details") ? "All orders" : "Account"}</span>
           </LocalizedClientLink>
         ) : (
           <>

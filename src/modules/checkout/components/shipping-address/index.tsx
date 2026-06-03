@@ -21,6 +21,8 @@ const ShippingAddress = ({
   saveAddress: boolean
   onToggleSaveAddress: () => void
 }) => {
+  const [isExistingAddress, setIsExistingAddress] = useState(false)
+
   const [formData, setFormData] = useState<Record<string, any>>({
     "shipping_address.first_name": cart?.shipping_address?.first_name || "",
     "shipping_address.last_name": cart?.shipping_address?.last_name || "",
@@ -95,15 +97,23 @@ const ShippingAddress = ({
   }
 
   useEffect(() => {
-    // Ensure cart is not null and has a shipping_address before setting form data
     if (cart && cart.shipping_address) {
       setFormAddress(cart?.shipping_address, cart?.email)
     }
-
     if (cart && !cart.email && customer?.email) {
       setFormAddress(undefined, customer.email)
     }
-  }, [cart]) // Add cart as a dependency
+  }, [cart])
+
+  // Detect if current cart address matches a saved address
+  useEffect(() => {
+    if (cart?.shipping_address && addressesInRegion?.length) {
+      const matches = addressesInRegion.some((a) =>
+        compareAddresses(a as HttpTypes.StoreCartAddress, cart.shipping_address!)
+      )
+      setIsExistingAddress(matches)
+    }
+  }, [cart?.shipping_address, addressesInRegion])
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -114,6 +124,7 @@ const ShippingAddress = ({
       ...formData,
       [e.target.name]: e.target.value,
     })
+    setIsExistingAddress(false)
   }
 
   return (
@@ -134,12 +145,13 @@ const ShippingAddress = ({
                 <button
                   key={address.id}
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     setFormAddress(
                       address as HttpTypes.StoreCartAddress,
                       customer.email
                     )
-                  }
+                    setIsExistingAddress(true)
+                  }}
                   className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${
                     isActive
                       ? "border-[#ccff00]/50 bg-[#ccff00]/5 text-white"
@@ -252,15 +264,17 @@ const ShippingAddress = ({
             <input
               type="hidden"
               name="save_address"
-              value={saveAddress ? "on" : "off"}
+              value={isExistingAddress ? "off" : saveAddress ? "on" : "off"}
             />
-            <Checkbox
-              label="Save this address to my address book"
-              name="save_address_display"
-              checked={saveAddress}
-              onChange={onToggleSaveAddress}
-              data-testid="save-address-checkbox"
-            />
+            {!isExistingAddress && (
+              <Checkbox
+                label="Save this address to my address book"
+                name="save_address_display"
+                checked={saveAddress}
+                onChange={onToggleSaveAddress}
+                data-testid="save-address-checkbox"
+              />
+            )}
           </>
         )}
         <Checkbox

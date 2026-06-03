@@ -13,17 +13,17 @@ type ItemProps = {
 
 const Item = ({ item, currencyCode }: ItemProps) => {
   return (
-    <Table.Row className="w-full border-b border-gray-700/30 last:border-0" data-testid="product-row">
-      <Table.Cell className="py-2 sm:py-4 pl-2 sm:pl-4 pr-2 w-14 sm:w-24 align-top sm:align-middle">
-        <div className="flex w-10 h-10 sm:w-16 sm:h-16 aspect-square rounded-md overflow-hidden bg-gray-800">
+    <Table.Row className="w-full" data-testid="product-row">
+      <Table.Cell className="!p-2 w-auto align-middle">
+        <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-zinc-900 ring-1 ring-white/5">
           <Thumbnail thumbnail={item.thumbnail} size="square" />
         </div>
       </Table.Cell>
 
-      <Table.Cell className="text-left py-2 sm:py-4 px-0 align-top sm:align-middle">
-        <div className="flex flex-col gap-y-1 pr-2">
+      <Table.Cell className="text-left !py-2 !px-2 align-middle">
+        <div className="flex flex-col gap-y-0.5 min-w-0">
           <Text
-            className="txt-medium-plus text-white font-semibold text-xs sm:text-base leading-tight"
+            className="text-sm font-medium text-white leading-snug break-words"
             data-testid="product-name"
           >
             {item.product_title}
@@ -32,11 +32,11 @@ const Item = ({ item, currencyCode }: ItemProps) => {
         </div>
       </Table.Cell>
 
-      <Table.Cell className="py-2 sm:py-4 pr-2 sm:pr-4 pl-0 text-right w-20 sm:w-auto align-top sm:align-middle">
-        <span className="flex flex-col items-end justify-start sm:justify-center gap-y-0.5 sm:gap-y-1">
-          <span className="flex gap-x-1 text-gray-400 text-[10px] sm:text-sm">
+      <Table.Cell className="!p-2 w-auto align-middle text-right">
+        <span className="flex flex-col items-end justify-center gap-y-0.5">
+          <span className="flex gap-x-1 items-baseline text-gray-400 text-xs whitespace-nowrap">
             <Text className="text-gray-500">
-              <span data-testid="product-quantity">{item.quantity}</span>x{" "}
+              <span data-testid="product-quantity">{item.quantity}</span>×
             </Text>
             <LineItemUnitPrice
               item={item}
@@ -44,7 +44,6 @@ const Item = ({ item, currencyCode }: ItemProps) => {
               currencyCode={currencyCode}
             />
           </span>
-
           <LineItemPrice
             item={item}
             style="tight"

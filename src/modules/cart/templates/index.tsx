@@ -5,6 +5,11 @@ import SignInPrompt from "../components/sign-in-prompt"
 import Divider from "@modules/common/components/divider"
 import { HttpTypes } from "@medusajs/types"
 
+type WarehouseItem = {
+  locationName: string
+  items: { title: string; quantity: number }[]
+}
+
 const CartTemplate = ({
   cart,
   customer,
@@ -12,6 +17,9 @@ const CartTemplate = ({
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
 }) => {
+  const warehouseItems =
+    ((cart?.metadata?.warehouse_items ?? {}) as Record<string, WarehouseItem>)
+
   return (
     <div className="py-12">
       <div className="content-container" data-testid="cart-container">
@@ -24,7 +32,7 @@ const CartTemplate = ({
                   <Divider />
                 </>
               )}
-              <ItemsTemplate cart={cart} />
+              <ItemsTemplate cart={cart} warehouseItems={warehouseItems} />
             </div>
             <div className="relative">
               <div className="flex flex-col gap-y-8 sticky top-12">

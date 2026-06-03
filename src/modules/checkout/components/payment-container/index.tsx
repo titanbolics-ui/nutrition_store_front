@@ -15,6 +15,7 @@ type PaymentContainerProps = {
   paymentProviderId: string
   selectedPaymentOptionId: string | null
   disabled?: boolean
+  disabledReason?: string
   paymentInfoMap: Record<string, { title: string; icon: JSX.Element }>
   children?: React.ReactNode
 }
@@ -24,14 +25,13 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
   selectedPaymentOptionId,
   paymentInfoMap,
   disabled = false,
+  disabledReason,
   children,
 }) => {
   const isDevelopment = process.env.NODE_ENV === "development"
-
   const isCashAppProvider = isCashApp(paymentProviderId)
-
   const isCardManualProvider = isCardManual(paymentProviderId)
-  console.log("isCardManualProvider", isCardManualProvider)
+  const isSelected = selectedPaymentOptionId === paymentProviderId
 
   return (
     <RadioGroupOption
@@ -39,116 +39,126 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
       value={paymentProviderId}
       disabled={disabled}
       className={clx(
-        "flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-xl px-8 mb-2 transition-all duration-200 focus:outline-none",
+        "flex flex-col cursor-pointer border rounded-2xl px-4 py-3.5 mb-2.5 transition-all duration-200 focus:outline-none",
         {
+          // Disabled — normal look, just not interactive
+          "cursor-not-allowed border-white/10 bg-zinc-900": disabled,
 
-          // Стилі для карт вручну
-          "border-blue-500 bg-blue-900/5 ring-1 ring-blue-500":
-          isCardManualProvider && selectedPaymentOptionId === paymentProviderId,
+          // Card manual — blue
+          "border-blue-500 bg-blue-950/20 ring-1 ring-blue-500/50":
+            isCardManualProvider && isSelected && !disabled,
 
-          // Стилі для звичайних методів
-          "border-gray-700 bg-gray-900 hover:border-gray-500":
-            !isCashAppProvider && selectedPaymentOptionId !== paymentProviderId,
-          "border-[#b8ff2b] bg-gray-800":
-            selectedPaymentOptionId === paymentProviderId && !isCashAppProvider,
+          // CashApp — green
+          "border-emerald-700 bg-zinc-900 hover:border-emerald-600":
+            isCashAppProvider && !isSelected && !disabled,
+          "border-emerald-400 bg-emerald-950/20 ring-1 ring-emerald-400/40":
+            isCashAppProvider && isSelected && !disabled,
 
-          // 🟢 Стилі для CASH APP (Зелені)
-          "border-emerald-800 bg-gray-900 hover:border-emerald-500":
-            isCashAppProvider && selectedPaymentOptionId !== paymentProviderId,
-          "border-emerald-500 bg-emerald-900/10 ring-1 ring-emerald-500":
-            isCashAppProvider && selectedPaymentOptionId === paymentProviderId,
+          // Default
+          "border-white/10 bg-zinc-900 hover:border-white/20":
+            !isCashAppProvider && !isSelected && !disabled,
+          "border-[#b8ff2b] bg-zinc-900 ring-1 ring-[#b8ff2b]/20":
+            !isCashAppProvider && isSelected && !disabled && !isCardManualProvider,
         }
       )}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-x-4">
-          <Radio checked={selectedPaymentOptionId === paymentProviderId} />
+      {/* Main row */}
+      <div className="flex items-center justify-between gap-x-3">
+        <div className="flex items-center gap-x-3 min-w-0">
+          <Radio checked={isSelected} />
 
-          <div className="flex flex-col">
-            <Text
-              className={clx("text-base-regular flex items-center gap-2", {
-                "font-semibold text-white": !isCashAppProvider,
-                "font-semibold text-emerald-400": isCashAppProvider,
-              })}
-            >
-              {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Text
+                className={clx("text-sm font-semibold leading-tight", {
+                  "text-white": !isCashAppProvider,
+                  "text-emerald-400": isCashAppProvider && !disabled,
+                })}
+              >
+                {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
+              </Text>
 
-              {/* Бейдж для Cash App */}
-              {isCashAppProvider && (
-                <span className="bg-emerald-500 text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ml-2">
+              {disabled && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30 uppercase tracking-wide whitespace-nowrap">
+                  Not available
+                </span>
+              )}
+
+              {isCashAppProvider && !disabled && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500 text-black uppercase tracking-wide">
                   Fastest
                 </span>
               )}
 
-              {/* Бейдж для карт вручну */}
-              {isCardManualProvider && (
-                <span className="bg-blue-500 text-white text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ml-2">
+              {isCardManualProvider && !disabled && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500 text-white uppercase tracking-wide">
                   Secure Bridge
                 </span>
               )}
-            </Text>
+            </div>
 
-            {/* Підзаголовок для Картки */}
-            {isCardManualProvider && (
-              <Text className="text-[11px] text-gray-400 mt-0.5">
-                Bank-safe anonymous processing
-              </Text>
-            )}
-
-            {/* Підзаголовок для Cash App (видимий завжди) */}
-            {isCashAppProvider && (
-              <Text className="text-[11px] text-gray-400 mt-0.5">
+            {isCashAppProvider && !disabled && (
+              <Text className="text-xs text-gray-500 mt-0.5">
                 Pay instantly via Debit/Credit Card
               </Text>
             )}
+            {isCardManualProvider && !disabled && (
+              <Text className="text-xs text-gray-500 mt-0.5">
+                Bank-safe anonymous processing
+              </Text>
+            )}
           </div>
-
-          {isManual(paymentProviderId) && isDevelopment && (
-            <PaymentTest className="hidden small:block" />
-          )}
         </div>
 
-          <span className="justify-self-end text-white">
-            {paymentInfoMap[paymentProviderId]?.icon}
-          </span>
-        </div>
+        <span className="flex-shrink-0">
+          {paymentInfoMap[paymentProviderId]?.icon}
+        </span>
+      </div>
 
-        {/* 🔵 СИНІЙ БЛОК ІНСТРУКЦІЇ ДЛЯ КАРТКИ (Знімаємо заперечення) */}
-        {isCardManualProvider && selectedPaymentOptionId === paymentProviderId && (
-        <div className="mt-3 pt-3 border-t border-blue-500/30">
-          <div className="bg-gray-900 p-3 rounded border border-blue-800 shadow-sm">
-            <p className="text-[12px] text-blue-400 font-medium mb-1">
-              🛡️ Secure Payment Protocol:
+      {/* Disabled reason */}
+      {disabled && disabledReason && (
+        <p className="text-xs text-amber-400/70 mt-2.5 pt-2.5 border-t border-white/[0.06] leading-snug">
+          {disabledReason}
+        </p>
+      )}
+
+      {/* Card manual info block */}
+      {isCardManualProvider && isSelected && !disabled && (
+        <div className="mt-3 pt-3 border-t border-blue-500/20">
+          <div className="bg-zinc-950 p-3 rounded-xl border border-blue-900/50">
+            <p className="text-xs text-blue-400 font-semibold mb-1.5">
+              🛡️ Secure Payment Protocol
             </p>
-            <ul className="list-disc list-inside text-[11px] text-gray-400 space-y-1 pl-1">
-              <li>Uses a secure Card-to-Crypto bridge for anonymity.</li>
-              <li>Your bank will only see a standard digital purchase.</li>
-              <li>First-time setup may require a quick 1-minute ID check.</li>
-              <li><span className="text-white italic">Need a no-ID route? Choose PayPal/Cash method instead.</span></li>
+            <ul className="space-y-1 text-xs text-gray-400">
+              <li>· Uses a secure Card-to-Crypto bridge for anonymity.</li>
+              <li>· Your bank will only see a standard digital purchase.</li>
+              <li>· First-time setup may require a quick 1-minute ID check.</li>
+              <li className="text-gray-300 italic">· Need a no-ID route? Choose PayPal or Cash App instead.</li>
             </ul>
           </div>
         </div>
       )}
 
-      {/* 🟢 ЗЕЛЕНИЙ БЛОК ІНСТРУКЦІЇ (Тільки коли вибрано Cash App) */}
-      {isCashAppProvider && selectedPaymentOptionId === paymentProviderId && (
-        <div className="mt-3 pt-3 border-t border-emerald-500/30">
-          <div className="bg-gray-900 p-3 rounded border border-emerald-800 shadow-sm">
-            <p className="text-[12px] text-emerald-400 font-medium mb-1">
-              ⚡ Quick Instructions:
+      {/* CashApp info block */}
+      {isCashAppProvider && isSelected && !disabled && (
+        <div className="mt-3 pt-3 border-t border-emerald-500/20">
+          <div className="bg-zinc-950 p-3 rounded-xl border border-emerald-900/50">
+            <p className="text-xs text-emerald-400 font-semibold mb-1.5">
+              ⚡ Quick Instructions
             </p>
-            <ul className="list-disc list-inside text-[11px] text-gray-400 space-y-0.5 pl-1">
-              <li>No crypto wallet needed.</li>
-              <li>Buy Bitcoin inside Cash App in 60 seconds.</li>
-              <li>Send to our address (shown on next step).</li>
+            <ul className="space-y-1 text-xs text-gray-400">
+              <li>· No crypto wallet needed.</li>
+              <li>· Buy Bitcoin inside Cash App in 60 seconds.</li>
+              <li>· Send to our address (shown on next step).</li>
             </ul>
           </div>
         </div>
       )}
 
-      {isManual(paymentProviderId) && isDevelopment && (
-        <PaymentTest className="small:hidden text-[10px]" />
+      {isManual(paymentProviderId) && isDevelopment && isSelected && (
+        <PaymentTest className="mt-2 text-[10px]" />
       )}
+
       {children}
     </RadioGroupOption>
   )
@@ -183,7 +193,7 @@ export const StripeCardContainer = ({
         },
       },
       classes: {
-        base: "pt-3 pb-1 block w-full h-11 px-4 mt-0 bg-gray-900 border rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-[#b8ff2b] focus:border-[#b8ff2b] border-gray-700 hover:bg-gray-800 transition-all duration-300 ease-in-out text-white",
+        base: "pt-3 pb-1 block w-full h-11 px-4 mt-0 bg-zinc-900 border rounded-xl appearance-none focus:outline-none focus:ring-1 focus:ring-[#b8ff2b] focus:border-[#b8ff2b] border-white/10 hover:border-white/20 transition-all duration-200 text-white",
       },
     }
   }, [])
@@ -197,8 +207,8 @@ export const StripeCardContainer = ({
     >
       {selectedPaymentOptionId === paymentProviderId &&
         (stripeReady ? (
-          <div className="my-4 transition-all duration-150 ease-in-out">
-            <Text className="txt-medium-plus text-white mb-1">
+          <div className="mt-3 pt-3 border-t border-white/[0.06]">
+            <Text className="text-xs text-gray-400 mb-2">
               Enter your card details:
             </Text>
             <CardElement

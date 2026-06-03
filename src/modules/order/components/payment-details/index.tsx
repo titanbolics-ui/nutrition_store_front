@@ -56,22 +56,15 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                     `**** **** **** ${payment.data.card_last4}`
                   ) : isManualPayment || isCashApp(providerId) || isCardManual(providerId) ? (
                     <span className="flex flex-col items-start gap-1">
-                      <span className="text-orange-400 font-bold flex items-center gap-1 uppercase text-xs tracking-wide">
-                        ● Awaiting Payment
-                      </span>
-
-                      {isCashApp(providerId) && (
-                        <span className="text-emerald-400 text-[11px] font-medium">
-                          Check your email for Cash App instructions.
+                      {order.payment_status === "captured" ? (
+                        <span className="text-emerald-400 font-bold flex items-center gap-1 uppercase text-xs tracking-wide">
+                          ● Paid
+                        </span>
+                      ) : (
+                        <span className="text-amber-400 font-bold flex items-center gap-1 uppercase text-xs tracking-wide">
+                          ● Awaiting Payment
                         </span>
                       )}
-
-                      {isCardManual(providerId) && (
-                        <span className="text-blue-400 text-[11px] font-medium">
-                          Complete your payment using the widget below.
-                        </span>
-                      )}
-
                       <span className="text-gray-400 font-normal text-xs">
                         Amount:{" "}
                         {convertToLocale({

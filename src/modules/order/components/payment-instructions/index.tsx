@@ -164,9 +164,9 @@ export const PayPalPaymentInstructions = ({ order }: PaymentInstructionsProps) =
         </div>
       </div>
 
-      <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
-        <p className="text-gray-400 text-xs">
-          Order reference: <strong className="text-white">#ONX-{order.display_id}</strong>
+      <div className="mt-3 px-1">
+        <p className="text-xs text-amber-400/80">
+          ⚠️ Do not include any notes, comments, or order references in the payment.
         </p>
       </div>
     </div>
@@ -182,60 +182,71 @@ export const CashAppPaymentInstructions = ({ order }: PaymentInstructionsProps) 
   })
 
   const steps = [
-    { num: 1, text: 'Open Cash App and tap the <strong class="text-white">"Bitcoin"</strong> tab.' },
-    { num: 2, text: `Buy <strong class="text-emerald-400">${amount}</strong> worth of BTC.` },
-    { num: 3, text: 'Tap the <strong class="text-white">"Paper Airplane"</strong> (Send) icon.' },
-    { num: 4, text: 'Copy the address below and paste it in the <strong class="text-white">"To"</strong> field.' },
+    {
+      num: 1,
+      text: <>Open Cash App and tap the <strong className="text-white">₿ Bitcoin</strong> tab</>
+    },
+    {
+      num: 2,
+      text: <>Tap <strong className="text-white">Buy</strong>, enter exactly <strong className="text-emerald-400">{amount}</strong>, and tap <strong className="text-white">Confirm</strong></>
+    },
+    {
+      num: 3,
+      text: <>After purchase, tap the <strong className="text-white">Send</strong> button on the Bitcoin screen</>
+    },
+    {
+      num: 4,
+      text: <>Paste the wallet address below into the <strong className="text-white">To</strong> field and confirm</>
+    },
   ]
 
   return (
-    <div className="mt-8">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-emerald-500/10 rounded-lg">
-        </div>
-        <div className="flex items-center gap-3">
-          <h3 className="text-xl font-bold text-white">
-            Pay via Cash App
-          </h3>
-          <span className="bg-emerald-500 text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+    <div className="border border-emerald-500/25 rounded-2xl overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-3 bg-emerald-500/10 border-b border-emerald-500/20">
+        <div className="flex items-center gap-2">
+          <span className="text-base font-bold text-white">Pay via Cash App</span>
+          <span className="bg-emerald-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
             Fastest
           </span>
         </div>
+        <span className="text-emerald-400 font-bold text-lg">{amount}</span>
       </div>
 
-      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6">
-        <p className="text-gray-300 text-sm mb-4 font-medium">
-          Complete your order in 60 seconds using Bitcoin on Cash App.
+      <div className="p-3 bg-zinc-950/80">
+        <p className="text-xs text-gray-400 mb-4">
+          Complete in 60 seconds using Bitcoin on Cash App. No wallet needed.
         </p>
 
-        <div className="bg-gray-900 border border-emerald-500/20 rounded-lg p-4 mb-4">
+        {/* Steps */}
+        <div className="space-y-2.5 mb-4">
           {steps.map(({ num, text }) => (
-            <div key={num} className={`flex items-start gap-3 ${num < 4 ? 'mb-3' : ''}`}>
-              <span className="text-lg font-bold text-emerald-400 w-6">{num}.</span>
-              <p 
-                className="text-sm text-gray-400 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: text }}
-              />
+            <div key={num} className="flex items-center gap-3">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-[11px] font-bold text-emerald-400">
+                {num}
+              </span>
+              <p className="text-sm text-gray-300 leading-snug">{text}</p>
             </div>
           ))}
         </div>
 
-        <div className="mb-4">
-          <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-2">
-            Copy this address:
-          </p>
-          <div className="bg-gray-900 border-2 border-dashed border-emerald-500/30 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <code className="font-mono text-sm text-white break-all flex-1 select-all">
-                {btcAddress}
-              </code>
-              <CopyButton text={btcAddress} />
-            </div>
+        {/* Address */}
+        <div className="rounded-xl border border-emerald-500/20 bg-zinc-900 overflow-hidden">
+          <div className="px-3 py-2 border-b border-emerald-500/10 flex items-center justify-between">
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">
+              Bitcoin address — tap to copy
+            </span>
+            <CopyButton text={btcAddress} />
+          </div>
+          <div className="px-3 py-2">
+            <code className="font-mono text-xs text-white break-all select-all leading-relaxed">
+              {btcAddress}
+            </code>
           </div>
         </div>
 
-        <p className="text-xs text-center text-gray-500">
-          Order status will update automatically once payment is detected.
+        <p className="text-[11px] text-center text-gray-600 mt-3">
+          Order status updates automatically once payment is detected.
         </p>
       </div>
     </div>

@@ -1,47 +1,45 @@
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@medusajs/ui"
-import { Package, ExternalLink, Clock } from "lucide-react"
 
 type OrderDetailsProps = {
   order: HttpTypes.StoreOrder
   showStatus?: boolean
 }
 
-// Status badge styling based on status type
 const getStatusBadgeClasses = (status: string): string => {
-  const normalizedStatus = status.toLowerCase()
-  
-  // Fulfillment statuses
-  if (normalizedStatus.includes("fulfilled") || normalizedStatus.includes("shipped") || normalizedStatus.includes("delivered")) {
-    return "bg-green-500/10 text-green-400 border border-green-500/20"
+  switch (status) {
+    // Green — all good
+    case "fulfilled":
+    case "shipped":
+    case "delivered":
+    case "captured":
+      return "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25"
+    // Blue — in progress
+    case "partially_fulfilled":
+    case "partially_shipped":
+      return "bg-blue-500/10 text-blue-400 border border-blue-500/25"
+    // Amber — waiting
+    case "not_fulfilled":
+    case "awaiting":
+    case "authorized":
+    case "not_paid":
+      return "bg-amber-500/10 text-amber-400 border border-amber-500/25"
+    // Red — problem
+    case "canceled":
+    case "cancelled":
+    case "refunded":
+    case "partially_refunded":
+    case "failed":
+      return "bg-red-500/10 text-red-400 border border-red-500/25"
+    default:
+      return "bg-zinc-800 text-gray-400 border border-white/10"
   }
-  if (normalizedStatus.includes("processing") || normalizedStatus.includes("pending") || normalizedStatus === "not_fulfilled" || normalizedStatus === "not fulfilled") {
-    return "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
-  }
-  if (normalizedStatus.includes("canceled") || normalizedStatus.includes("cancelled") || normalizedStatus.includes("refunded") || normalizedStatus.includes("failed")) {
-    return "bg-red-500/10 text-red-400 border border-red-500/20"
-  }
-  
-  // Payment statuses
-  if (normalizedStatus.includes("captured") || normalizedStatus.includes("paid")) {
-    return "bg-green-500/10 text-green-400 border border-green-500/20"
-  }
-  if (normalizedStatus.includes("awaiting") || normalizedStatus === "not_paid" || normalizedStatus === "not paid") {
-    return "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
-  }
-  
-  // Default
-  return "bg-gray-500/10 text-gray-400 border border-gray-500/20"
 }
 
 // Check if order is shipped/fulfilled/delivered
 const isOrderShipped = (fulfillmentStatus: string): boolean => {
   const status = fulfillmentStatus.toLowerCase()
-  return (
-    status.includes("fulfilled") ||
-    status.includes("shipped") ||
-    status.includes("delivered")
-  )
+  return status === "fulfilled" || status === "shipped" || status === "delivered"
 }
 
 const TRACKING_BASE_URL = "https://dealer-send.com/en-US/track-my-shipment?trackingNumber="
@@ -95,14 +93,24 @@ const getTrackingNumber = (order: HttpTypes.StoreOrder): string | undefined => {
 
 const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
   const formatStatus = (str: string) => {
-    const formatted = str.split("_").join(" ")
-
-    return formatted.slice(0, 1).toUpperCase() + formatted.slice(1)
+    const map: Record<string, string> = {
+      not_fulfilled: "Not yet shipped",
+      partially_fulfilled: "Partially shipped",
+      fulfilled: "Fulfilled",
+      shipped: "Shipped",
+      delivered: "Delivered",
+      captured: "Paid",
+      authorized: "Awaiting payment",
+      awaiting: "Awaiting payment",
+      not_paid: "Awaiting payment",
+      refunded: "Refunded",
+      partially_refunded: "Partially refunded",
+      canceled: "Canceled",
+      cancelled: "Canceled",
+      failed: "Failed",
+    }
+    return map[str] ?? str.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")
   }
-
-  // Get tracking number from multiple possible sources
-  const trackingNumber = getTrackingNumber(order)
-  const isShipped = isOrderShipped(order.fulfillment_status)
 
   return (
     <div>
@@ -152,31 +160,14 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
         )}
       </div>
 
-      {/* Tracking Section */}
-      <div className="mt-4 pt-4 border-t border-gray-800">
-        {isShipped && trackingNumber ? (
-          <a
-            href={`${TRACKING_BASE_URL}${trackingNumber}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#ccff00]/10 hover:bg-[#ccff00]/20 border border-[#ccff00]/30 rounded-lg text-[#ccff00] font-medium text-sm transition-all group"
-          >
-            <Package className="w-4 h-4 shrink-0" />
-            <span>Track Your Package</span>
-            <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-          </a>
-        ) : isShipped && !trackingNumber ? (
-          <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 text-sm">
-            <Clock className="w-4 h-4 shrink-0" />
-            <span>Tracking number will be available shortly</span>
+      {order.payment_status !== "captured" && (
+        <div className="mt-4 pt-4 border-t border-white/[0.06]">
+          <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border bg-amber-500/10 border-amber-500/25 text-amber-400">
+            <span className="w-2 h-2 rounded-full flex-shrink-0 bg-current animate-pulse" />
+            <span>Awaiting payment — see instructions below</span>
           </div>
-        ) : (
-          <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-400 text-sm">
-            <Clock className="w-4 h-4 shrink-0" />
-            <span>Tracking available 4-5 days after shipping</span>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

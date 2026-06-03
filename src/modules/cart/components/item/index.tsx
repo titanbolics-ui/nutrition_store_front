@@ -53,14 +53,14 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
     >
       <Table.Cell
         className={clx({
-          "!p-1 sm:!p-2 w-auto align-top sm:align-middle": type === "preview",
+          "!p-2 w-auto align-middle": type === "preview",
           "py-2 px-1 sm:px-2 w-16 sm:w-20": type === "full",
         })}
       >
         <LocalizedClientLink
           href={`/products/${item.product_handle}`}
-          className={clx("flex", {
-            "w-10 h-10 sm:w-14 sm:h-14 aspect-square rounded-md overflow-hidden bg-gray-800":
+          className={clx("flex flex-shrink-0", {
+            "w-16 h-16 rounded-lg overflow-hidden bg-zinc-900 ring-1 ring-white/5":
               type === "preview",
             "w-14 h-14 sm:w-16 sm:h-16 rounded-md overflow-hidden bg-gray-800":
               type === "full",
@@ -76,13 +76,13 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
 
       <Table.Cell
         className={clx("text-left", {
-          "!py-1 !px-1 sm:!p-2 align-top sm:align-middle": type === "preview",
+          "!py-2 !px-2 align-middle": type === "preview",
         })}
       >
         <div className="flex flex-col gap-y-0.5 min-w-0">
           <Text
             className={clx("txt-medium-plus text-white break-words", {
-              "font-semibold text-xs sm:text-base leading-tight":
+              "font-medium text-sm leading-snug":
                 type === "preview",
               "text-sm sm:text-base": type === "full",
             })}
@@ -141,18 +141,18 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
 
       <Table.Cell
         className={clx("text-right", {
-          "!p-1 sm:!p-2 w-auto align-top sm:align-middle": type === "preview",
+          "!p-2 w-auto align-middle": type === "preview",
         })}
       >
         <span
           className={clx({
-            "flex flex-col items-end justify-start sm:justify-center gap-y-0.5 sm:gap-y-1":
+            "flex flex-col items-end justify-center gap-y-0.5":
               type === "preview",
           })}
         >
           {type === "preview" && (
-            <span className="flex gap-x-1 text-gray-400 text-[10px] sm:text-sm">
-              <Text className="text-gray-500">{item.quantity}x </Text>
+            <span className="flex gap-x-1 items-baseline text-gray-400 text-xs whitespace-nowrap">
+              <span className="text-gray-500">{item.quantity}×</span>
               <LineItemUnitPrice
                 item={item}
                 style="tight"

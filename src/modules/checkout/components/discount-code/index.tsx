@@ -1,7 +1,6 @@
 "use client"
 
-import { Badge, Heading, Label, Text } from "@medusajs/ui"
-import Input from "@modules/common/components/input"
+import { Badge, Text } from "@medusajs/ui"
 import React from "react"
 
 import { applyPromotions } from "@lib/data/cart"
@@ -64,116 +63,97 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
   }
 
   return (
-    <div className="w-full bg-gray-900 border border-gray-800 rounded-xl p-6 flex flex-col">
-      <div className="txt-medium">
-        <form action={(a) => addPromotionCode(a)} className="w-full mb-0">
-          <Label className="flex gap-x-1 mb-2 items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              type="button"
-              className="txt-medium text-[#b8ff2b] hover:text-[#b8ff2b]/80 transition-colors w-full text-left font-medium"
-              data-testid="add-discount-button"
-            >
-              Add Promotion Code(s)
-            </button>
-          </Label>
+    <div className="w-full">
+      <form action={(a) => addPromotionCode(a)} className="w-full">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          type="button"
+          className="text-sm text-[#b8ff2b] hover:text-[#b8ff2b]/70 transition-colors inline-flex items-center gap-1.5 leading-none"
+          data-testid="add-discount-button"
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            fill="currentColor"
+            className={`transition-transform duration-200 ${isOpen ? "rotate-45" : ""}`}
+          >
+            <path d="M5.25 5.25V0h1.5v5.25H12v1.5H6.75V12h-1.5V6.75H0v-1.5h5.25z" />
+          </svg>
+          Promotion code
+        </button>
 
-          {isOpen && (
-            <>
-              <div className="flex w-full gap-x-2 mt-2">
-                <Input
-                  className="bg-black border-gray-700 text-white focus:border-[#ccff00] placeholder-gray-500"
-                  name="code"
-                  label=""
-                  type="text"
-                  autoFocus={true}
-                  data-testid="discount-input"
-                  placeholder="Enter code"
-                />
-                <SubmitButton
-                  variant="secondary"
-                  data-testid="discount-apply-button"
-                  className="bg-[#b8ff2b] text-black border-none hover:bg-[#b8ff2b]/80 h-11 mt-0"
-                >
-                  Apply
-                </SubmitButton>
-              </div>
-
-              <ErrorMessage
-                error={errorMessage}
-                data-testid="discount-error-message"
+        {isOpen && (
+          <div className="mt-3">
+            <div className="flex w-full gap-x-2 items-center">
+              <input
+                type="text"
+                name="code"
+                autoFocus
+                data-testid="discount-input"
+                className="flex-1 h-10 px-3 rounded-lg bg-zinc-900 border border-white/10 text-white text-sm focus:outline-none focus:border-[#b8ff2b] focus:ring-1 focus:ring-[#b8ff2b]/20"
               />
-            </>
-          )}
-        </form>
-
-        {promotions.length > 0 && (
-          <div className="w-full flex items-center mt-4 pt-4 border-t border-gray-800">
-            <div className="flex flex-col w-full">
-              <Heading className="txt-medium mb-2 text-white">
-                Promotion(s) applied:
-              </Heading>
-
-              {promotions.map((promotion) => {
-                return (
-                  <div
-                    key={promotion.id}
-                    className="flex items-center justify-between w-full max-w-full mb-2"
-                    data-testid="discount-row"
-                  >
-                    <Text className="flex gap-x-1 items-baseline txt-small-plus w-4/5 pr-1 text-gray-400">
-                      <span className="truncate" data-testid="discount-code">
-                        <Badge
-                          color={promotion.is_automatic ? "green" : "grey"}
-                          size="small"
-                          className="bg-gray-800 border-gray-700 text-[#b8ff2b]"
-                        >
-                          {promotion.code}
-                        </Badge>{" "}
-                        (
-                        {promotion.application_method?.value !== undefined &&
-                          promotion.application_method.currency_code !==
-                            undefined && (
-                            <>
-                              {promotion.application_method.type ===
-                              "percentage"
-                                ? `${promotion.application_method.value}%`
-                                : convertToLocale({
-                                    amount: +promotion.application_method.value,
-                                    currency_code:
-                                      promotion.application_method
-                                        .currency_code,
-                                  })}
-                            </>
-                          )}
-                        )
-                      </span>
-                    </Text>
-                    {!promotion.is_automatic && (
-                      <button
-                        className="flex items-center text-gray-500 hover:text-white transition-colors"
-                        onClick={() => {
-                          if (!promotion.code) {
-                            return
-                          }
-
-                          removePromotionCode(promotion.code)
-                        }}
-                        data-testid="remove-discount-button"
-                      >
-                        <Trash size={14} />
-                        <span className="sr-only">
-                          Remove discount code from order
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
+              <SubmitButton
+                variant="secondary"
+                data-testid="discount-apply-button"
+                className="bg-[#b8ff2b] text-black border-none hover:bg-[#b8ff2b]/80 h-10 mt-0 text-sm font-semibold px-4"
+              >
+                Apply
+              </SubmitButton>
             </div>
+            <ErrorMessage
+              error={errorMessage}
+              data-testid="discount-error-message"
+            />
           </div>
         )}
-      </div>
+      </form>
+
+      {promotions.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-white/[0.06]">
+          {promotions.map((promotion) => (
+            <div
+              key={promotion.id}
+              className="flex items-center justify-between mb-1.5"
+              data-testid="discount-row"
+            >
+              <Text className="flex gap-x-1 items-baseline text-sm text-gray-400">
+                <Badge
+                  color={promotion.is_automatic ? "green" : "grey"}
+                  size="small"
+                  className="bg-zinc-900 border-white/10 text-[#b8ff2b]"
+                >
+                  {promotion.code}
+                </Badge>
+                {promotion.application_method?.value !== undefined &&
+                  promotion.application_method.currency_code !== undefined && (
+                    <span className="text-gray-500">
+                      (
+                      {promotion.application_method.type === "percentage"
+                        ? `${promotion.application_method.value}%`
+                        : convertToLocale({
+                            amount: +promotion.application_method.value,
+                            currency_code:
+                              promotion.application_method.currency_code,
+                          })}
+                      )
+                    </span>
+                  )}
+              </Text>
+              {!promotion.is_automatic && (
+                <button
+                  className="text-gray-600 hover:text-white transition-colors"
+                  onClick={() => promotion.code && removePromotionCode(promotion.code)}
+                  data-testid="remove-discount-button"
+                >
+                  <Trash size={13} />
+                  <span className="sr-only">Remove discount code</span>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
