@@ -25,8 +25,10 @@ const Fulfillments = ({ order, warehouseItems = {} }: FulfillmentsProps) => {
     id: string
     location_id?: string
     shipped_at?: string | null
+    delivered_at?: string | null
     items: FulfillmentItem[]
     labels: Array<{ tracking_number?: string; tracking_url?: string }>
+    metadata?: Record<string, unknown>
   }>
 
   // Build line_item_id → product_title map from order items
@@ -35,6 +37,11 @@ const Fulfillments = ({ order, warehouseItems = {} }: FulfillmentsProps) => {
     lineItemTitles[item.id] = item.product_title ?? item.title ?? ""
   }
 
+  // Order-level tracking map: { [fulfillment_id]: tracking_number }
+  const orderTrackingMap = (
+    (order as any).metadata?.tracking ?? {}
+  ) as Record<string, string>
+
   if (!fulfillments?.length) return null
 
   const resolveLocationName = (locationId?: string): string => {
@@ -42,16 +49,54 @@ const Fulfillments = ({ order, warehouseItems = {} }: FulfillmentsProps) => {
     return warehouseItems[locationId]?.locationName ?? "Warehouse"
   }
 
+  const deliveredCount = fulfillments.filter((f) => !!f.delivered_at).length
+  const shippedCount = fulfillments.filter((f) => !!f.shipped_at && !f.delivered_at).length
+  const totalCount = fulfillments.length
+  const allDone = deliveredCount === totalCount
+  const isPartial = (deliveredCount > 0 || shippedCount > 0) && deliveredCount < totalCount
+
   return (
     <div>
-      <h2 className="text-sm font-semibold text-white mb-3">Shipments</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-white">Shipments</h2>
+        {totalCount > 1 && (
+          <span className="text-xs text-gray-400">
+            {allDone
+              ? `${totalCount}/${totalCount} delivered`
+              : deliveredCount > 0
+              ? `${deliveredCount}/${totalCount} delivered`
+              : `${shippedCount + deliveredCount}/${totalCount} shipped`}
+          </span>
+        )}
+      </div>
+
+      {isPartial && (
+        <div className="mb-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex items-start gap-3">
+          <span className="text-amber-400 text-base mt-0.5">📦</span>
+          <div>
+            <p className="text-sm font-medium text-amber-300 mb-0.5">
+              {deliveredCount > 0 ? "Partially delivered" : "Partially shipped"}
+            </p>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              {deliveredCount > 0
+                ? `${deliveredCount} of ${totalCount} shipments delivered. The rest are still on their way.`
+                : `${shippedCount} of ${totalCount} shipments have left the warehouse. The remaining ${totalCount - shippedCount === 1 ? "shipment is" : "shipments are"} still being prepared.`}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3">
         {fulfillments.map((fulfillment) => {
-          const trackingNumber = fulfillment.labels?.[0]?.tracking_number
+          const trackingNumber =
+            fulfillment.labels?.[0]?.tracking_number ||
+            (fulfillment.metadata?.tracking_number as string | undefined) ||
+            orderTrackingMap[fulfillment.id]
           const trackingUrl =
             fulfillment.labels?.[0]?.tracking_url ||
             (trackingNumber ? `${TRACKING_BASE_URL}${trackingNumber}` : null)
           const locationName = resolveLocationName(fulfillment.location_id)
+          const isDelivered = !!fulfillment.delivered_at
           const isShipped = !!fulfillment.shipped_at
 
           return (
@@ -69,12 +114,14 @@ const Fulfillments = ({ order, warehouseItems = {} }: FulfillmentsProps) => {
                 </div>
                 <span
                   className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${
-                    isShipped
+                    isDelivered
+                      ? "bg-blue-500/10 border-blue-500/25 text-blue-400"
+                      : isShipped
                       ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
                       : "bg-amber-500/10 border-amber-500/25 text-amber-400"
                   }`}
                 >
-                  {isShipped ? "Shipped" : "Preparing"}
+                  {isDelivered ? "Delivered" : isShipped ? "Shipped" : "Preparing"}
                 </span>
               </div>
 
@@ -114,8 +161,17 @@ const Fulfillments = ({ order, warehouseItems = {} }: FulfillmentsProps) => {
                   </div>
                 )}
 
-                {/* Ship date */}
-                {fulfillment.shipped_at && (
+                {/* Dates */}
+                {fulfillment.delivered_at && (
+                  <p className="text-[11px] text-gray-600">
+                    Delivered{" "}
+                    {new Date(fulfillment.delivered_at).toLocaleDateString(
+                      "en-US",
+                      { month: "short", day: "numeric", year: "numeric" }
+                    )}
+                  </p>
+                )}
+                {!fulfillment.delivered_at && fulfillment.shipped_at && (
                   <p className="text-[11px] text-gray-600">
                     Shipped{" "}
                     {new Date(fulfillment.shipped_at).toLocaleDateString(
