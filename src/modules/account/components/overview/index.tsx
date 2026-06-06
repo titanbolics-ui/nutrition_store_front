@@ -4,13 +4,17 @@ import ChevronDown from "@modules/common/icons/chevron-down"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
+import { StoreCreditAccount } from "@lib/data/store-credits"
 
 type OverviewProps = {
   customer: HttpTypes.StoreCustomer | null
   orders: HttpTypes.StoreOrder[] | null
+  storeCreditAccounts?: StoreCreditAccount[]
 }
 
-const Overview = ({ customer, orders }: OverviewProps) => {
+const Overview = ({ customer, orders, storeCreditAccounts = [] }: OverviewProps) => {
+  const totalCredits = storeCreditAccounts.reduce((sum, a) => sum + a.balance, 0)
+  const creditAccount = storeCreditAccounts[0]
   return (
     <div data-testid="overview-page-wrapper">
       <div className="hidden small:block">
@@ -31,6 +35,23 @@ const Overview = ({ customer, orders }: OverviewProps) => {
         </div>
         <div className="flex flex-col py-8 border-t border-gray-800">
           <div className="flex flex-col gap-y-4 h-full col-span-1 row-span-2 flex-1">
+            {totalCredits > 0 && creditAccount && (
+              <div className="mb-6 rounded-xl border border-[#b8ff2b]/20 bg-[#b8ff2b]/5 px-5 py-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Store Credit</p>
+                  <p className="text-2xl font-bold text-[#b8ff2b]">
+                    {convertToLocale({ amount: totalCredits, currency_code: creditAccount.currency_code })}
+                  </p>
+                </div>
+                <LocalizedClientLink
+                  href="/checkout"
+                  className="text-sm text-[#b8ff2b] hover:text-[#b8ff2b]/70 transition-colors"
+                >
+                  Use at checkout →
+                </LocalizedClientLink>
+              </div>
+            )}
+
             <div className="flex items-start gap-x-16 mb-6">
               <div className="flex flex-col gap-y-4">
                 <h3 className="text-large-semi text-white">Profile</h3>

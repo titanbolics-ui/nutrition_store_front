@@ -12,6 +12,7 @@ type CartTotalsProps = {
     item_subtotal?: number | null
     shipping_subtotal?: number | null
     discount_subtotal?: number | null
+    credit_lines?: { reference?: string; amount?: number }[] | null
   }
 }
 
@@ -23,7 +24,12 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
     item_subtotal,
     shipping_subtotal,
     discount_subtotal,
+    credit_lines,
   } = totals
+
+  const storeCreditApplied = (credit_lines ?? [])
+    .filter((l) => l.reference === "store-credit")
+    .reduce((sum, l) => sum + (l.amount ?? 0), 0)
 
   return (
     <div className="pt-1">
@@ -49,6 +55,14 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
               data-value={discount_subtotal || 0}
             >
               -{convertToLocale({ amount: discount_subtotal ?? 0, currency_code })}
+            </span>
+          </div>
+        )}
+        {storeCreditApplied > 0 && (
+          <div className="flex items-center justify-between">
+            <span>Store credit</span>
+            <span className="text-[#b8ff2b]">
+              -{convertToLocale({ amount: storeCreditApplied, currency_code })}
             </span>
           </div>
         )}

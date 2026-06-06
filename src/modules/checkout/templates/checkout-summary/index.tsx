@@ -2,21 +2,28 @@ import { Heading } from "@medusajs/ui"
 
 import ItemsPreviewTemplate from "@modules/cart/templates/preview"
 import DiscountCode from "@modules/checkout/components/discount-code"
+import StoreCredits from "@modules/checkout/components/store-credits"
 import CartTotals from "@modules/common/components/cart-totals"
 import Divider from "@modules/common/components/divider"
+import { getStoreCreditAccounts } from "@lib/data/store-credits"
 
 type WarehouseItemsMetadata = Record<
   string,
   { locationName: string; items: { title: string; quantity: number }[] }
 >
 
-const CheckoutSummary = ({ cart }: { cart: any }) => {
+const CheckoutSummary = async ({ cart }: { cart: any }) => {
+  const storeCreditAccounts = await getStoreCreditAccounts(cart.currency_code ?? "usd")
   // Sum all shipping methods so the total reflects multi-warehouse shipping
   const shippingSubtotal: number =
     cart.shipping_methods?.reduce(
       (sum: number, m: any) => sum + (m.amount ?? 0),
       0
     ) ?? cart.shipping_subtotal ?? 0
+
+  const storeCreditApplied: number = (cart.credit_lines ?? [])
+    .filter((l: any) => l.reference === "store-credit")
+    .reduce((sum: number, l: any) => sum + (l.amount ?? 0), 0)
 
   const correctedTotals = {
     ...cart,
@@ -25,7 +32,8 @@ const CheckoutSummary = ({ cart }: { cart: any }) => {
       (cart.item_subtotal ?? 0) +
       shippingSubtotal +
       (cart.tax_total ?? 0) -
-      (cart.discount_subtotal ?? 0),
+      (cart.discount_subtotal ?? 0) -
+      storeCreditApplied,
   }
 
   const warehouseItems: WarehouseItemsMetadata =
@@ -42,8 +50,9 @@ const CheckoutSummary = ({ cart }: { cart: any }) => {
           In your Cart
         </Heading>
         <ItemsPreviewTemplate cart={cart} warehouseItems={warehouseItems} />
-        <div className="mt-4 mb-3 border-t border-white/[0.06] pt-3">
+        <div className="mt-4 mb-3 border-t border-white/[0.06] pt-3 flex flex-col gap-3">
           <DiscountCode cart={cart} />
+          <StoreCredits cart={cart} accounts={storeCreditAccounts} />
         </div>
         <CartTotals totals={correctedTotals} />
       </div>
