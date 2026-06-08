@@ -58,20 +58,76 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
                     <span className="flex flex-col items-start gap-1">
                       {order.payment_status === "captured" ? (
                         <span className="text-emerald-400 font-bold flex items-center gap-1 uppercase text-xs tracking-wide">
-                          ● Paid
+                          ● Paid in full
+                        </span>
+                      ) : order.payment_status === "partially_captured" ? (
+                        <span className="text-amber-400 font-bold flex items-center gap-1 uppercase text-xs tracking-wide">
+                          ● Partially paid
+                        </span>
+                      ) : order.payment_status === "refunded" ? (
+                        <span className="text-red-400 font-bold flex items-center gap-1 uppercase text-xs tracking-wide">
+                          ● Refunded
+                        </span>
+                      ) : order.payment_status === "partially_refunded" ? (
+                        <span className="text-red-400 font-bold flex items-center gap-1 uppercase text-xs tracking-wide">
+                          ● Partially refunded
                         </span>
                       ) : (
                         <span className="text-amber-400 font-bold flex items-center gap-1 uppercase text-xs tracking-wide">
                           ● Awaiting Payment
                         </span>
                       )}
-                      <span className="text-gray-400 font-normal text-xs">
-                        Amount:{" "}
-                        {convertToLocale({
-                          amount: order.total,
-                          currency_code: order.currency_code,
-                        })}
-                      </span>
+                      {order.payment_status === "partially_captured" ? (
+                        <span className="flex flex-col gap-0.5 text-xs">
+                          <span className="text-gray-400">
+                            Paid:{" "}
+                            <span className="text-emerald-400 font-semibold">
+                              {convertToLocale({
+                                amount: Number(order.total) - Number((order as any).summary?.pending_difference ?? 0),
+                                currency_code: order.currency_code,
+                              })}
+                            </span>
+                          </span>
+                          <span className="text-gray-400">
+                            Balance due:{" "}
+                            <span className="text-amber-400 font-semibold">
+                              {convertToLocale({
+                                amount: Number((order as any).summary?.pending_difference ?? 0),
+                                currency_code: order.currency_code,
+                              })}
+                            </span>
+                          </span>
+                        </span>
+                      ) : order.payment_status === "refunded" || order.payment_status === "partially_refunded" ? (
+                        <span className="flex flex-col gap-0.5 text-xs">
+                          <span className="text-gray-400">
+                            Paid:{" "}
+                            <span className="text-emerald-400 font-semibold">
+                              {convertToLocale({
+                                amount: Number((order as any).summary?.paid_total ?? order.total),
+                                currency_code: order.currency_code,
+                              })}
+                            </span>
+                          </span>
+                          <span className="text-gray-400">
+                            Refunded:{" "}
+                            <span className="text-red-400 font-semibold">
+                              {convertToLocale({
+                                amount: Number((order as any).summary?.refunded_total ?? 0),
+                                currency_code: order.currency_code,
+                              })}
+                            </span>
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 font-normal text-xs">
+                          Amount:{" "}
+                          {convertToLocale({
+                            amount: order.total,
+                            currency_code: order.currency_code,
+                          })}
+                        </span>
+                      )}
                     </span>
                   ) : (
                     // Default (Paid)

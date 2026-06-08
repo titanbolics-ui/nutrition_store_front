@@ -10,6 +10,7 @@ import OrderDetails from "@modules/order/components/order-details"
 import OrderSummary from "@modules/order/components/order-summary"
 import Fulfillments from "@modules/order/components/fulfillments"
 import PaymentDetails from "@modules/order/components/payment-details"
+import PaymentHistory from "@modules/order/components/payment-history"
 import PaymentInstructions from "@modules/order/components/payment-instructions"
 import ShippingDetails from "@modules/order/components/shipping-details"
 import React from "react"
@@ -30,9 +31,11 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
     order.payment_collections?.[0]?.payments?.[0]?.provider_id ||
     order.payment_collections?.[0]?.payment_sessions?.[0]?.provider_id ||
     ""
+  const pendingDiff = Number((order as any).summary?.pending_difference ?? 0)
   const awaitingPayment =
     (isCashApp(providerId) || isManual(providerId)) &&
-    order.payment_status !== "captured"
+    (order as any).status !== "canceled" &&
+    pendingDiff > 0
 
   const warehouseItems =
     ((order.metadata?.warehouse_items ?? {}) as Record<string, WarehouseItem>)
@@ -71,6 +74,7 @@ const OrderDetailsTemplate: React.FC<OrderDetailsTemplateProps> = ({
           <Items order={order} warehouseItems={warehouseItems} />
         </div>
 
+        <PaymentHistory order={order} />
         <Fulfillments order={order} warehouseItems={warehouseItems} />
         <ShippingDetails order={order} />
         <PaymentDetails order={order} />

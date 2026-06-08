@@ -1,5 +1,6 @@
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@medusajs/ui"
+import { convertToLocale } from "@lib/util/money"
 
 type OrderDetailsProps = {
   order: HttpTypes.StoreOrder
@@ -23,6 +24,9 @@ const getStatusBadgeClasses = (status: string): string => {
     case "awaiting":
     case "authorized":
     case "not_paid":
+      return "bg-amber-500/10 text-amber-400 border border-amber-500/25"
+    // Amber — partial payment
+    case "partially_captured":
       return "bg-amber-500/10 text-amber-400 border border-amber-500/25"
     // Red — problem
     case "canceled":
@@ -100,6 +104,7 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
       shipped: "Shipped",
       delivered: "Delivered",
       captured: "Paid",
+      partially_captured: "Partially paid",
       authorized: "Awaiting payment",
       awaiting: "Awaiting payment",
       not_paid: "Awaiting payment",
@@ -140,34 +145,69 @@ const OrderDetails = ({ order, showStatus }: OrderDetailsProps) => {
           <>
             <Text className="text-gray-400 flex items-center gap-x-2 text-sm">
               Order status:{" "}
-              <span 
-                className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getStatusBadgeClasses(order.fulfillment_status)}`}
+              <span
+                className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
+                  (order as any).status === "canceled"
+                    ? getStatusBadgeClasses("canceled")
+                    : getStatusBadgeClasses(order.fulfillment_status)
+                }`}
                 data-testid="order-status"
               >
-                {formatStatus(order.fulfillment_status)}
+                {(order as any).status === "canceled"
+                  ? "Canceled"
+                  : formatStatus(order.fulfillment_status)}
               </span>
             </Text>
             <Text className="text-gray-400 flex items-center gap-x-2 text-sm">
               Payment status:{" "}
-              <span
-                className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getStatusBadgeClasses(order.payment_status)}`}
-                data-testid="order-payment-status"
-              >
-                {formatStatus(order.payment_status)}
-              </span>
+              {(() => {
+                const isCanceled = (order as any).status === "canceled"
+                const pendingDiff = Number((order as any).summary?.pending_difference ?? 0)
+                const paidTotal = Number((order as any).summary?.paid_total ?? 0)
+                let effectiveStatus = order.payment_status
+                if (!isCanceled) {
+                  if (pendingDiff > 0 && paidTotal > 0) {
+                    effectiveStatus = "partially_captured"
+                  } else if (pendingDiff <= 0 && order.payment_status === "partially_captured") {
+                    effectiveStatus = "captured"
+                  }
+                }
+                return (
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${getStatusBadgeClasses(effectiveStatus)}`}
+                    data-testid="order-payment-status"
+                  >
+                    {formatStatus(effectiveStatus)}
+                  </span>
+                )
+              })()}
             </Text>
           </>
         )}
       </div>
 
-      {order.payment_status !== "captured" && (
-        <div className="mt-4 pt-4 border-t border-white/[0.06]">
-          <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border bg-amber-500/10 border-amber-500/25 text-amber-400">
-            <span className="w-2 h-2 rounded-full flex-shrink-0 bg-current animate-pulse" />
-            <span>Awaiting payment — see instructions below</span>
+      {(() => {
+        const pendingDiff = Number((order as any).summary?.pending_difference ?? 0)
+        if ((order as any).status === "canceled") return null
+        if (pendingDiff <= 0) return null
+        return (
+          <div className="mt-4 pt-4 border-t border-white/[0.06]">
+            <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border bg-amber-500/10 border-amber-500/25 text-amber-400">
+              <span className="w-2 h-2 rounded-full flex-shrink-0 bg-current animate-pulse" />
+              <span>
+                Balance due:{" "}
+                <strong>
+                  {convertToLocale({
+                    amount: pendingDiff,
+                    currency_code: order.currency_code,
+                  })}
+                </strong>
+                {" "}— see payment instructions below
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }

@@ -10,6 +10,11 @@ type PaymentInstructionsProps = {
   order: HttpTypes.StoreOrder
 }
 
+function getPayableAmount(order: HttpTypes.StoreOrder): number {
+  const pendingDiff = Number((order as any).summary?.pending_difference ?? 0)
+  return pendingDiff > 0 ? pendingDiff : Number(order.total)
+}
+
 // Copy button component
 const CopyButton = ({ text }: { text: string }) => {
   const [copied, setCopied] = useState(false)
@@ -39,7 +44,7 @@ const CopyButton = ({ text }: { text: string }) => {
 export const CryptoPaymentInstructions = ({ order }: PaymentInstructionsProps) => {
   const btcAddress = process.env.NEXT_PUBLIC_BTC_WALLET_ADDRESS || ""
   const amount = convertToLocale({
-    amount: order.total,
+    amount: getPayableAmount(order),
     currency_code: order.currency_code,
   })
 
@@ -102,7 +107,7 @@ export const CryptoPaymentInstructions = ({ order }: PaymentInstructionsProps) =
 export const PayPalPaymentInstructions = ({ order }: PaymentInstructionsProps) => {
   const paypalAddress = process.env.NEXT_PUBLIC_PAYPAL_WALLET_ADDRESS || ""
   const amount = convertToLocale({
-    amount: order.total,
+    amount: getPayableAmount(order),
     currency_code: order.currency_code,
   })
 
@@ -177,7 +182,7 @@ export const PayPalPaymentInstructions = ({ order }: PaymentInstructionsProps) =
 export const CashAppPaymentInstructions = ({ order }: PaymentInstructionsProps) => {
   const btcAddress = process.env.NEXT_PUBLIC_BTC_WALLET_ADDRESS || ""
   const amount = convertToLocale({
-    amount: order.total,
+    amount: getPayableAmount(order),
     currency_code: order.currency_code,
   })
 
