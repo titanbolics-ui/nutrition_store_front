@@ -70,6 +70,13 @@ export default async function Nav() {
             <div className="hidden small:flex items-center gap-x-6 h-full">
               <LocalizedClientLink
                 className="hover:text-[#ccff00] transition-colors font-bold tracking-wide"
+                href="/orders/track"
+                data-testid="nav-track-order-link"
+              >
+                TRACK ORDER
+              </LocalizedClientLink>
+              <LocalizedClientLink
+                className="hover:text-[#ccff00] transition-colors font-bold tracking-wide"
                 href="/account"
                 data-testid="nav-account-link"
               >

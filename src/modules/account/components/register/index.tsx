@@ -1,12 +1,10 @@
 "use client"
 
-import { useActionState } from "react"
+import { useState, useEffect } from "react"
 import Input from "@modules/common/components/input"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
-import ErrorMessage from "@modules/checkout/components/error-message"
-import { SubmitButton } from "@modules/checkout/components/submit-button"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { signup } from "@lib/data/customer"
+import { requestRegistration } from "@lib/data/magic-link"
 import posthog from "posthog-js"
 
 type Props = {
@@ -14,23 +12,39 @@ type Props = {
 }
 
 const Register = ({ setCurrentView }: Props) => {
-  const [message, formAction] = useActionState(signup, null)
+  const [firstName, setFirstName] = useState("")
+  const [lastName,  setLastName]  = useState("")
+  const [email,     setEmail]     = useState("")
+  const [phone,     setPhone]     = useState("")
 
-  // Трекаємо email для PostHog
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const email = e.target.value
-    if (email && email.includes("@") && posthog) {
-      posthog.setPersonProperties({
-        $email: email,
-      })
-    }
-  }
+  const [state, setState] = useState<"idle" | "sending" | "sent">("idle")
+  const [cooldown, setCooldown] = useState(0)
 
-  // Обробник сабміту форми - трекаємо спробу реєстрації
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [cooldown])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (state === "sending" || cooldown > 0) return
+    setState("sending")
+
     if (posthog) {
-      posthog.capture("signup_attempted")
+      posthog.capture("registration_attempted")
+      if (email) posthog.setPersonProperties({ $email: email })
     }
+
+    await requestRegistration({
+      email: email.trim(),
+      first_name: firstName.trim() || undefined,
+      last_name:  lastName.trim()  || undefined,
+      phone:      phone.trim()     || undefined,
+    })
+
+    setState("sent")
+    setCooldown(60)
   }
 
   return (
@@ -41,80 +55,107 @@ const Register = ({ setCurrentView }: Props) => {
       <h1 className="text-large-semi uppercase mb-6 text-white font-bold tracking-wider">
         Become an Onyx Genetics Member
       </h1>
-      <p className="text-center text-base-regular text-gray-400 mb-4">
-        Create your Onyx Genetics Member profile, and get access to an enhanced
-        shopping experience.
-      </p>
-      <form
-        className="w-full flex flex-col"
-        action={formAction}
-        onSubmit={handleSubmit}
-      >
-        <div className="flex flex-col w-full gap-y-4">
-          <Input
-            label="First name"
-            name="first_name"
-            required
-            autoComplete="given-name"
-            data-testid="first-name-input"
-          />
-          <Input
-            label="Last name"
-            name="last_name"
-            required
-            autoComplete="family-name"
-            data-testid="last-name-input"
-          />
-          <Input
-            label="Email"
-            name="email"
-            required
-            type="email"
-            autoComplete="email"
-            data-testid="email-input"
-            onChange={handleEmailChange}
-          />
-          <Input
-            label="Phone"
-            name="phone"
-            type="tel"
-            autoComplete="tel"
-            data-testid="phone-input"
-          />
-          <Input
-            label="Password"
-            name="password"
-            required
-            type="password"
-            autoComplete="new-password"
-            data-testid="password-input"
-          />
+
+      {state === "sent" ? (
+        <div className="w-full text-center">
+          <div className="text-[#b8ff2b] text-3xl mb-3">✓</div>
+          <p className="text-white font-semibold mb-1">Check your inbox</p>
+          <p className="text-gray-400 text-sm mb-4">
+            A confirmation link was sent to <strong className="text-white">{email}</strong>.
+            It expires in 15 minutes.
+          </p>
+          {cooldown > 0 ? (
+            <p className="text-gray-500 text-xs">Resend available in {cooldown}s</p>
+          ) : (
+            <button
+              onClick={() => { setState("idle"); setCooldown(0) }}
+              className="text-gray-400 text-xs underline hover:text-white transition-colors"
+            >
+              Send again
+            </button>
+          )}
         </div>
-        <ErrorMessage error={message} data-testid="register-error" />
-        <span className="text-center text-gray-400 text-small-regular mt-6">
-          By creating an account, you agree to Onyx Genetics&apos;s{" "}
-          <LocalizedClientLink
-            href="/content/privacy-policy"
-            className="underline text-[#ccff00] hover:text-white"
-          >
-            Privacy Policy
-          </LocalizedClientLink>{" "}
-          and{" "}
-          <LocalizedClientLink
-            href="/content/terms-of-use"
-            className="underline text-[#ccff00] hover:text-white"
-          >
-            Terms of Use
-          </LocalizedClientLink>
-          .
-        </span>
-        <SubmitButton
-          className="w-full mt-6 bg-[#ccff00] text-black hover:opacity-90 font-bold uppercase tracking-wider border-none"
-          data-testid="register-button"
-        >
-          Join
-        </SubmitButton>
-      </form>
+      ) : (
+        <>
+          <p className="text-center text-base-regular text-gray-400 mb-4">
+            Create your account — no password needed. We'll send you a one-click confirmation link.
+          </p>
+          <form className="w-full flex flex-col" onSubmit={handleSubmit}>
+            <div className="flex flex-col w-full gap-y-4">
+              <Input
+                label="First name"
+                name="first_name"
+                required
+                autoComplete="given-name"
+                data-testid="first-name-input"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+              <Input
+                label="Last name"
+                name="last_name"
+                required
+                autoComplete="family-name"
+                data-testid="last-name-input"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+              <Input
+                label="Email"
+                name="email"
+                required
+                type="email"
+                autoComplete="email"
+                data-testid="email-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <div>
+                <Input
+                  label="Phone (optional)"
+                  name="phone"
+                  type="tel"
+                  autoComplete="tel"
+                  data-testid="phone-input"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                <p className="text-gray-600 text-xs mt-1 px-1">
+                  For WhatsApp order updates
+                </p>
+              </div>
+            </div>
+
+            <span className="text-center text-gray-400 text-small-regular mt-6">
+              By creating an account, you agree to Onyx Genetics&apos;s{" "}
+              <LocalizedClientLink
+                href="/content/privacy-policy"
+                className="underline text-[#ccff00] hover:text-white"
+              >
+                Privacy Policy
+              </LocalizedClientLink>{" "}
+              and{" "}
+              <LocalizedClientLink
+                href="/content/terms-of-use"
+                className="underline text-[#ccff00] hover:text-white"
+              >
+                Terms of Use
+              </LocalizedClientLink>
+              .
+            </span>
+
+            <button
+              type="submit"
+              disabled={!firstName || !lastName || !email || state === "sending"}
+              className="w-full mt-6 bg-[#ccff00] text-black font-bold py-3 rounded-lg text-sm uppercase tracking-wider disabled:opacity-40 hover:opacity-90 transition-opacity"
+              data-testid="register-button"
+            >
+              {state === "sending" ? "Sending…" : "Create account →"}
+            </button>
+          </form>
+        </>
+      )}
+
       <span className="text-center text-gray-400 text-small-regular mt-6">
         Already a member?{" "}
         <button

@@ -31,6 +31,10 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
     .filter((l) => l.reference === "store-credit")
     .reduce((sum, l) => sum + (l.amount ?? 0), 0)
 
+  const giftCardApplied = (credit_lines ?? [])
+    .filter((l) => l.reference === "gift-card")
+    .reduce((sum, l) => sum + (l.amount ?? 0), 0)
+
   return (
     <div className="pt-1">
       <div className="flex flex-col gap-y-2.5 text-sm text-gray-400">
@@ -63,6 +67,14 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
             <span>Store credit</span>
             <span className="text-[#b8ff2b]">
               -{convertToLocale({ amount: storeCreditApplied, currency_code })}
+            </span>
+          </div>
+        )}
+        {giftCardApplied > 0 && (
+          <div className="flex items-center justify-between">
+            <span>Gift card</span>
+            <span className="text-[#b8ff2b]">
+              -{convertToLocale({ amount: giftCardApplied, currency_code })}
             </span>
           </div>
         )}
