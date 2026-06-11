@@ -3,7 +3,7 @@
 import { Badge, Text } from "@medusajs/ui"
 import React from "react"
 
-import { applyPromotions } from "@lib/data/cart"
+import { applyPromotions, applyGiftCard, removeGiftCard } from "@lib/data/cart"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import Trash from "@modules/common/icons/trash"
@@ -13,6 +13,7 @@ import { SubmitButton } from "../submit-button"
 type DiscountCodeProps = {
   cart: HttpTypes.StoreCart & {
     promotions: HttpTypes.StorePromotion[]
+    gift_cards?: { id: string; code: string }[]
   }
 }
 
@@ -21,6 +22,7 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
   const [errorMessage, setErrorMessage] = React.useState("")
 
   const { promotions = [] } = cart
+  const giftCards = cart.gift_cards ?? []
   const removePromotionCode = async (code: string) => {
     setErrorMessage("")
 
@@ -52,13 +54,37 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
 
     const error = await applyPromotions(codes)
 
-    if (error) {
-      setErrorMessage(error)
-    } else {
-      // Success - clear input
+    if (!error) {
       if (input) {
         input.value = ""
       }
+      return
+    }
+
+    // Not a promotion — try it as a gift card code (loyalty plugin)
+    const giftError = await applyGiftCard(code.toString())
+
+    if (!giftError) {
+      if (input) {
+        input.value = ""
+      }
+      return
+    }
+
+    // Gift card "not found" → the code is simply invalid; balance/currency
+    // errors are specific enough to show as-is
+    setErrorMessage(
+      giftError.includes("not found")
+        ? "Invalid promotion or gift card code."
+        : giftError
+    )
+  }
+
+  const handleRemoveGiftCard = async (code: string) => {
+    setErrorMessage("")
+    const error = await removeGiftCard(code)
+    if (error) {
+      setErrorMessage(error)
     }
   }
 
@@ -108,6 +134,37 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
           </div>
         )}
       </form>
+
+      {giftCards.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-white/[0.06]">
+          {giftCards.map((gc) => (
+            <div
+              key={gc.id}
+              className="flex items-center justify-between mb-1.5"
+              data-testid="gift-card-row"
+            >
+              <Text className="flex gap-x-1 items-baseline text-sm text-gray-400">
+                <Badge
+                  color="green"
+                  size="small"
+                  className="bg-zinc-900 border-white/10 text-[#b8ff2b]"
+                >
+                  🎁 {gc.code}
+                </Badge>
+                <span className="text-gray-500">(gift card)</span>
+              </Text>
+              <button
+                className="text-gray-600 hover:text-white transition-colors"
+                onClick={() => handleRemoveGiftCard(gc.code)}
+                data-testid="remove-gift-card-button"
+              >
+                <Trash size={13} />
+                <span className="sr-only">Remove gift card</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {promotions.length > 0 && (
         <div className="mt-3 pt-3 border-t border-white/[0.06]">

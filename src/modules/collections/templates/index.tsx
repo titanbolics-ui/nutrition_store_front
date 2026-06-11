@@ -29,7 +29,7 @@ export default async function CollectionTemplate({
 
   return (
     <>
-      <div className="flex flex-col md:flex-row md:items-start py-6 content-container pt-28 md:pt-32 min-h-screen">
+      <div className="flex flex-col md:flex-row md:items-start py-6 content-container pt-8 md:pt-12 min-h-screen">
         <RefinementList sortBy={sort} categories={rootCategories} />
         <div className="w-full">
           {/* Mobile Category Chips */}

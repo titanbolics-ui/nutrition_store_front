@@ -70,7 +70,7 @@ export default function LabResultsPage() {
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
       {/* 1. PAGE HEADING */}
-      <div className="bg-white border-b border-gray-200 pt-32 pb-12">
+      <div className="bg-white border-b border-gray-200 pt-12 pb-12">
         <div className="content-container max-w-[1440px] mx-auto px-6 small:px-12">
           <div className="flex flex-col md:flex-row justify-between items-end gap-6">
             <div className="max-w-2xl">

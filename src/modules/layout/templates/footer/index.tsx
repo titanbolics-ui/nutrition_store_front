@@ -227,7 +227,7 @@ export default function Footer() {
                   <li>
                     <LocalizedClientLink
                       className="hover:text-[#ccff00] transition-colors"
-                      href="/account/orders"
+                      href="/orders/track"
                     >
                       Track Order
                     </LocalizedClientLink>

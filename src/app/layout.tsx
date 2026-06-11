@@ -4,6 +4,7 @@ import { PostHogProvider } from "./providers/posthog-provider"
 import { PostHogIdentifier } from "./providers/posthog-identifier"
 import { FlyToCartWrapper } from "./providers/fly-to-cart-wrapper"
 import NextTopLoader from "nextjs-toploader"
+import ScrollToTop from "@modules/common/components/scroll-to-top"
 import "styles/globals.css"
 import { Suspense } from "react"
 
@@ -34,6 +35,9 @@ export default function RootLayout({
         <PostHogProvider>
         <Suspense fallback={null}>
           <PostHogIdentifier />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ScrollToTop />
         </Suspense>
           <FlyToCartWrapper>
             <main className="relative min-h-screen">{children}</main>

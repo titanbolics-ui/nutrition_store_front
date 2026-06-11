@@ -149,7 +149,7 @@ async function checkAndRemoveInvalidPromotions(cartId: string) {
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +metadata, *credit_lines"
+    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +metadata, *credit_lines, *gift_cards"
 
   if (!id) {
     return null
@@ -583,18 +583,6 @@ async function _applyPromotions(codes: string[]) {
   }
 }
 
-export async function applyGiftCard(code: string) {
-  //   const cartId = getCartId()
-  //   if (!cartId) return "No cartId cookie found"
-  //   try {
-  //     await updateCart(cartId, { gift_cards: [{ code }] }).then(() => {
-  //       revalidateTag("cart")
-  //     })
-  //   } catch (error: any) {
-  //     throw error
-  //   }
-}
-
 export async function removeDiscount(code: string) {
   // const cartId = getCartId()
   // if (!cartId) return "No cartId cookie found"
@@ -606,26 +594,6 @@ export async function removeDiscount(code: string) {
   // }
 }
 
-export async function removeGiftCard(
-  codeToRemove: string,
-  giftCards: any[]
-  // giftCards: GiftCard[]
-) {
-  //   const cartId = getCartId()
-  //   if (!cartId) return "No cartId cookie found"
-  //   try {
-  //     await updateCart(cartId, {
-  //       gift_cards: [...giftCards]
-  //         .filter((gc) => gc.code !== codeToRemove)
-  //         .map((gc) => ({ code: gc.code })),
-  //     }).then(() => {
-  //       revalidateTag("cart")
-  //     })
-  //   } catch (error: any) {
-  //     throw error
-  //   }
-}
-
 // Wrapper function that catches errors and returns them as strings
 // This is needed because Next.js hides thrown errors in production Server Components
 export async function applyPromotions(codes: string[]): Promise<string | void> {
@@ -635,6 +603,56 @@ export async function applyPromotions(codes: string[]): Promise<string | void> {
     // Return error message instead of throwing
     // This allows the error to be properly displayed in production
     return e.message || "An error occurred while applying the promotion code"
+  }
+}
+
+export async function applyGiftCard(code: string): Promise<string | undefined> {
+  try {
+    const cartId = await getCartId()
+    if (!cartId) {
+      throw new Error("No existing cart found")
+    }
+
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
+
+    await sdk.client.fetch(`/store/carts/${cartId}/gift-cards`, {
+      method: "POST",
+      body: { code },
+      headers,
+    })
+
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+    return undefined
+  } catch (e: any) {
+    return e.message || "An error occurred while applying the gift card"
+  }
+}
+
+export async function removeGiftCard(code: string): Promise<string | undefined> {
+  try {
+    const cartId = await getCartId()
+    if (!cartId) {
+      throw new Error("No existing cart found")
+    }
+
+    const headers = {
+      ...(await getAuthHeaders()),
+    }
+
+    await sdk.client.fetch(`/store/carts/${cartId}/gift-cards`, {
+      method: "DELETE",
+      body: { code },
+      headers,
+    })
+
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+    return undefined
+  } catch (e: any) {
+    return e.message || "An error occurred while removing the gift card"
   }
 }
 

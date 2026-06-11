@@ -21,7 +21,7 @@ const ProductCategories = [
 
 // Service links
 const ServiceLinks = [
-  { name: "Track My Order", href: "/account/orders" },
+  { name: "Track My Order", href: "/orders/track" },
   { name: "Lab Results", href: "/lab-results" },
   { name: "Shipping Info", href: "/shipping" },
   { name: "Returns", href: "/returns" },

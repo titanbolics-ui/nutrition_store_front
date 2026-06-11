@@ -21,19 +21,11 @@ const CheckoutSummary = async ({ cart }: { cart: any }) => {
       0
     ) ?? cart.shipping_subtotal ?? 0
 
-  const storeCreditApplied: number = (cart.credit_lines ?? [])
-    .filter((l: any) => l.reference === "store-credit")
-    .reduce((sum: number, l: any) => sum + (l.amount ?? 0), 0)
-
+  // cart.total is backend-computed and already accounts for credit lines
+  // (store credit AND gift cards) — never recompute it manually
   const correctedTotals = {
     ...cart,
     shipping_subtotal: shippingSubtotal,
-    total:
-      (cart.item_subtotal ?? 0) +
-      shippingSubtotal +
-      (cart.tax_total ?? 0) -
-      (cart.discount_subtotal ?? 0) -
-      storeCreditApplied,
   }
 
   const warehouseItems: WarehouseItemsMetadata =

@@ -53,7 +53,12 @@ const Fulfillments = ({ order, warehouseItems = {} }: FulfillmentsProps) => {
   const shippedCount = fulfillments.filter((f) => !!f.shipped_at && !f.delivered_at).length
   const totalCount = fulfillments.length
   const allDone = deliveredCount === totalCount
-  const isPartial = (deliveredCount > 0 || shippedCount > 0) && deliveredCount < totalCount
+  // preparing = not yet shipped; "partial" banners only when shipments are at
+  // DIFFERENT stages — all-shipped (none delivered) is not partial anything
+  const preparingCount = totalCount - shippedCount - deliveredCount
+  const isPartialShipped = preparingCount > 0 && shippedCount + deliveredCount > 0
+  const isPartialDelivered = preparingCount === 0 && deliveredCount > 0 && !allDone
+  const isPartial = isPartialShipped || isPartialDelivered
 
   return (
     <div>
@@ -75,12 +80,12 @@ const Fulfillments = ({ order, warehouseItems = {} }: FulfillmentsProps) => {
           <span className="text-amber-400 text-base mt-0.5">📦</span>
           <div>
             <p className="text-sm font-medium text-amber-300 mb-0.5">
-              {deliveredCount > 0 ? "Partially delivered" : "Partially shipped"}
+              {isPartialDelivered ? "Partially delivered" : "Partially shipped"}
             </p>
             <p className="text-xs text-gray-400 leading-relaxed">
-              {deliveredCount > 0
+              {isPartialDelivered
                 ? `${deliveredCount} of ${totalCount} shipments delivered. The rest are still on their way.`
-                : `${shippedCount} of ${totalCount} shipments have left the warehouse. The remaining ${totalCount - shippedCount === 1 ? "shipment is" : "shipments are"} still being prepared.`}
+                : `${shippedCount + deliveredCount} of ${totalCount} shipments have left the warehouse. The remaining ${preparingCount === 1 ? "shipment is" : "shipments are"} still being prepared.`}
             </p>
           </div>
         </div>
@@ -92,9 +97,14 @@ const Fulfillments = ({ order, warehouseItems = {} }: FulfillmentsProps) => {
             fulfillment.labels?.[0]?.tracking_number ||
             (fulfillment.metadata?.tracking_number as string | undefined) ||
             orderTrackingMap[fulfillment.id]
+          // admin-entered URLs can be schemeless/truncated — trust absolute only
+          const rawTrackingUrl = fulfillment.labels?.[0]?.tracking_url
           const trackingUrl =
-            fulfillment.labels?.[0]?.tracking_url ||
-            (trackingNumber ? `${TRACKING_BASE_URL}${trackingNumber}` : null)
+            rawTrackingUrl && /^https?:\/\//i.test(rawTrackingUrl)
+              ? rawTrackingUrl
+              : trackingNumber
+              ? `${TRACKING_BASE_URL}${trackingNumber}`
+              : null
           const locationName = resolveLocationName(fulfillment.location_id)
           const isDelivered = !!fulfillment.delivered_at
           const isShipped = !!fulfillment.shipped_at

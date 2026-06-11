@@ -1,5 +1,4 @@
 import { Metadata } from "next"
-import { Suspense } from "react"
 
 import Hero from "@modules/home/components/hero"
 import HorizontalScrollSection from "@modules/home/components/horizontal-scroll-section"
@@ -8,7 +7,6 @@ import OnyxStandard from "@modules/home/components/onyx-standard"
 import { getRegion } from "@lib/data/regions"
 import LabResults from "@modules/home/components/lab-tested-section"
 import HeroSnapContainer from "@modules/home/components/mobile-scroll-snap"
-import ScrollToTop from "@modules/common/components/scroll-to-top"
 
 export const metadata: Metadata = {
   title: "Onyx Genetics",
@@ -26,13 +24,12 @@ export default async function Home(props: {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <ScrollToTop />
-      </Suspense>
-      <HeroSnapContainer>
-        <Hero />
-        <HorizontalScrollSection />
-      </HeroSnapContainer>
+      <div className="-mt-20">
+        <HeroSnapContainer>
+          <Hero />
+          <HorizontalScrollSection />
+        </HeroSnapContainer>
+      </div>
       {region && <BestSellers region={region} />}
       <LabResults />
       <OnyxStandard />

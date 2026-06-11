@@ -27,6 +27,9 @@ export default async function PageLayout(props: { children: React.ReactNode }) {
   return (
     <>
       <Nav />
+      {/* Offset for the fixed h-20 header — pages that want content under the
+          translucent header (home hero) pull themselves up with -mt-20 */}
+      <div className="h-20" aria-hidden />
       {customer && cart && (
         <CartMismatchBanner customer={customer} cart={cart} />
       )}

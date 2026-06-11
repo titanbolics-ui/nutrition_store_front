@@ -1,6 +1,26 @@
 "use client"
 
 import posthog from "posthog-js"
+
+// Redact magic-link tokens so they never reach PostHog event history.
+// - /orders/<token> → /orders/[redacted]  (order_view tokens, 30-day lifetime)
+// - ?token=<value>  → ?token=[redacted]   (login / activate tokens)
+// Known static paths like /orders/track are left intact (min-length guard).
+function sanitizeTokenUrl(url: string): string {
+  try {
+    const u = new URL(url)
+    u.pathname = u.pathname.replace(
+      /\/orders\/(?!track(?:\/|$))([^/?#]{6,})/,
+      "/orders/[redacted]"
+    )
+    if (u.searchParams.has("token")) {
+      u.searchParams.set("token", "[redacted]")
+    }
+    return u.toString()
+  } catch {
+    return url
+  }
+}
 import { PostHogProvider as PHProvider } from "posthog-js/react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useEffect, Suspense } from "react"
@@ -43,6 +63,19 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
               ph.debug()
             }
           },
+          // Strip magic-link tokens from every event before it leaves the browser.
+          // order_view tokens live 30 days — anyone with PostHog access could open
+          // orders if these were captured.
+          before_send: (event) => {
+            if (!event) return event
+            if (event.properties?.$current_url) {
+              event.properties.$current_url = sanitizeTokenUrl(event.properties.$current_url)
+            }
+            if (event.properties?.$referrer) {
+              event.properties.$referrer = sanitizeTokenUrl(event.properties.$referrer)
+            }
+            return event
+          },
         })
         ;(posthog as any).__loaded = true
       }
@@ -70,6 +103,7 @@ function PostHogPageView() {
         if (searchParams && searchParams.toString()) {
           url = url + `?${searchParams.toString()}`
         }
+        url = sanitizeTokenUrl(url)
 
         if ((posthog as any).__loaded) {
           posthog.capture("$pageview", {

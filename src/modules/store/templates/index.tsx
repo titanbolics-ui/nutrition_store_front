@@ -28,7 +28,7 @@ const StoreTemplate = async ({
   return (
     <>
       <div
-        className="flex flex-col md:flex-row md:items-start py-6 content-container pt-28 md:pt-32 min-h-screen"
+        className="flex flex-col md:flex-row md:items-start py-6 content-container pt-8 md:pt-12 min-h-screen"
         data-testid="category-container"
       >
         <RefinementList sortBy={sort} categories={rootCategories} />
