@@ -55,3 +55,6 @@ dump.rdb
 /blob-report/
 /playwright/.cache/
 /playwright/.auth
+
+# Single package manager: npm (Railway deploys with `npm install`). Block yarn lockfile.
+yarn.lock

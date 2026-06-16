@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
 import Input from "@modules/common/components/input"
 import { LOGIN_VIEW } from "@modules/account/templates/login-template"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { requestRegistration } from "@lib/data/magic-link"
+import { checkPhone } from "@lib/util/phone"
 import posthog from "posthog-js"
 
 type Props = {
@@ -12,6 +14,7 @@ type Props = {
 }
 
 const Register = ({ setCurrentView }: Props) => {
+  const { countryCode } = useParams() as { countryCode?: string }
   const [firstName, setFirstName] = useState("")
   const [lastName,  setLastName]  = useState("")
   const [email,     setEmail]     = useState("")
@@ -19,6 +22,10 @@ const Register = ({ setCurrentView }: Props) => {
 
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle")
   const [cooldown, setCooldown] = useState(0)
+
+  // Soft warning only — phone is optional and submission is never blocked
+  const phoneCheck = checkPhone(phone, countryCode)
+  const showPhoneWarning = phone.trim().length > 0 && !phoneCheck.valid
 
   useEffect(() => {
     if (cooldown <= 0) return
@@ -36,11 +43,14 @@ const Register = ({ setCurrentView }: Props) => {
       if (email) posthog.setPersonProperties({ $email: email })
     }
 
+    // Send E.164 when we can parse it (better default-country than the backend's
+    // international-only parse); otherwise send raw and let the backend keep it.
+    const rawPhone = phone.trim()
     await requestRegistration({
       email: email.trim(),
       first_name: firstName.trim() || undefined,
       last_name:  lastName.trim()  || undefined,
-      phone:      phone.trim()     || undefined,
+      phone:      rawPhone ? (phoneCheck.e164 ?? rawPhone) : undefined,
     })
 
     setState("sent")
@@ -120,9 +130,15 @@ const Register = ({ setCurrentView }: Props) => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                 />
-                <p className="text-gray-600 text-xs mt-1 px-1">
-                  For WhatsApp order updates
-                </p>
+                {showPhoneWarning ? (
+                  <p className="text-amber-400 text-xs mt-1 px-1">
+                    Double-check this number — we couldn&apos;t recognize it. You can still continue.
+                  </p>
+                ) : (
+                  <p className="text-gray-600 text-xs mt-1 px-1">
+                    For WhatsApp order updates
+                  </p>
+                )}
               </div>
             </div>
 
