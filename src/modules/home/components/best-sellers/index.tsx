@@ -1,5 +1,6 @@
 import { sdk } from "@lib/config"
 import { listProducts } from "@lib/data/products"
+import { sortByRank } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { Text } from "@medusajs/ui"
 import InteractiveLink from "@modules/common/components/interactive-link"
@@ -37,17 +38,17 @@ export default async function BestSellers({
     regionId: region.id,
     queryParams: {
       limit: tagId ? 8 : 50,
-      fields: "*variants.calculated_price,+tags",
+      fields: "*variants.calculated_price,+tags,+metadata",
       ...(tagId && { tag_id: [tagId] }),
     },
   })
 
   // If we fetched by tag_id, use those directly. Otherwise filter.
-  let displayProducts = products
+  let displayProducts = sortByRank(products)
 
   if (!tagId) {
     // Fallback: filter products that have "best-sellers" tag
-    const bestSellerProducts = products.filter((product) =>
+    const bestSellerProducts = displayProducts.filter((product) =>
       product.tags?.some(
         (tag) =>
           tag.value?.toLowerCase() === "best-sellers" ||
@@ -58,7 +59,7 @@ export default async function BestSellers({
     displayProducts =
       bestSellerProducts.length > 0
         ? bestSellerProducts.slice(0, 8)
-        : products.slice(0, 8)
+        : displayProducts.slice(0, 8)
   }
 
   if (!displayProducts || displayProducts.length === 0) {

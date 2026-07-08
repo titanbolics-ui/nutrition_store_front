@@ -18,7 +18,7 @@ const StoreTemplate = async ({
   countryCode: string
 }) => {
   const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
+  const sort = sortBy || "featured"
 
   // Fetch categories from backend - only root categories (without parent)
   const allCategories = await listCategories()

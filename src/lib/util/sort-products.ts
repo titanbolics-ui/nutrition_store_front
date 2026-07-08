@@ -1,8 +1,41 @@
-import { HttpTypes } from "@medusajs/types"
-import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import type { HttpTypes } from "@medusajs/types"
+import type { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
 interface MinPricedProduct extends HttpTypes.StoreProduct {
   _minPrice?: number
+}
+
+const MISSING_RANK = 9999
+
+function parseRank(raw: unknown): number {
+  if (typeof raw !== "number" && typeof raw !== "string") {
+    return MISSING_RANK
+  }
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : MISSING_RANK
+}
+
+/**
+ * Manual merchandising order: metadata.rank ascending, tiebroken by created_at
+ * descending, then id for full determinism. Missing/non-numeric rank sorts last.
+ */
+export function sortByRank(
+  products: HttpTypes.StoreProduct[]
+): HttpTypes.StoreProduct[] {
+  return products.sort((a, b) => {
+    const rankDiff = parseRank(a.metadata?.rank) - parseRank(b.metadata?.rank)
+    if (rankDiff !== 0) {
+      return rankDiff
+    }
+
+    const dateDiff =
+      new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime()
+    if (dateDiff !== 0) {
+      return dateDiff
+    }
+
+    return a.id.localeCompare(b.id)
+  })
 }
 
 /**
@@ -44,6 +77,10 @@ export function sortProducts(
         new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime()
       )
     })
+  }
+
+  if (sortBy === "featured") {
+    sortedProducts = sortByRank(sortedProducts)
   }
 
   return sortedProducts

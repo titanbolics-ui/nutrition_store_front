@@ -2,7 +2,11 @@
 
 import FilterRadioGroup from "@modules/common/components/filter-radio-group"
 
-export type SortOptions = "price_asc" | "price_desc" | "created_at"
+export type SortOptions = "price_asc" | "price_desc" | "created_at" | "featured"
+
+// "featured" is the internal default (no explicit sort chosen) — manual rank curation.
+// It is intentionally not listed in `sortOptions` below, so customers can never pick it
+// directly; "Latest Arrivals" (created_at) keeps meaning newest-first.
 
 type SortProductsProps = {
   sortBy: SortOptions
