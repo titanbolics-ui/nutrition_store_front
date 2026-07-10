@@ -10,10 +10,17 @@ import { isEqual } from "lodash"
 import { useParams, usePathname, useSearchParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
+import StockBadge from "../stock-badge"
 import MobileActions from "./mobile-actions"
+import WaitlistForm from "../waitlist-form"
 import { useRouter } from "next/navigation"
 import { useFlyToCart } from "@lib/context/fly-to-cart-context"
 import posthog from "posthog-js"
+import {
+  resolveProductStockState,
+  resolveStockState,
+  shouldShowWaitlistForm,
+} from "@lib/util/resolve-stock-state"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -166,6 +173,15 @@ export default function ProductActions({
     return false
   }, [selectedVariant])
 
+  // Badge state: a fully-out-of-stock product must not read "In Stock" just
+  // because no variant is selected yet (unlike `inStock` above, which only
+  // gates the button and has its own independent `!selectedVariant` guard).
+  const stockState = useMemo(() => {
+    return selectedVariant
+      ? resolveStockState(selectedVariant)
+      : resolveProductStockState(product)
+  }, [selectedVariant, product])
+
   const actionsRef = useRef<HTMLDivElement>(null)
 
   const inView = useIntersection(actionsRef, "0px")
@@ -279,6 +295,10 @@ export default function ProductActions({
         </div>
 
         <ProductPrice product={product} variant={selectedVariant} />
+        <StockBadge
+          state={stockState}
+          restockEta={selectedVariant?.metadata?.restock_eta}
+        />
 
         {/* Quantity selector and Add to cart button */}
         {/* Quantity counter allows selecting quantity before adding to cart */}
@@ -334,12 +354,20 @@ export default function ProductActions({
             {getButtonText()}
           </Button>
         </div>
+
+        {shouldShowWaitlistForm(stockState, !!selectedVariant) && (
+          <div className="mt-2">
+            <WaitlistForm variantId={selectedVariant!.id} />
+          </div>
+        )}
+
         <MobileActions
           product={product}
           variant={selectedVariant}
           options={options}
           updateOptions={setOptionValue}
           inStock={inStock}
+          stockState={stockState}
           handleAddToCart={handleAddToCart}
           isAdding={isAdding}
           show={!inView}

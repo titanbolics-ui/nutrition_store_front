@@ -1,10 +1,16 @@
-import { Text } from "@medusajs/ui"
+import { Text, clx } from "@medusajs/ui"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
 import QuickAddButton from "./quick-add-button"
+import StockBadge from "../stock-badge"
+import {
+  formatRestockEta,
+  resolveProductRestockEta,
+  resolveProductStockState,
+} from "@lib/util/resolve-stock-state"
 
 export default async function ProductPreview({
   product,
@@ -18,6 +24,12 @@ export default async function ProductPreview({
   const { cheapestPrice } = getProductPrice({
     product,
   })
+
+  const stockState = resolveProductStockState(product)
+  const isOos = stockState === "out_of_stock"
+  const isLowStock = stockState === "low_stock"
+  const restockEta = isOos ? resolveProductRestockEta(product) : null
+  const etaLabel = formatRestockEta(restockEta)
 
   return (
     <LocalizedClientLink
@@ -37,8 +49,27 @@ export default async function ProductPreview({
               size="full"
               isFeatured={isFeatured}
               isContain
-              className="!bg-transparent !shadow-none !p-0 !rounded-none !border-none !overflow-hidden"
+              className={clx(
+                "!bg-transparent !shadow-none !p-0 !rounded-none !border-none !overflow-hidden",
+                { "[&_img]:grayscale [&_img]:opacity-50": isOos }
+              )}
             />
+            {isOos && (
+              <span
+                className="absolute top-2 left-2 z-10 inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide bg-black/80 border border-amber-500/50 text-amber-400"
+                data-testid="oos-image-badge"
+              >
+                Out of stock{etaLabel ? ` · ${etaLabel}` : ""}
+              </span>
+            )}
+            {isLowStock && (
+              <span
+                className="absolute top-2 left-2 z-10 inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide bg-black/80 border border-amber-500/50 text-amber-400"
+                data-testid="low-stock-image-badge"
+              >
+                Low stock
+              </span>
+            )}
           </div>
         </div>
 
@@ -56,16 +87,19 @@ export default async function ProductPreview({
             </Text>
           </div>
 
-          <div className="flex items-center justify-between border-t border-gray-800 pt-2 sm:pt-3 md:pt-4 mt-auto">
-            <div className="font-mono font-black text-base sm:text-lg md:text-xl tracking-tight drop-shadow-[0_0_8px_rgba(204,255,0,0.3)]">
-              {cheapestPrice && (
-                <PreviewPrice
-                  price={cheapestPrice}
-                  className="text-[#ccff00]"
-                />
-              )}
+          <div className="flex flex-col gap-1 border-t border-gray-800 pt-2 sm:pt-3 md:pt-4 mt-auto">
+            <StockBadge state={stockState} restockEta={restockEta} variant="plain" />
+            <div className="flex items-center justify-between">
+              <div className="font-mono font-black text-base sm:text-lg md:text-xl tracking-tight drop-shadow-[0_0_8px_rgba(204,255,0,0.3)]">
+                {cheapestPrice && (
+                  <PreviewPrice
+                    price={cheapestPrice}
+                    className="text-[#ccff00]"
+                  />
+                )}
+              </div>
+              <QuickAddButton product={product} />
             </div>
-            <QuickAddButton product={product} />
           </div>
         </div>
       </div>

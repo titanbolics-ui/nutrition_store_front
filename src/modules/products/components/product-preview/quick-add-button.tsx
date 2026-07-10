@@ -5,6 +5,7 @@ import { HttpTypes } from "@medusajs/types"
 import { useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useFlyToCart } from "@lib/context/fly-to-cart-context"
+import { resolveStockState } from "@lib/util/resolve-stock-state"
 import posthog from "posthog-js"
 
 type QuickAddButtonProps = {
@@ -25,6 +26,12 @@ export default function QuickAddButton({ product }: QuickAddButtonProps) {
     (product.options?.length === 1 && product.options[0]?.values?.length === 1)
   
   const firstVariant = product.variants?.[0]
+
+  // Only relevant for simple products: this button adds `firstVariant`
+  // directly with no page visit, so it must not silently no-op or add an
+  // out-of-stock variant.
+  const isOutOfStock =
+    isSimple && resolveStockState(firstVariant) === "out_of_stock"
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -73,10 +80,14 @@ export default function QuickAddButton({ product }: QuickAddButtonProps) {
     <button
       ref={buttonRef}
       onClick={handleClick}
-      disabled={isAdding}
+      disabled={isAdding || isOutOfStock}
+      aria-label={isOutOfStock ? "Out of stock" : "Add to cart"}
+      title={isOutOfStock ? "Out of stock" : undefined}
       className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full border flex items-center justify-center transition-all duration-300 shadow-lg disabled:cursor-wait ${
-        showSuccess 
-          ? "bg-[#ccff00] border-[#ccff00] text-black" 
+        isOutOfStock
+          ? "border-gray-700 bg-transparent text-gray-600 opacity-50 disabled:cursor-not-allowed"
+          : showSuccess
+          ? "bg-[#ccff00] border-[#ccff00] text-black"
           : "border-gray-600 bg-transparent text-white hover:bg-[#ccff00] hover:text-black hover:border-[#ccff00] hover:shadow-[0_0_15px_rgba(204,255,0,0.4)]"
       }`}
     >

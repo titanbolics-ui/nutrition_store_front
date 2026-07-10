@@ -38,7 +38,8 @@ export default async function BestSellers({
     regionId: region.id,
     queryParams: {
       limit: tagId ? 8 : 50,
-      fields: "*variants.calculated_price,+tags,+metadata",
+      fields:
+        "*variants.calculated_price,+variants.inventory_quantity,+variants.metadata,+tags,+metadata",
       ...(tagId && { tag_id: [tagId] }),
     },
   })

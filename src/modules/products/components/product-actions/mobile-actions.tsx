@@ -10,6 +10,8 @@ import { getProductPrice } from "@lib/util/get-product-price"
 import OptionSelect from "./option-select"
 import { HttpTypes } from "@medusajs/types"
 import { isSimpleProduct } from "@lib/util/product"
+import { StockState } from "@lib/util/resolve-stock-state"
+import StockBadge from "../stock-badge"
 
 type MobileActionsProps = {
   product: HttpTypes.StoreProduct
@@ -17,6 +19,7 @@ type MobileActionsProps = {
   options: Record<string, string | undefined>
   updateOptions: (title: string, value: string) => void
   inStock?: boolean
+  stockState?: StockState
   handleAddToCart: (buttonElement?: HTMLElement) => void
   isAdding?: boolean
   show: boolean
@@ -34,6 +37,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   options,
   updateOptions,
   inStock,
+  stockState,
   handleAddToCart,
   isAdding,
   show,
@@ -61,6 +65,10 @@ const MobileActions: React.FC<MobileActionsProps> = ({
   }, [price])
 
   const isSimple = isSimpleProduct(product)
+
+  // A selected, valid, genuinely out-of-stock variant: the CTA redirects to
+  // the waitlist form instead of dead-ending on a disabled "Out of stock" button.
+  const oosRedirect = !!variant && isValidVariant && stockState === "out_of_stock"
 
   return (
     <>
@@ -153,8 +161,14 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                   </button>
                 </div>
                 <Button
-                  onClick={(e) => handleAddToCart(e.currentTarget as HTMLElement)}
-                  disabled={!inStock || !variant || !isValidVariant}
+                  onClick={(e) => {
+                    if (oosRedirect) {
+                      document.getElementById("waitlist-email")?.focus()
+                      return
+                    }
+                    handleAddToCart(e.currentTarget as HTMLElement)
+                  }}
+                  disabled={!variant || !isValidVariant || (!inStock && !oosRedirect)}
                   className="flex-1 bg-[#ccff00] text-black font-bold hover:bg-[#b8e600] border-none shadow-[0_0_20px_rgba(204,255,0,0.3)] disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none"
                   isLoading={isAdding}
                   data-testid="mobile-cart-button"
@@ -168,9 +182,9 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                     if (!variant) {
                       return "Select variant"
                     }
-                    // If variant is selected but out of stock
-                    if (variant && isValidVariant && !inStock) {
-                      return "Out of stock"
+                    // Out of stock: point at the waitlist, not a dead end
+                    if (oosRedirect) {
+                      return "Notify me"
                     }
                     // Default
                     return "Add to cart"
@@ -178,6 +192,14 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                 </Button>
               </div>
             </div>
+
+            {stockState && (
+              <StockBadge
+                state={stockState}
+                restockEta={variant?.metadata?.restock_eta}
+                className="w-full text-center"
+              />
+            )}
           </div>
         </Transition>
       </div>

@@ -25,7 +25,7 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
     <div className="flex flex-col gap-y-3">
       <span className="text-sm text-gray-400">Select {title}</span>
       <div
-        className="flex flex-wrap justify-between gap-2"
+        className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-2 items-stretch"
         data-testid={dataTestId}
       >
         {filteredOptions.map((v) => {
@@ -34,7 +34,11 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
               onClick={() => updateOption(option.id, v)}
               key={v}
               className={clx(
-                "border border-gray-700 bg-gray-800 text-white text-small-regular h-10 rounded-lg p-2 flex-1 transition-all duration-150",
+                // A fixed min-height (not just grid's per-row stretch) keeps every
+                // button the same height regardless of which row it lands in —
+                // stretch alone only equalizes siblings that share a row, and a
+                // 2-line label can end up alone in its own row at narrow widths.
+                "border border-gray-700 bg-gray-800 text-white text-small-regular rounded-lg p-2 min-h-[3.75rem] flex items-center justify-center text-center transition-all duration-150",
                 {
                   "border-[#ccff00] bg-gray-700 text-[#ccff00]": v === current,
                   "hover:border-gray-600 hover:bg-gray-700":
