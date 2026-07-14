@@ -1,4 +1,5 @@
 import { clx } from "@medusajs/ui"
+import { CircleCheck, CircleSlash, TriangleAlert } from "lucide-react"
 import { formatRestockEta, StockState } from "@lib/util/resolve-stock-state"
 
 export default function StockBadge({
@@ -19,10 +20,14 @@ export default function StockBadge({
   if (state === "in_stock") {
     return (
       <span
-        className={clx("text-xs text-gray-400", className)}
+        className={clx(
+          "inline-flex items-center gap-1.5 text-xs text-[#ccff00]",
+          className
+        )}
         data-testid="stock-badge"
         data-stock-state={state}
       >
+        <CircleCheck className="h-3.5 w-3.5" aria-hidden="true" />
         In Stock
       </span>
     )
@@ -32,10 +37,14 @@ export default function StockBadge({
     if (variant === "plain") {
       return (
         <span
-          className={clx("text-xs text-gray-500", className)}
+          className={clx(
+            "inline-flex items-center gap-1.5 text-xs text-gray-500",
+            className
+          )}
           data-testid="stock-badge"
           data-stock-state={state}
         >
+          <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
           Low Stock
         </span>
       )
@@ -44,12 +53,13 @@ export default function StockBadge({
     return (
       <span
         className={clx(
-          "inline-flex items-center text-xs font-medium rounded-full px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/25",
+          "inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/25",
           className
         )}
         data-testid="stock-badge"
         data-stock-state={state}
       >
+        <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
         Low Stock
       </span>
     )
@@ -59,10 +69,14 @@ export default function StockBadge({
 
   return (
     <span
-      className={clx("text-xs text-gray-500", className)}
+      className={clx(
+        "inline-flex items-center gap-1.5 text-xs text-gray-500",
+        className
+      )}
       data-testid="stock-badge"
       data-stock-state={state}
     >
+      <CircleSlash className="h-3.5 w-3.5" aria-hidden="true" />
       Out of stock{eta ? ` · Back around ${eta}` : ""}
     </span>
   )

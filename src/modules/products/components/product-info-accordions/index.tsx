@@ -2,39 +2,53 @@
 
 import Back from "@modules/common/icons/back"
 import FastDelivery from "@modules/common/icons/fast-delivery"
-import Refresh from "@modules/common/icons/refresh" // Можна замінити на іконку щита (Shield), якщо є
+import Refresh from "@modules/common/icons/refresh"
 
-import Accordion from "./accordion"
+import Accordion from "../product-tabs/accordion"
 import { HttpTypes } from "@medusajs/types"
-import ProductSpecs from "../product-specs"
+import ProductSpecs, { hasAvailableSpecs } from "../product-specs"
 
-type ProductTabsProps = {
+type ProductInfoAccordionsProps = {
   product: HttpTypes.StoreProduct
 }
 
-const ProductTabs = ({ product }: ProductTabsProps) => {
-  const tabs = [
-    {
-      label: "Specifications",
-      component: <ProductInfoTab product={product} />,
-    },
+/**
+ * The quiet accordions that live in the info column right under the buy
+ * block: Shipping & Delivery always, Specifications when the product has
+ * spec metadata. Content is force-mounted so it lands in the initial HTML
+ * (search/AI readable) even while collapsed.
+ */
+const ProductInfoAccordions = ({ product }: ProductInfoAccordionsProps) => {
+  const sections = [
     {
       label: "Shipping & Delivery",
-      component: <ShippingInfoTab />,
+      component: <ShippingInfo />,
     },
   ]
 
+  if (hasAvailableSpecs(product)) {
+    sections.push({
+      label: "Specifications",
+      component: (
+        <div className="text-small-regular py-4">
+          <ProductSpecs product={product} />
+        </div>
+      ),
+    })
+  }
+
   return (
-    <div className="w-full">
-      <Accordion type="multiple" defaultValue={["Specifications"]}>
-        {tabs.map((tab, i) => (
+    <div className="w-full" data-testid="product-info-accordions">
+      <Accordion type="multiple">
+        {sections.map((section) => (
           <Accordion.Item
-            key={i}
-            title={tab.label}
+            key={section.label}
+            title={section.label}
             headingSize="medium"
-            value={tab.label}
+            value={section.label}
+            forceMountContent
           >
-            {tab.component}
+            {section.component}
           </Accordion.Item>
         ))}
       </Accordion>
@@ -42,19 +56,10 @@ const ProductTabs = ({ product }: ProductTabsProps) => {
   )
 }
 
-const ProductInfoTab = ({ product }: ProductTabsProps) => {
+const ShippingInfo = () => {
   return (
-    <div className="text-small-regular py-8">
-      <ProductSpecs product={product} />
-    </div>
-  )
-}
-
-const ShippingInfoTab = () => {
-  return (
-    <div className="text-small-regular py-8">
-      <div className="grid grid-cols-1 gap-y-8">
-        {/* Терміни доставки - Dark Tech Style */}
+    <div className="text-small-regular py-4">
+      <div className="grid grid-cols-1 gap-y-6">
         <div className="flex items-start gap-x-3 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
           <FastDelivery className="text-[#ccff00] flex-shrink-0 mt-0.5" />
           <div>
@@ -69,7 +74,7 @@ const ShippingInfoTab = () => {
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-start gap-x-3">
           <FastDelivery className="text-gray-400 flex-shrink-0 mt-0.5" />
           <div>
@@ -105,4 +110,4 @@ const ShippingInfoTab = () => {
   )
 }
 
-export default ProductTabs
+export default ProductInfoAccordions

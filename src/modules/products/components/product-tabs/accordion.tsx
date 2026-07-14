@@ -2,8 +2,11 @@ import { Text, clx } from "@medusajs/ui"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import React from "react"
 
-type AccordionItemProps = AccordionPrimitive.AccordionItemProps & {
-  title: string
+type AccordionItemProps = Omit<
+  AccordionPrimitive.AccordionItemProps,
+  "title"
+> & {
+  title: React.ReactNode
   subtitle?: string
   description?: string
   required?: boolean
@@ -72,7 +75,10 @@ const Item: React.FC<AccordionItemProps> = ({
       <AccordionPrimitive.Content
         forceMount={forceMountContent}
         className={clx(
-          "radix-state-closed:animate-accordion-close radix-state-open:animate-accordion-open radix-state-closed:pointer-events-none px-1"
+          // radix-state-closed:hidden: with forceMount Radix keeps closed
+          // content mounted (wanted — it lands in the initial HTML for
+          // crawlers) but does NOT set the hidden attribute, so hide it here.
+          "radix-state-closed:animate-accordion-close radix-state-open:animate-accordion-open radix-state-closed:pointer-events-none radix-state-closed:hidden px-1"
         )}
       >
         <div className="inter-base-regular group-radix-state-closed:animate-accordion-close">

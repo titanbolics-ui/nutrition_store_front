@@ -1,24 +1,36 @@
 import { HttpTypes } from "@medusajs/types"
-import { Text } from "@medusajs/ui"
+import { Droplet, Factory, Pill, Syringe, type LucideIcon } from "lucide-react"
+import SpecRow from "../spec-row"
 
 type ProductSpecsProps = {
   product: HttpTypes.StoreProduct
 }
 
-const ProductSpecs = ({ product }: ProductSpecsProps) => {
+const specsConfig = [
+  { key: "manufacturer", label: "Manufacturer" },
+  { key: "active_ingredient", label: "Active Ingredient" },
+  { key: "concentration", label: "Concentration" },
+  { key: "form", label: "Form" },
+  { key: "volume", label: "Volume" },
+]
+
+function iconFor(key: string, value: unknown): LucideIcon | undefined {
+  if (key === "manufacturer") return Factory
+  if (key === "concentration") return Droplet
+  if (key === "form") {
+    return /inject|vial|amp/i.test(String(value ?? "")) ? Syringe : Pill
+  }
+  return undefined
+}
+
+/**
+ * Old products keep specs nested under metadata.specs (string or object);
+ * newer ones write the same fields flat on metadata directly. Flat keys win
+ * when both are present.
+ */
+function getAvailableSpecs(product: HttpTypes.StoreProduct) {
   const metadata = product.metadata || {}
 
-  // 1. Конфігурація полів, які ми шукаємо
-  const specsConfig = [
-    { key: "manufacturer", label: "Manufacturer" },
-    { key: "active_ingredient", label: "Active Ingredient" },
-    { key: "concentration", label: "Concentration" },
-    { key: "form", label: "Form" },
-    { key: "volume", label: "Volume" },
-  ]
-
-  // 2. ЛОГІКА ДЛЯ СТАРИХ ТОВАРІВ (Nested specs)
-  // Намагаємося дістати та розпарсити об'єкт 'specs', якщо він є
   let specs: Record<string, any> = {}
   const specsRaw = metadata.specs
 
@@ -33,41 +45,38 @@ const ProductSpecs = ({ product }: ProductSpecsProps) => {
     specs = {}
   }
 
-  // 3. ЛОГІКА ДЛЯ НОВИХ ТОВАРІВ (Flat metadata)
-  // Проходимося по нашому конфігу і дивимося, чи є такі ключі прямо в корені metadata.
-  // Якщо є — додаємо їх у об'єкт specs (або перезаписуємо старі).
   specsConfig.forEach((item) => {
-    // metadata[item.key] шукає metadata.manufacturer, metadata.volume і т.д.
     const flatValue = metadata[item.key]
-
-    // Перевіряємо, чи значення існує і не пусте
     if (flatValue !== undefined && flatValue !== null && flatValue !== "") {
       specs[item.key] = flatValue
     }
   })
 
-  // 4. Фільтруємо ті, що мають значення (щоб не виводити пусті рядки)
-  const availableSpecs = specsConfig.filter((spec) => specs[spec.key])
+  return specsConfig
+    .filter((spec) => specs[spec.key])
+    .map((spec) => ({ ...spec, value: specs[spec.key] }))
+}
+
+export function hasAvailableSpecs(product: HttpTypes.StoreProduct): boolean {
+  return getAvailableSpecs(product).length > 0
+}
+
+const ProductSpecs = ({ product }: ProductSpecsProps) => {
+  const availableSpecs = getAvailableSpecs(product)
 
   if (availableSpecs.length === 0) return null
 
   return (
-    <div className="grid grid-cols-1 gap-y-3">
+    <dl className="grid grid-cols-1">
       {availableSpecs.map((spec) => (
-        <div
+        <SpecRow
           key={spec.key}
-          className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0"
-        >
-          <span className="text-gray-400 text-sm">
-            {spec.label}
-          </span>
-          <span className="text-white font-medium text-sm">
-            {/* Додаємо toString(), про всяк випадок, якщо там число */}
-            {specs[spec.key]?.toString()}
-          </span>
-        </div>
+          label={spec.label}
+          value={spec.value?.toString()}
+          icon={iconFor(spec.key, spec.value)}
+        />
       ))}
-    </div>
+    </dl>
   )
 }
 

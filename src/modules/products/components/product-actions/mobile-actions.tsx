@@ -137,7 +137,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                   <button
                     onClick={decreaseQuantity}
                     disabled={quantity <= 1 || optionsDisabled}
-                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
                     type="button"
                     data-testid="mobile-decrease-quantity-button"
                   >
@@ -153,7 +153,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                       (variant?.manage_inventory && 
                        quantity >= (variant?.inventory_quantity || 0))
                     }
-                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
                     type="button"
                     data-testid="mobile-increase-quantity-button"
                   >
@@ -169,7 +169,7 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                     handleAddToCart(e.currentTarget as HTMLElement)
                   }}
                   disabled={!variant || !isValidVariant || (!inStock && !oosRedirect)}
-                  className="flex-1 bg-[#ccff00] text-black font-bold hover:bg-[#b8e600] border-none shadow-[0_0_20px_rgba(204,255,0,0.3)] disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none"
+                  className="flex-1 bg-[#ccff00] text-black font-bold hover:bg-[#b8e600] border-none shadow-[0_0_20px_rgba(204,255,0,0.3)] disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
                   isLoading={isAdding}
                   data-testid="mobile-cart-button"
                 >
@@ -254,6 +254,9 @@ const MobileActions: React.FC<MobileActionsProps> = ({
                                 updateOption={updateOptions}
                                 title={option.title ?? ""}
                                 disabled={optionsDisabled}
+                                variants={product.variants ?? undefined}
+                                selectedOptions={options}
+                                productForm={product.metadata?.form}
                               />
                             </div>
                           )

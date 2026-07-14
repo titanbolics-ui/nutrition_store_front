@@ -1,10 +1,15 @@
 ## Design (read before ANY visual work)
-- ALWAYS read /mnt/skills/public/frontend-design/SKILL.md before building or reshaping UI.
-- Keep the existing brand identity: near-black background, single acid-green accent.
-  Do NOT redesign the identity — only structure and new sections. The brand works.
-- The gold/tan look in any reference screenshots is NOT our palette — adapt logic, not color.
-- Quality floor, always: responsive to 375px, visible keyboard focus, reduced-motion respected.
-- Spend boldness in one signature element per page; keep everything else quiet.
+- ALWAYS read `docs/frontend-design.md` before building or reshaping UI.
+  It defines: palette (near-black + single acid-green accent), typography,
+  spacing rules, lucide-react icon mapping per section, data-visualization
+  patterns (rating bars, severity indicators), and animation level
+  (middle — smooth, present, never flashy).
+- Direction: body-tech energy + scientific precision. Data is the hero —
+  show ratings/values as visuals, never as gray key-value text.
+- Do NOT invent a parallel style or introduce new colors. Amber is for stock
+  warnings only; red only for genuine errors.
+- Baseline always: responsive to 375px, visible keyboard focus,
+  `prefers-reduced-motion` respected.
 
 ## Product page architecture
 - TWO templates, selected by the product's ROOT category (Compounds → compound template,

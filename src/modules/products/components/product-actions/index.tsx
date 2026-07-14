@@ -271,10 +271,13 @@ export default function ProductActions({
   return (
     <>
       <div className="flex flex-col gap-y-2" ref={actionsRef}>
+        {/* Price first, then the variant chips it applies to */}
+        <ProductPrice product={product} variant={selectedVariant} />
+
         <div>
           {/* Display options even when there's only one variant (previously hidden) */}
           {product.options && product.options.length > 0 && (
-            <div className="flex flex-col gap-y-4">
+            <div className="flex flex-col gap-y-4 pt-2">
               {(product.options || []).map((option) => {
                 return (
                   <div key={option.id}>
@@ -285,6 +288,9 @@ export default function ProductActions({
                       title={option.title ?? ""}
                       data-testid="product-options"
                       disabled={!!disabled || isAdding}
+                      variants={product.variants ?? undefined}
+                      selectedOptions={options}
+                      productForm={product.metadata?.form}
                     />
                   </div>
                 )
@@ -294,7 +300,6 @@ export default function ProductActions({
           )}
         </div>
 
-        <ProductPrice product={product} variant={selectedVariant} />
         <StockBadge
           state={stockState}
           restockEta={selectedVariant?.metadata?.restock_eta}
@@ -307,7 +312,7 @@ export default function ProductActions({
             <button
               onClick={decreaseQuantity}
               disabled={quantity <= 1 || !!disabled || isAdding}
-              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
               type="button"
               data-testid="decrease-quantity-button"
             >
@@ -328,7 +333,7 @@ export default function ProductActions({
                   !!selectedVariant.manage_inventory &&
                   quantity >= (selectedVariant.inventory_quantity || 0))
               }
-              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors transition-transform duration-100 active:scale-[0.97] motion-reduce:active:scale-100"
               type="button"
               data-testid="increase-quantity-button"
             >
@@ -347,7 +352,7 @@ export default function ProductActions({
               !isValidVariant
             }
             variant="primary"
-            className="flex-1 h-10 bg-[#ccff00] text-black font-bold hover:bg-[#b8e600] border-none shadow-[0_0_20px_rgba(204,255,0,0.3)] hover:shadow-[0_0_30px_rgba(204,255,0,0.5)] transition-all duration-300 disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none"
+            className="flex-1 h-10 bg-[#ccff00] text-black font-bold hover:bg-[#b8e600] border-none shadow-[0_0_20px_rgba(204,255,0,0.3)] hover:shadow-[0_0_30px_rgba(204,255,0,0.5)] transition-all duration-300 active:scale-[0.97] motion-reduce:active:scale-100 disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none"
             isLoading={isAdding}
             data-testid="add-product-button"
           >

@@ -238,3 +238,174 @@ variants (`methenolone-enanthate-100mgml-1ml-amp-zphc`): clicked through all 3 o
 plus 6 rapid stress clicks — exactly 1 `turnstile-container`/script/`waitlist-form`
 throughout, confirming Fix 2 from the prior stage holds under real variant switching, not
 just the StrictMode unit test. `npm run test` 34/34, `npm run build` clean.
+
+---
+
+## Storefront Redesign Stage C — content templates with tabs — DONE (2026-07-10)
+
+Source spec: `docs/storefront-redesign-tech-spec.md`. Stages A/B were intentionally
+reverted by the user (manual category/variant work in prod Admin, not automated) — built
+Stage C fresh, including `resolveProductTemplate` which didn't exist anywhere in code
+despite being mentioned as "already exists" in an earlier version of the brief.
+
+**What:**
+- `src/lib/util/resolve-product-template.ts` — `resolveProductTemplate(product)`.
+  `metadata.template` override wins when it's exactly `"compound"`/`"peptide"`; else
+  infers from root category (`category.parent_category ?? category`, matched on
+  `handle === "peptides"`); else `"compound"`. Verified against the real live category
+  tree (`Peptides` root + 5 subcategories, `HGH` a separate root) via the store API before
+  writing this, not assumed.
+- `src/modules/products/components/product-content/` — new component tree: `index.tsx`
+  (entry point: reads `metadata.content`; `content.type` is the source of truth for which
+  layout renders, `resolveProductTemplate` is only consulted to warn on a mismatch — never
+  to blank the page, see deviations below), `compound-content.tsx` / `peptide-content.tsx`
+  (tab panel lists),
+  `tabs-shell.tsx` (Radix `Tabs` desktop strip + the existing `Accordion` primitive from
+  `product-tabs/accordion.tsx` for mobile, toggled via the `small:` (1024px) breakpoint —
+  no new accordion component), `dosage-scale.tsx` (beginner/intermediate/advanced as a
+  3-stage acid-green bar, not raw text), `content-blocks.tsx` (text/image/callout/table,
+  in order), `faq-section.tsx`, `also-known-as.tsx`, `calculator-placeholder.tsx`
+  (Stage D reservation — see deviations below), `labels.ts` (tab-label lookup, written
+  generically so nothing says "Peptide" — verified against a real HGH product, see below),
+  `read-content.ts` (defensive runtime shape check; malformed/absent content → `null`,
+  never throws), `types.ts`.
+- `src/modules/products/templates/index.tsx` — one new line,
+  `<ProductContent product={product} />`, placed where `<ProductSideEffects
+  product={product} />` already sits. `ProductSideEffects` (legacy `overview_html`) and
+  `ProductSpecs` (legacy flat/nested specs) are untouched and keep rendering for any
+  product without a valid `metadata.content` — confirmed with the user before building
+  that 151 of 158 live products currently have `overview_html` and zero have
+  `metadata.content` yet, so replacing those blocks outright would have blanked real
+  content on production today.
+- New dependency: `@radix-ui/react-tabs` (desktop tab strip; pairs with the
+  already-installed `@radix-ui/react-accordion`).
+
+**Deviations from the spec doc:**
+- Reconstitution (vial amount/unit/enabled) lives on **variant metadata**
+  (`variant.metadata.reconstitution`), not in `metadata.content` — this turn's schema
+  instructions omitted it from content entirely and phrased the Calculator gate as "any
+  variant has reconstitution.enabled." Read defensively in `calculator-placeholder.tsx`;
+  an invalid shape is silently treated as disabled rather than crashing.
+- `ProductContent` treats `content.type` as the source of truth for layout — content is
+  hand-authored, so it's what was explicitly meant. `resolveProductTemplate` is only
+  consulted to catch a mismatch (e.g. peptide-shaped content on a product whose
+  category/override resolves to compound) and `console.warn` loudly; it never overrides
+  `content.type` and never blanks the page — a mismatch is a content mistake to surface,
+  not a reason to hide the page. (Revised after initial review: the first version rendered
+  nothing on a mismatch, which was itself the "silent blank page" failure mode being
+  guarded against.)
+- `/mnt/skills/public/frontend-design/SKILL.md` did not exist on this machine — the dead
+  path has since been removed from `CLAUDE.md` and replaced with an inline design rule.
+  This stage was built using the codebase's own existing brand implementation instead
+  (acid-green `#ccff00`, the existing `Accordion` primitive, the `small:` breakpoint
+  convention) rather than block on
+  a missing file.
+
+**Tests:** `src/lib/util/resolve-product-template.test.ts` (7 cases: override wins over
+category, override wins for the HGH case, Peptides subcategory, Peptides root itself,
+unrelated category, no data fallback, garbage override value ignored) +
+`src/modules/products/components/product-content/index.test.tsx` (14 cases: compound vs
+peptide tab labels, HGH scenario renders peptide layout with no "Peptide" text anywhere in
+that section, coaUrl present/absent, faq present/absent, overview-only product renders
+cleanly, all 4 contentBlocks types in order, no content → renders nothing, malformed
+content → renders nothing not a crash, Calculator tab present/absent by variant
+reconstitution, mobile accordion trigger expands). `npm run test` — all 55 green (14 new +
+41 pre-existing, zero regressions). `npm run build` clean (3622 static product pages).
+
+**Manual verification:** patched two real products on the local dev DB —
+`delatestryl-300-test-e-1ml-amp-canadabiolabs` (compound: dosage/profile/side-effects/lab
+tabs, alsoKnownAs, a callout + table content block, all confirmed rendered server-side via
+curl) and `spectros-140iu-hgh-spectrum-pharma` (HGH via `metadata.template: "peptide"`
+override + a variant with `reconstitution.enabled`: Key Highlights/Research/Calculator/Lab
+Results tabs rendered, Calculator showed the raw `14 IU` value, and grepping the rendered
+`peptide-content` section confirmed zero "Peptide" wording in any visible label — the only
+"peptide" hits on the whole page were in unrelated RelatedProducts copy and internal RSC
+JSON, not this stage's UI). Both products reverted back to no `metadata.content`
+afterward. Did not get to a real browser at 375px (no browser/screenshot tool available in
+this environment) — verified the accordion markup is present in the server-rendered HTML
+and covered keyboard-trigger expansion in the component test instead; recommend a manual
+375px check in an actual browser before shipping.
+
+**Follow-up (2026-07-11, real Admin UI usage):** the `content` metadata table field turned
+out to be edited as a raw string (Admin's generic metadata editor), not an object — fixed
+backend-side (see `nutrition_store/HANDOFF.md`), no frontend change needed since
+`readProductContent` already only ever sees the final persisted object. Separately, added
+an optional `title` field to `text`/`callout` contentBlocks (`content-blocks.tsx`,
+`types.ts`) — a real authoring need (a titled paragraph/callout) that surfaced immediately
+on first real use; renders as a heading above the body when present, nothing changes when
+absent. `npm run test` 57/57, `npm run build` clean.
+
+**Backend half:** `nutrition_store/HANDOFF.md` has the schema/validation side of this
+stage.
+
+## Product page restructure — slider gallery, info order, variant chips — DONE (2026-07-13)
+
+**What:** PDP rebuilt around proven patterns (Gymshark gallery/chips, Immortals info
+order) + GEO: key facts visible without a click, ALL tab content in the initial HTML.
+
+- `image-gallery/gallery-view.tsx` (new) + `image-gallery/index.tsx` — vertical image
+  wall replaced by a slider. Desktop: main image + thumbnail strip (acid-green active
+  border); mobile: native CSS scroll-snap swipe carousel with dot indicators. No new
+  dependency; every image stays mounted in the DOM (inactive slides CSS-hidden). The
+  existing yet-another-react-lightbox zoom is unchanged (its CSS imports are why the
+  markup lives in gallery-view.tsx — the node test runner can't parse CSS).
+- Info column order (templates/index.tsx, 2-col layout): breadcrumb row → gallery left /
+  sticky right column: title → subtitle → line-clamp-3 description → price → variant
+  chips → stock+qty+CTA (+waitlist) → Shipping & Delivery + Specifications accordions
+  (moved from the old left-column ProductTabs, which is deleted;
+  `product-info-accordions/index.tsx` is its successor, force-mounted for SEO).
+- `product-subtitle/index.tsx` (new) — "Oxandrolone — also known as Anavar" from
+  `metadata.active_ingredient` + `metadata.content.alsoKnownAs` (read leniently, NOT via
+  readProductContent — a broken dosage section must not hide the subtitle). DATA GAP:
+  0 products have alsoKnownAs authored, 28 lack active_ingredient — admin content task.
+- Variant chips (`option-select.tsx` rewritten) — values grouped by physical form via
+  `lib/util/resolve-variant-form.ts` (value keyword wins over `metadata.form` fallback;
+  a product mixing ampoules and vials gets two groups, each with icon + header). Icons:
+  lucide Pill; custom `common/icons/vial.tsx` + `ampoule.tsx` (lucide has neither).
+  Out-of-stock values: rendered but muted+strikethrough, `aria-disabled`, not clickable,
+  `title="Out of stock"`; a value is OOS only when EVERY variant matching it (and the
+  other selected options) is OOS — reuses `resolveStockState`, inventory already fetched.
+- Breadcrumb (`common/components/breadcrumbs` restyled, `product-breadcrumb/` new):
+  compact `Home › Category › Product` line, text-xs; mobile collapses to a quiet
+  "‹ Category" link. BackButton usage dropped from the PDP (component itself untouched).
+- SEO fix beyond the spec's assumption: Radix Tabs/Accordion UNMOUNT inactive panels —
+  tab content was NOT in view-source before. Now force-mounted: tabs-shell.tsx
+  (`forceMount` + `data-[state=inactive]:hidden`, switch animation is CSS
+  `animate-fade-in-top`, framer-motion FadeMount removed there) and
+  product-tabs/accordion.tsx (`radix-state-closed:hidden` — Radix skips the hidden attr
+  under forceMount; caveat: collapsed-open height animation may jump since closed
+  content measures 0, accepted for SEO).
+
+**Verified:** `npm test` 101/101 (new: resolve-variant-form, option-select groups/OOS,
+product-subtitle, gallery-view DOM/dots, tabs-shell force-mount, info-accordions).
+Live view-source on running dev: "Cycle length"/"Anabolic rating"/"Detection time"
+present without any tab click; Methenolone Enanthate ZPHC page renders "Ampoules" +
+"Vials" groups with 3 strikethrough OOS chips; 6 gallery images ×2 (desktop+mobile) in
+HTML. Prices untouched. One pre-existing tsc error in mobile-actions.tsx:151 (quantity
+button, code not touched) — repo has many pre-existing tsc errors outside this task.
+
+## Підзаголовок: pill речовини + chips назв + підсвітка в тексті — DONE (2026-07-13)
+
+**What:** активна речовина та альт-назви зроблені помітними на сторінці товару.
+
+- `product-subtitle/index.tsx` — редизайн: `active_ingredient` (плоский metadata) →
+  acid-green «pill»; `alsoKnownAs` (ліберально з metadata.content) → приглушені chips з
+  міткою «Also known as». Джерела не змінені; нема даних → null.
+- `src/lib/util/highlight-term.tsx` (новий) — `highlightTerm(text, term)`: кожне повне
+  (whole-word, case-insensitive, Unicode-межі) входження терма → `<span
+  text-[#ccff00]/80 font-medium>` (приглушений зелений, без фону — «не шум»). Екранує
+  спецсимволи; нема терма/збігу → рядок як є.
+- `product-content/index.tsx` дістає `metadata.active_ingredient` і передає в
+  `compound-content.tsx`/`peptide-content.tsx`; overview-абзаци (what/howItWorks/mechanism)
+  обгорнуті `highlightTerm(..., activeIngredient)`.
+
+**Backend contract:** `active_ingredient` завозиться через `content/<handle>.json` →
+`nutrition_store` import-скрипт (див. його HANDOFF).
+
+**Verified:** `npm test` 106/106 (новий highlight-term: whole-word/усі входження/metachar/
+без збігу; оновлений subtitle: pill+chips/лише pill/лише chips/порожньо). tsc по цих файлах
+чисто. Live view-source oxandrolone-zphc: pill «Oxandrolone», chips Anavar/Oxandrolonum/Var/
+Oxandrin, у overview «Oxandrolone» приглушено-зелене.
+
+**Прапор для ревʼю:** «Also known as» тепер у двох місцях — підзаголовок і overview-панель
+(компонент `AlsoKnownAs`). Лишив обидва; можливо, прибрати з overview.

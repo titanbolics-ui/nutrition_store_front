@@ -13,6 +13,7 @@ const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
  */
 const nextConfig = {
   reactStrictMode: true,
+  devIndicators: false,
   logging: {
     fetches: {
       fullUrl: true,
@@ -67,6 +68,34 @@ const nextConfig = {
           ]
         : []),
     ],
+  },
+  async redirects(){
+    return [
+      // Real storefront links carry the country prefix (/us/products/...).
+      // :countryCode is a path param — it must be re-emitted in destination,
+      // otherwise the segment stays literal.
+      {
+        source: '/:countryCode/products/testoplex-e300',
+        destination: '/:countryCode/products/testosterone-enanthate-250mgml-10ml-zphc',
+        permanent: false,
+      },
+      // Fallback for bare links without a country prefix; proxy re-adds it after.
+      {
+        source: '/products/testoplex-e300',
+        destination: '/products/testosterone-enanthate-250mgml-10ml-zphc',
+        permanent: false,
+      },
+      { source: '/:countryCode/products/mastaplex',
+        destination: '/:countryCode/products/drostanolone-propionate-100mgml-10ml',
+        permanent: false,},
+        // Fallback for bare links without a country prefix; proxy re-adds it after.
+      {
+source: '/products/mastaplex',
+        destination: '/products/drostanolone-propionate-100mgml-10ml',
+        permanent: false,
+      },
+    
+    ]
   },
   skipTrailingSlashRedirect: true,
 }
