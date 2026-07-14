@@ -94,7 +94,7 @@ source: '/products/mastaplex',
         destination: '/products/drostanolone-propionate-100mgml-10ml',
         permanent: false,
       },
- // 1. З 10ml-zphc на базовий zphc
+ // 1. from 10ml-zphc to base zphc
       {
         source: '/:countryCode/products/testosterone-enanthate-250mgml-10ml-zphc',
         destination: '/:countryCode/products/testosterone-enanthate-250mgml-zphc',
@@ -106,7 +106,7 @@ source: '/products/mastaplex',
         permanent: false,
       },
 
-      // 2. З 30ml-zphc на базовий zphc
+      // 2. from 30ml-zphc to base zphc
       {
         source: '/:countryCode/products/testosterone-enanthate-250mgml-30ml-zphc',
         destination: '/:countryCode/products/testosterone-enanthate-250mgml-zphc',
@@ -118,7 +118,7 @@ source: '/products/mastaplex',
         permanent: false,
       },
 
-      // 3. З 1ml-amp-zphc на базовий zphc
+      // 3. from 1ml-amp-zphc to base zphc
       {
         source: '/:countryCode/products/testosterone-enanthate-250mgml-1ml-amp-zphc',
         destination: '/:countryCode/products/testosterone-enanthate-250mgml-zphc',
@@ -130,7 +130,7 @@ source: '/products/mastaplex',
         permanent: false,
       },
 
-      // 4. З 2ml-amp-zphc на базовий zphc
+      // 4. from 2ml-amp-zphc to base zphc
       {
         source: '/:countryCode/products/testosterone-enanthate-250mgml-2ml-amp-zphc',
         destination: '/:countryCode/products/testosterone-enanthate-250mgml-zphc',
