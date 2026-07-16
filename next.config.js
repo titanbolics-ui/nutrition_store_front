@@ -141,6 +141,112 @@ source: '/products/mastaplex',
         destination: '/products/testosterone-enanthate-250mgml-zphc',
         permanent: false,
       },
+        // 5. from test-e-xt-labs to base zphc
+      {
+        source: '/:countryCode/products/testoplex-e300',
+        destination: '/:countryCode/products/testosterone-enanthate-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/testoplex-e300',
+        destination: '/products/testosterone-enanthate-250mgml-zphc',
+        permanent: false,
+      },
+      // 1. From 10ml-zphc to base zphc
+      {
+        source: '/:countryCode/products/testosterone-cypionate-250mgml-10ml-zphc',
+        destination: '/:countryCode/products/testosterone-cypionate-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/testosterone-cypionate-250mgml-10ml-zphc',
+        destination: '/products/testosterone-cypionate-250mgml-zphc',
+        permanent: false,
+      },
+
+      // 2. From 1ml-amp-zphc to base zphc
+      {
+        source: '/:countryCode/products/testosterone-cypionate-250mgml-1ml-amp-zphc',
+        destination: '/:countryCode/products/testosterone-cypionate-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/testosterone-cypionate-250mgml-1ml-amp-zphc',
+        destination: '/products/testosterone-cypionate-250mgml-zphc',
+        permanent: false,
+      },
+
+      // 3. From 30ml-zphc to base zphc
+      {
+        source: '/:countryCode/products/testosterone-cypionate-250mgml-30ml-zphc',
+        destination: '/:countryCode/products/testosterone-cypionate-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/testosterone-cypionate-250mgml-30ml-zphc',
+        destination: '/products/testosterone-cypionate-250mgml-zphc',
+        permanent: false,
+      },
+      // 4. From test-c-xt-labs to base zphc
+      {
+        source: '/:countryCode/products/testoplex-c300',
+        destination: '/:countryCode/products/testosterone-cypionate-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/testoplex-c300',
+        destination: '/products/testosterone-cypionate-250mgml-zphc',
+        permanent: false,
+      },
+      // Redirects for Testosterone Mix variants to the base product
+
+      // 1. From 10ml-zphc to base zphc
+      {
+        source: '/:countryCode/products/testosterone-mix-250mgml-10ml-zphc',
+        destination: '/:countryCode/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/testosterone-mix-250mgml-10ml-zphc',
+        destination: '/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
+
+      // 2. From 1ml-amp-zphc to base zphc
+      {
+        source: '/:countryCode/products/testosterone-mix-250mgml-1ml-amp-zphc',
+        destination: '/:countryCode/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/testosterone-mix-250mgml-1ml-amp-zphc',
+        destination: '/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
+
+      // 3. From 2ml-amp-zphc to base zphc
+      {
+        source: '/:countryCode/products/testosterone-mix-250mgml-2ml-amp-zphc',
+        destination: '/:countryCode/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/testosterone-mix-250mgml-2ml-amp-zphc',
+        destination: '/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
+
+      // 4. From 30ml-zphc to base zphc
+      {
+        source: '/:countryCode/products/testosterone-mix-250mgml-30ml-zphc',
+        destination: '/:countryCode/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/testosterone-mix-250mgml-30ml-zphc',
+        destination: '/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
     ]
   },
   skipTrailingSlashRedirect: true,
