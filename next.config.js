@@ -319,6 +319,43 @@ source: '/products/mastaplex',
         destination: '/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
         permanent: false,
       },
+      // Redirects for Spectros HGH variants to the base product
+
+      // 1. From spectros-140iu-hgh-spectrum-pharma to base hgh
+      {
+        source: '/:countryCode/products/spectros-140iu-hgh-spectrum-pharma',
+        destination: '/:countryCode/products/spectros-hgh-somatropin-spectrum-pharma',
+        permanent: false,
+      },
+      {
+        source: '/products/spectros-140iu-hgh-spectrum-pharma',
+        destination: '/products/spectros-hgh-somatropin-spectrum-pharma',
+        permanent: false,
+      },
+
+      // 2. From spectros-150iu-hgh-spectrum-pharma (derived from SPECTROS 150IU HGH [Spectrum Pharma]) to base hgh
+      {
+        source: '/:countryCode/products/spectros-150iu-hgh-spectrum-pharma',
+        destination: '/:countryCode/products/spectros-hgh-somatropin-spectrum-pharma',
+        permanent: false,
+      },
+      {
+        source: '/products/spectros-150iu-hgh-spectrum-pharma',
+        destination: '/products/spectros-hgh-somatropin-spectrum-pharma',
+        permanent: false,
+      },
+
+      // 3. From spectros-280iu-hgh-spectrum-pharma to base hgh
+      {
+        source: '/:countryCode/products/spectros-280iu-hgh-spectrum-pharma',
+        destination: '/:countryCode/products/spectros-hgh-somatropin-spectrum-pharma',
+        permanent: false,
+      },
+      {
+        source: '/products/spectros-280iu-hgh-spectrum-pharma',
+        destination: '/products/spectros-hgh-somatropin-spectrum-pharma',
+        permanent: false,
+      },
     ]
   },
   skipTrailingSlashRedirect: true,
