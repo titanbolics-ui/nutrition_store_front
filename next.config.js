@@ -247,6 +247,78 @@ source: '/products/mastaplex',
         destination: '/products/testosterone-mix-250mgml-zphc',
         permanent: false,
       },
+        // 4. From sustaplex-275-xt-labs to base zphc
+      {
+        source: '/:countryCode/products/sustaplex-275',
+        destination: '/:countryCode/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/sustaplex-275',
+        destination: '/products/testosterone-mix-250mgml-zphc',
+        permanent: false,
+      },
+      // Redirects for Zptropin HGH variants to the base product
+
+      // 1. From zptropin-hgh-160iu-zphc to base hgh
+      {
+        source: '/:countryCode/products/zptropin-hgh-160iu-zphc',
+        destination: '/:countryCode/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/zptropin-hgh-160iu-zphc',
+        destination: '/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
+
+      // 2. From zptrop-hgh-80iu-zphc-bacteriostatic-water to base hgh
+      {
+        source: '/:countryCode/products/zptrop-hgh-80iu-zphc-bacteriostatic-water',
+        destination: '/:countryCode/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/zptrop-hgh-80iu-zphc-bacteriostatic-water',
+        destination: '/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
+
+      // 3. From zptrop-200iu-hgh-bacteriostatic-water-zphc to base hgh
+      {
+        source: '/:countryCode/products/zptrop-200iu-hgh-bacteriostatic-water-zphc',
+        destination: '/:countryCode/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/zptrop-200iu-hgh-bacteriostatic-water-zphc',
+        destination: '/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
+
+      // 4. From zptrop-hgh-320iu-zphc to base hgh
+      {
+        source: '/:countryCode/products/zptrop-hgh-320iu-zphc',
+        destination: '/:countryCode/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/zptrop-hgh-320iu-zphc',
+        destination: '/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
+
+      // 5. From zptrop-100iu-zphc to base hgh
+      {
+        source: '/:countryCode/products/zptrop-100iu-zphc',
+        destination: '/:countryCode/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
+      {
+        source: '/products/zptrop-100iu-zphc',
+        destination: '/products/zptrop-hgh-somatripin-191aa-rdna-zphc',
+        permanent: false,
+      },
     ]
   },
   skipTrailingSlashRedirect: true,
