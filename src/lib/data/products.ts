@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { resolveProductStockState } from "@lib/util/resolve-stock-state"
 import { sortProducts } from "@lib/util/sort-products"
 import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
@@ -63,7 +64,7 @@ export const listProducts = async ({
           offset,
           region_id: region?.id,
           fields:
-            "*variants.calculated_price,+variants.inventory_quantity,+variants.metadata,*variants.images,+metadata,+tags,*categories,*categories.parent_category",
+            "*variants.calculated_price,+variants.inventory_quantity,+variants.metadata,*variants.images,+metadata,+tags,*type,*categories,*categories.parent_category",
           ...queryParams,
         },
         headers,
@@ -86,19 +87,28 @@ export const listProducts = async ({
 }
 
 /**
- * This will fetch 100 products to the cache and sort them based on the sortBy parameter.
- * It will then return the paginated products based on the page and limit parameters.
+ * Fetches the full result set (up to 500 — the catalog is ~150 products; the
+ * old cap of 100 made pages past the 100th product render empty), sorts and
+ * optionally filters it in memory, then returns the requested page.
+ *
+ * - `brandTypeId` is passed through to the API (`type_id`) — server-side.
+ * - `inStockOnly` filters in memory via `resolveProductStockState`, so the
+ *   reported `count` (and thus pagination) reflects the filtered set.
  */
 export const listProductsWithSort = async ({
   page = 0,
   queryParams,
   sortBy = "created_at",
   countryCode,
+  brandTypeId,
+  inStockOnly,
 }: {
   page?: number
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
   sortBy?: SortOptions
   countryCode: string
+  brandTypeId?: string
+  inStockOnly?: boolean
 }): Promise<{
   response: { products: HttpTypes.StoreProduct[]; count: number }
   nextPage: number | null
@@ -107,17 +117,26 @@ export const listProductsWithSort = async ({
   const limit = queryParams?.limit || 12
 
   const {
-    response: { products, count },
+    response: { products },
   } = await listProducts({
     pageParam: 0,
     queryParams: {
       ...queryParams,
-      limit: 100,
+      ...(brandTypeId ? { type_id: [brandTypeId] } : {}),
+      limit: 500,
     },
     countryCode,
   })
 
-  const sortedProducts = sortProducts(products, sortBy)
+  const filteredProducts = inStockOnly
+    ? products.filter(
+        (p) => resolveProductStockState(p) !== "out_of_stock"
+      )
+    : products
+
+  const count = filteredProducts.length
+
+  const sortedProducts = sortProducts(filteredProducts, sortBy)
 
   const pageParam = (page - 1) * limit
 

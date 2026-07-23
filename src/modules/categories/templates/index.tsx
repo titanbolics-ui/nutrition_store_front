@@ -10,20 +10,27 @@ import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { listCategories } from "@lib/data/categories"
+import { listBrandTypes } from "@lib/data/product-types"
+import BrandFilter from "@modules/store/components/brand-filter"
 
 export default async function CategoryTemplate({
   category,
   sortBy,
   page,
   countryCode,
+  brand,
+  stock,
 }: {
   category: HttpTypes.StoreProductCategory
   sortBy?: SortOptions
   page?: string
   countryCode: string
+  brand?: string
+  stock?: string
 }) {
   const pageNumber = page ? parseInt(page) : 1
   const sort = sortBy || "featured"
+  const inStockOnly = stock === "in"
 
   if (!category || !countryCode) notFound()
 
@@ -31,6 +38,7 @@ export default async function CategoryTemplate({
   const allCategories = await listCategories()
   const rootCategories =
     allCategories?.filter((category) => !category.parent_category) || []
+  const brands = await listBrandTypes()
 
   const parents = [] as HttpTypes.StoreProductCategory[]
 
@@ -73,6 +81,7 @@ export default async function CategoryTemplate({
         <RefinementList
           sortBy={sort}
           categories={rootCategories}
+          brands={brands}
           data-testid="sort-by-container"
         />
         <div className="w-full">
@@ -82,6 +91,11 @@ export default async function CategoryTemplate({
             subcategories={subcategoriesToShow}
             activeParentHandle={parentCategoryHandle}
           />
+
+          {/* Mobile brand / stock filters */}
+          <div className="md:hidden mb-4">
+            <BrandFilter brands={brands} />
+          </div>
 
           {/* Breadcrumbs - small gray text */}
           {parents && parents.length > 0 && (
@@ -138,9 +152,7 @@ export default async function CategoryTemplate({
             )}
           <Suspense
             fallback={
-              <SkeletonProductGrid
-                numberOfProducts={category.products?.length ?? 8}
-              />
+              <SkeletonProductGrid />
             }
           >
             <PaginatedProducts
@@ -148,6 +160,8 @@ export default async function CategoryTemplate({
               page={pageNumber}
               categoryId={category.id}
               countryCode={countryCode}
+              brandSlug={brand}
+              inStockOnly={inStockOnly}
             />
           </Suspense>
 

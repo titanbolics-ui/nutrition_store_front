@@ -51,7 +51,9 @@ export const getCollectionByHandle = async (
 
   return sdk.client
     .fetch<HttpTypes.StoreCollectionListResponse>(`/store/collections`, {
-      query: { handle, fields: "*products" },
+      // *products deliberately omitted — Medusa expands DRAFT products into
+      // collection.products, leaking unpublished listings.
+      query: { handle },
       next,
       cache: "force-cache",
     })

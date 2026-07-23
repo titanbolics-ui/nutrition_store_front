@@ -409,3 +409,179 @@ Oxandrin, у overview «Oxandrolone» приглушено-зелене.
 
 **Прапор для ревʼю:** «Also known as» тепер у двох місцях — підзаголовок і overview-панель
 (компонент `AlsoKnownAs`). Лишив обидва; можливо, прибрати з overview.
+
+## Storefront Redesign Stage D — reconstitution calculator — DONE (2026-07-18)
+
+Source spec: `docs/storefront-redesign-tech-spec.md` Stage D. Replaces the Stage C
+`calculator-placeholder.tsx` with the real interactive calculator.
+
+**What:**
+- `src/lib/util/reconstitution.ts` (new) — all math, pure and React-free:
+  `computeDraw` (mg/mcg and IU modes, discriminated result with
+  `no-water`/`invalid-input`/`exceeds-syringe` guards — NaN/Infinity can never escape),
+  `mgEquivalent` (IU-mode informational display only, editable factor, default
+  `DEFAULT_IU_PER_MG = 3`), `formatUnits`/`formatMl` display rounding, plus
+  `readReconstitution`/`hasReconstitutionEnabled` moved here from the deleted placeholder.
+  U-100 fixed (`SYRINGE_ML = 1`, `SYRINGE_UNITS = 100`), no syringe-type selector.
+- `src/modules/products/components/reconstitution-calculator/index.tsx` (new,
+  `"use client"`) — self-contained (reads everything from `product.variants`, so it drops
+  into the future tool-hub unchanged): vial chip picker when 2+ variants have a valid
+  config; BAC-water + dose inputs (`inputMode="decimal"`, comma tolerated); mcg/mg toggle
+  in mg mode; editable IU/mg factor field in IU mode; result hero number in acid-green
+  inside an `aria-live="polite"` region; CSS-only U-100 syringe bar (ticks every 10 units,
+  `motion-reduce:transition-none`); amber exceeds-syringe warning replaces the number;
+  blend note + "total draw" labelling when `isBlend`; mandatory research disclaimer.
+- `compound-content.tsx` / `peptide-content.tsx` — placeholder import swapped for the new
+  component + util; `calculator-placeholder.tsx` deleted.
+
+**Deviations from the spec doc:**
+- Gating tightened vs the Stage C placeholder: `enabled: true` with an unusable
+  `vialAmount`/`unit` (non-positive, non-number, unknown unit) now counts as disabled —
+  no Calculator tab — instead of rendering raw garbage values.
+- Blend handling: spec allowed hide-or-note; chose "show with explicit note" ("result is
+  total draw volume, not a single-component dose"), dose label becomes "Desired total
+  dose".
+- No new dependencies (syringe visual is hand-rolled CSS per the design doc's "no heavy
+  chart library" rule).
+
+**Tests:** `src/lib/util/reconstitution.test.ts` (20: both spec worked examples exact —
+0.20 ml/20 units and 5.6 units — mg↔mcg equivalence, all guard reasons, exactly-1-ml
+boundary, factor editing incl. the 2.8 IU/mg label case, `readReconstitution` malformed
+shapes, display rounding) + `reconstitution-calculator/index.test.tsx` (14: worked
+examples through the real inputs, comma decimals, unit toggle, empty/zero/non-numeric
+guards with a no-NaN-on-screen assertion, exceeds warning suppresses the number, blend
+note + total-draw label with a Super Slim Mix-shaped fixture, disclaimer, variant
+switching changes the math, no-picker single variant, garbage config renders nothing).
+`npm run test` 140/140, `npm run build` clean (backend running).
+
+**Manual verification:** patched three real products on the local dev DB (metadata backed
+up to scratchpad first, restored byte-identical after): `bpc-157-25mg-zphc` (mg mode),
+`somatropin-191aa-15iu-hgh-bacteriostatic-water-canadabiolabs` (IU mode: factor field
+present, default 3), `super-slim-mix-zphc` (blend: note + "Desired total dose" in the
+server HTML). All three pages server-rendered the calculator twice (desktop tab + mobile
+accordion) via curl. NOTE: `spectros-140iu-hgh-spectrum-pharma` is unusable as a local
+fixture now — `next.config.js` 301s all spectros handles to
+`spectros-hgh-somatropin-spectrum-pharma`, which doesn't exist in the local dev DB → 404.
+Same caveat as Stage C: no real browser available here, so the 375px layout and
+keyboard-only pass are covered by construction (native inputs, `focus-visible` outlines,
+`xsmall:` grid collapse) + component tests; recommend a quick manual browser check.
+
+## Storefront Redesign Stage D.1 — calculator UI redesign (reference-style UX) — DONE (2026-07-18)
+
+User rejected the Stage D bare-inputs look ("халтура") against their reference screenshot
+(gold preset-chip calculator). Rebuilt the component's UX to the reference's structure,
+brand-skinned (dark + `#ccff00`, NOT gold):
+
+- **Guided questions with preset chips**: syringe volume 0.3/0.5/1.0 ml (selectable rows
+  with hand-rolled SVG syringe illustrations, barrel length scaled per size); BAC water
+  1/2/3/5 ml + Other; dose 50/100/250/500 mcg, 1 mg, 2.5 mg + Other (mg mode) or
+  1/2/3/4 IU + Other (IU mode). "Other" reveals the old free inputs. Chip state uses an
+  explicit `"other"` sentinel — the custom value never masquerades as a preset.
+- **Defaults preselected** (2 ml water, 500 mcg / 2 IU dose, 1.0 ml syringe) → live
+  result on open.
+- **Sentence result**: "Your vial concentration is **X mg/ml**. To achieve **D**, draw
+  **Y ml** (**Z units** on a U-100 syringe)." + "Bonus tip:" line, values bold acid-green.
+- **Ruler scale** replaced the thin bar: minor ticks every 2 units, labelled majors every
+  10, range = syringe × 100 (30/50/100), translucent green draw zone with a solid edge.
+- **Syringe selector is a spec deviation** — spec said "no syringe-type selector for
+  now"; explicit user override (2026-07-18). All sizes U-100; `computeDraw` gained a
+  `syringeMl` param (default 1) for the exceeds guard; `SYRINGE_SIZES` exported. Vial
+  stays product-bound (user decision — free vial choice deferred to the tool-hub).
+- Guards/blend/disclaimer semantics unchanged; exceeds message now names the chosen
+  syringe size and suggests picking a bigger one.
+
+Files: `src/lib/util/reconstitution.ts` (syringeMl param), rebuilt
+`reconstitution-calculator/index.tsx`, tests updated:
+`reconstitution.test.ts` 22 (added 0.3/0.5/1.0 exceed + boundary cases),
+`reconstitution-calculator/index.test.tsx` 15 (chip flows, instant defaults, syringe
+rescale, Other flows with the old guard scenarios). `npm run test` 143/143,
+`npm run build` clean. Verified server-rendered on the local dev fixtures
+(bpc-157 mg, spectros IU — redirects in `next.config.js` were commented out by the user,
+so the spectros URL resolves again; super-slim blend). Test metadata patches are STILL
+LIVE on the dev DB (user is reviewing visually); backups in the session scratchpad.
+
+## Storefront Redesign Stage D.2 — calculator decoupled from variants — DONE (2026-07-18)
+
+Bug: after the user defined real variants on the HGH product (150 IU / 140 IU), those new
+variants carried no `reconstitution` metadata, so the variant-gated Calculator tab vanished
+on their `v_id` URLs. Also, vial size varies too much to bind to a variant (NAD vials are
+500 mg). Fix: decouple the calculator from variants entirely.
+
+- **Gate moved to product level**: `product.metadata.reconstitution.enabled` (was variant
+  metadata). `hasReconstitutionEnabled` / new `readProductReconstitution` read the product,
+  not variants. Variant `reconstitution` metadata is no longer read anywhere.
+- **Mode auto-resolved**: `resolveReconstitutionUnit(product)` → IU when the product is HGH
+  (root category handle `hgh`, or `metadata.class` contains "HGH", or `active_ingredient`
+  === "HGH"); else mg. Overridable with an explicit `metadata.reconstitution.unit`.
+- **Vial is user input now**: new "How many {mg|IU} are in your vial?" question with preset
+  chips (`VIAL_PRESETS` — mg 2/5/10/15/30, IU 100/140/150) + "Other" custom field (covers
+  NAD 500 mg). Default `DEFAULT_VIAL` mg→5, IU→140. Variant chip picker removed.
+- Reference-style UI (syringe selector, water/dose chips, sentence result, ruler, bonus
+  tip, guards, disclaimer) unchanged. `computeDraw` still takes `syringeMl` from Stage D.1.
+
+Files: `src/lib/util/reconstitution.ts` (removed variant `readReconstitution`/
+`ReconstitutionConfig`; added `resolveReconstitutionUnit`, `readProductReconstitution`,
+`VIAL_PRESETS`, `DEFAULT_VIAL`), rebuilt vial block in
+`reconstitution-calculator/index.tsx`. Tests: `reconstitution.test.ts` 25 (unit-resolution
++ product-gate cases replace variant-read), `reconstitution-calculator/index.test.tsx` 17
+(product fixtures, vial chip + Other/NAD flow, HGH→IU auto), `product-content/index.test.tsx`
+gating tests now set product-level metadata. `npm run test` 148/148, `npm run build` clean.
+
+Verified server-render on the SELECTED-VARIANT URL that was broken
+(`/us/products/spectros-140iu-hgh-spectrum-pharma?v_id=variant_01KXTP5QW0AWV1ZSR98VF970E5`):
+calculator present, IU mode, 140 IU default. bpc-157 mg + super-slim blend also confirmed.
+
+**Backend contract change — DONE (cross-repo rule — backend owns the contract):**
+`reconstitution` now belongs on the PRODUCT, not the variant. Backend caught up the same
+day (`nutrition_store/HANDOFF.md` Stage D.2): authored as a top-level key in
+`content/<handle>.json` like `active_ingredient`, validated by `validateReconstitution`
+(`.strict()` — a stale `vialAmount` is rejected), split into `metadata.reconstitution` by
+import-content, round-tripped by export-content; documented in `content/README.md`. Spec
+`storefront-redesign-tech-spec.md` updated (content-schema note + Stage D AS-BUILT block).
+Dev fixtures are patched to product level (bpc/spectros `{enabled:true}`, super-slim
+`{enabled:true,isBlend:true}`); variant test metadata cleared. Still live for review.
+
+## Storefront Redesign Stage E — brand badges + catalog filters + US-domestic purge — DONE (2026-07-21)
+
+Brand = `product.type` (Medusa product type; backend half in `nutrition_store/HANDOFF.md`
+Stage E). Stock-badge deliverables were already built in previous stages (3-state resolver,
+card image-badges, PDP badge near price, restock_eta plumbing) — re-verified, not rebuilt.
+
+- **Data:** `lib/data/products.ts` — `*type` added to list fields; `listProductsWithSort`
+  now fetches up to 500 (was 100 — with 156 products, pages past #9 were PHANTOM: count
+  said 13 pages, fetch had 100 items, slices came back empty; last pages now render),
+  takes `brandTypeId` (server-side `type_id` filter) + `inStockOnly` (in-memory via
+  `resolveProductStockState`; `count`/pagination reflect the filtered set; low_stock IS
+  purchasable so it stays visible). New `lib/data/product-types.ts` (`listBrandTypes`,
+  slug↔type map). Unknown `?brand=` slug filters to zero, never silently unfiltered.
+- **UI:** card brand caption now `product.type.value` (was `collection?.title ||
+  "Spectrum Pharma"` hardcode — collections are Stage A curation, not brands); no type →
+  no caption. PDP: brand pill above the title (`product-info`, `data-testid="brand-badge"`).
+  New `store/components/brand-filter` — brand chips (toggle, mutually exclusive) +
+  "In Stock only" pill; URL params `?brand=<slug>&stock=in`, changing filters drops `page`.
+  Rendered in RefinementList (desktop) + under CategoryChips (mobile) on store/category/
+  collection pages; all three pages pass `brand`/`stock` through to `PaginatedProducts`.
+- **US-domestic purge (customer-visible):** checkout PayPal XT-Labs block removed
+  (`checkout/components/payment/index.tsx` — `warehouse_items` gating + message).
+  **Draft-product leak fixed:** Medusa's `*products` expansion on categories/collections
+  returns DRAFT products; those objects were serialized into client props via
+  RefinementList/CategoryChips (store page HTML carried the 15 unpublished "USA Domestic"
+  products — 2.4 MB → 780 KB after the fix). `*products` dropped from `listCategories`,
+  `getCategoryByHandle`, `getCollectionByHandle`; skeleton counts fall back to default 8.
+- **Tests:** `brand-filter/index.test.tsx` 6 (chips, toggle-on/off, mutual exclusion,
+  stock param, page-param drop; next/navigation stubbed via AppRouterContext/
+  PathnameContext/SearchParamsContext providers), `product-info/index.test.tsx` 2
+  (badge renders from type.value / absent without). ProductPreview itself is not
+  render-testable (transitively imports `server-only` via QuickAddButton → cart data) —
+  card verified on live SSR instead. `npm run test` 156/156, `npm run build` clean.
+- **Live SSR verified** (dev, cookie-warmed — first hit 307s on `_medusa_cache_id`):
+  `/us/store?brand=zphc&stock=in` → 12 cards, all badges ZPHC, zero OOS;
+  `/us/categories/oral-steroids?brand=spectrum-pharma` → 6 Spectrum-only;
+  PDP `oxandrolone-zphc` → ZPHC pill + stock badge; unfiltered store 12 pages
+  (141 products), `stock=in` 11 pages; last pages render 9 real cards (phantom fix);
+  `grep -i domestic` over rendered HTML and `src/` (sans tests) → clean.
+- **Deviations:** spec order says "E needs A" — A/B still not done; E sits on existing
+  store/category pages (same precedent as C/D). No restock_eta values in live data right
+  now (mechanism tested in unit tests only). 15 unpublished handles are dead URLs;
+  redirect entries prepared but NOT enabled — the `next.config.js` redirects block is
+  deliberately commented out (user, Stage D.2); user decides.

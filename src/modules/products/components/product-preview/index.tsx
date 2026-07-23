@@ -76,9 +76,14 @@ export default async function ProductPreview({
         {/* INFO CONTAINER */}
         <div className="p-3 sm:p-4 md:p-5 flex flex-col flex-grow justify-between gap-2 sm:gap-3 md:gap-4 bg-[#111111]">
           <div>
-            <div className="text-[#ccff00]/70 text-[8px] sm:text-[10px] uppercase tracking-widest font-mono mb-0.5 sm:mb-1">
-              {product.collection?.title || "Spectrum Pharma"}
-            </div>
+            {product.type?.value && (
+              <div
+                className="text-[#ccff00]/70 text-[8px] sm:text-[10px] uppercase tracking-widest font-mono mb-0.5 sm:mb-1"
+                data-testid="brand-badge"
+              >
+                {product.type.value}
+              </div>
+            )}
             <Text
               className="text-gray-200 text-xs sm:text-sm md:text-base font-bold leading-tight uppercase tracking-normal md:group-hover:text-[#ccff00] transition-colors line-clamp-3"
               data-testid="product-title"

@@ -178,7 +178,6 @@ decisive. One resolution helper, used everywhere the page picks a template.
      dosage: { beginner, intermediate, advanced, cycleLength, administration, pct },
      profile: { anabolicRating, androgenicRating, ester, halfLife, aromatization, detectionTime },
      sideEffects: { estrogenic, androgenic, cardiovascular, suppression },
-     reconstitution?: { enabled, vialAmount, unit },   // optional — see Stage D
      coaUrl?,                                           // only if a real report exists
      faq?: [ { q, a } ],                                // optional — GEO Q&A, see item 7
      contentBlocks?: [ ... ]                            // see below
@@ -192,7 +191,6 @@ decisive. One resolution helper, used everywhere the page picks a template.
      overview: { what, mechanism },
      keyHighlights: [ ... ],
      research: { useCases, models },
-     reconstitution?: { enabled, vialAmount, unit },
      stacking?: [ { productHandle, label } ],           // cross-sell + trust
      coaUrl?,
      faq?: [ { q, a } ],                                // optional — GEO Q&A, see item 7
@@ -212,6 +210,16 @@ decisive. One resolution helper, used everywhere the page picks a template.
    Empty/absent → renders nothing (clean default). Present → rendered in array order in a
    dedicated section. This is what lets a specific product carry a mechanism diagram or a
    formula while every product keeps the same structured core.
+
+   **Reconstitution is NOT part of content.** It is a separate flat PRODUCT metadata key,
+   `metadata.reconstitution = { enabled: true, unit?: "mg" | "IU", isBlend?: boolean }`
+   (authored in the same `content/<handle>.json` file as a top-level key, like
+   `active_ingredient`, and split out on import — see backend `content/README.md`). No
+   `vialAmount`: the vial amount is entered by the user in the calculator, not stored.
+   `unit` is optional — the storefront auto-resolves mg vs IU (HGH → IU) when absent.
+   (History: Stage C/D first put this on VARIANT metadata; Stage D.2 moved it to the product
+   after real variants without the flag hid the calculator and because vial size varies too
+   much to bind to a variant, e.g. NAD vials are 500 mg.)
 
 3. Storefront: two page components (compound / peptide), selected by resolveProductTemplate
    (explicit `template` wins, else root category). Render structured sections as TABS or
@@ -268,6 +276,10 @@ decisive. One resolution helper, used everywhere the page picks a template.
 
 ## Stage D — Reconstitution calculator (shared component, MEDICAL math)
 
+> **Status: shipped, then reshaped (Stage D.1 UI, Stage D.2 data model). Read the
+> "AS BUILT" note at the end of this section — the gate, vial source, and syringe
+> selector differ from the original prose below.**
+
 **Goal:** an interactive calculator on the product page (and reusable in the future
 tool-hub) that turns vial amount + BAC water + desired dose into an exact syringe draw,
 shown as a number AND a visual syringe scale. Cross-template: enabled by
@@ -294,11 +306,14 @@ template type.
   - Provide an EDITABLE mg↔IU factor (default `1 mg ≈ 3 IU`, WHO standard for rhGH) used
     only for an optional informational mg-equivalent display. The factor must be editable
     because some products specify a different potency (e.g. 2.8 IU/mg) on their label.
-  - Mode is driven by `reconstitution.unit` ("mg" | "IU"); IU mode is essentially HGH.
+  - Mode is `reconstitution.unit` when explicitly set; otherwise AS BUILT it is
+    auto-resolved (HGH → IU, else mg). IU mode is essentially HGH.
 
 **Common requirements:**
-- Syringe scale fixed at U-100 (1 ml = 100 units, 0.01 ml = 1 unit). No syringe-type
-  selector for now (we don't sell syringes; U-100 is the de-facto standard).
+- Syringe scale fixed at U-100 (1 ml = 100 units, 0.01 ml = 1 unit). ~~No syringe-type
+  selector for now~~ — AS BUILT (Stage D.1): a 0.3 / 0.5 / 1.0 ml syringe selector was
+  added at the user's request. All sizes are U-100 (100 units/ml); the selector only sets
+  the barrel volume used for the ruler range and the "dose exceeds syringe" guard.
 - Visual syringe bar with the draw zone highlighted — this is what makes it trustworthy;
   not optional.
 - Guard rails (the reason this needs tests):
@@ -331,6 +346,27 @@ template type.
 - Blend product (`isBlend = true`) → calculator hidden OR shown with the blend note; never
   presents a per-component dose. Verify with a Super Slim Mix-shaped fixture.
 - Mobile + keyboard accessible.
+
+**AS BUILT (Stage D + D.1 + D.2) — how it actually shipped:**
+- **Gate + data model (D.2):** `reconstitution` is a flat PRODUCT metadata key,
+  `metadata.reconstitution = { enabled: true, unit?: "mg"|"IU", isBlend?: boolean }` —
+  NOT on variants, NOT inside `content`. Authored as a top-level key in
+  `content/<handle>.json` (backend splits it out on import; validated by
+  `validateReconstitution`, `.strict()` so a stale `vialAmount` is rejected). The
+  Calculator tab shows iff `metadata.reconstitution.enabled === true`.
+- **Vial amount is user input**, not product data: preset chips (mg 2/5/10/15/30,
+  IU 100/140/150) + a custom "Other" field (covers e.g. NAD 500 mg). This is why the vial
+  amount left the data model — a single variant can't carry one meaningful vial size.
+- **Mode auto-resolved** from the product (HGH → IU via the `hgh` root category / `HGH`
+  class / active_ingredient; else mg), overridable by explicit `reconstitution.unit`.
+- **UI (D.1):** reference-style guided questions with preset chips, a sentence result
+  ("…draw 0.20 ml (20 units on a U-100 syringe)"), and a ruler-style scale; brand-skinned
+  (dark + acid-green), plus the 0.3/0.5/1.0 ml syringe selector noted above.
+- Math (`computeDraw`), guards, blend note, and disclaimer are unchanged from the prose
+  above and remain exhaustively unit-tested (the worked examples still hold exactly).
+- Storefront: `src/lib/util/reconstitution.ts` +
+  `src/modules/products/components/reconstitution-calculator/`. Backend authoring:
+  `content/README.md`, `product-content-schema.ts`, `import-content.ts` / `export-content.ts`.
 
 ---
 

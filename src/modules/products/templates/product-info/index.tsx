@@ -14,6 +14,14 @@ type ProductInfoProps = {
 const ProductInfo = ({ product }: ProductInfoProps) => {
   return (
     <div id="product-info" className="flex flex-col gap-y-3">
+      {product.type?.value && (
+        <span
+          className="self-start inline-flex items-center rounded-full border border-[#ccff00]/25 bg-[#ccff00]/10 px-2.5 py-0.5 text-[10px] uppercase tracking-widest font-mono text-[#ccff00]"
+          data-testid="brand-badge"
+        >
+          {product.type.value}
+        </span>
+      )}
       <Heading
         level="h2"
         className="text-3xl leading-10 text-ui-fg-base"

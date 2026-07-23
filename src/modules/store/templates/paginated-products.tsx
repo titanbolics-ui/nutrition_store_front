@@ -1,4 +1,5 @@
 import { listProductsWithSort } from "@lib/data/products"
+import { listBrandTypes } from "@lib/data/product-types"
 import { getRegion } from "@lib/data/regions"
 import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
@@ -21,6 +22,8 @@ export default async function PaginatedProducts({
   categoryId,
   productsIds,
   countryCode,
+  brandSlug,
+  inStockOnly,
 }: {
   sortBy?: SortOptions
   page: number
@@ -28,6 +31,8 @@ export default async function PaginatedProducts({
   categoryId?: string
   productsIds?: string[]
   countryCode: string
+  brandSlug?: string
+  inStockOnly?: boolean
 }) {
   const queryParams: PaginatedProductsParams = {
     limit: 12,
@@ -55,6 +60,13 @@ export default async function PaginatedProducts({
     return null
   }
 
+  // An unknown ?brand= slug (typo, stale link) filters to nothing rather
+  // than silently showing the full unfiltered catalog.
+  const brandTypeId = brandSlug
+    ? (await listBrandTypes()).find((b) => b.slug === brandSlug)?.id ??
+      "unknown-brand"
+    : undefined
+
   let {
     response: { products, count },
   } = await listProductsWithSort({
@@ -62,6 +74,8 @@ export default async function PaginatedProducts({
     queryParams,
     sortBy,
     countryCode,
+    brandTypeId,
+    inStockOnly,
   })
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)

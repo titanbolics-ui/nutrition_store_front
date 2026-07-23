@@ -13,9 +13,8 @@ import DosageScale from "./dosage-scale"
 import ContentBlocks from "./content-blocks"
 import FaqSection from "./faq-section"
 import AlsoKnownAs from "./also-known-as"
-import CalculatorPlaceholder, {
-  hasReconstitutionEnabled,
-} from "./calculator-placeholder"
+import ReconstitutionCalculator from "@modules/products/components/reconstitution-calculator"
+import { hasReconstitutionEnabled } from "@lib/util/reconstitution"
 import { TAB_LABELS } from "./labels"
 import SpecRow from "../spec-row"
 import RatingBar from "../rating-bar"
@@ -104,7 +103,7 @@ const CompoundContent = ({ product, content, activeIngredient }: Props) => {
       value: "calculator",
       label: labels.calculator,
       icon: <Beaker className="h-4 w-4" aria-hidden="true" />,
-      content: <CalculatorPlaceholder product={product} />,
+      content: <ReconstitutionCalculator product={product} />,
     })
   }
 

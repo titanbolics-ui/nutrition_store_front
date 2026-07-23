@@ -57,12 +57,16 @@ function product(opts: {
   template?: string
   categories?: any[]
   variants?: any[]
+  reconstitution?: unknown
 }) {
   return {
     id: "prod_1",
     metadata: {
       ...(opts.content !== undefined ? { content: opts.content } : {}),
       ...(opts.template !== undefined ? { template: opts.template } : {}),
+      ...(opts.reconstitution !== undefined
+        ? { reconstitution: opts.reconstitution }
+        : {}),
     },
     categories: opts.categories ?? [],
     variants: opts.variants ?? [],
@@ -255,37 +259,29 @@ test("malformed metadata.content (missing required field) renders nothing, no cr
   assert.equal(container.innerHTML, "")
 })
 
-test("a variant with reconstitution.enabled shows the Calculator tab with raw values", () => {
+test("product-level reconstitution.enabled shows the Calculator tab with the calculator", () => {
   render(
     <ProductContent
       product={product({
         content: peptideContent,
         categories: [category({ handle: "gh-axis", parentHandle: "peptides" })],
-        variants: [
-          {
-            id: "variant_1",
-            title: "5mg vial",
-            metadata: { reconstitution: { enabled: true, vialAmount: 5, unit: "mg" } },
-          },
-        ],
+        reconstitution: { enabled: true },
       })}
     />
   )
   const calculatorTabs = screen.getAllByText("Calculator")
   assert.ok(calculatorTabs.length > 0)
-  // Panels are force-mounted for SEO, so the placeholder is in the DOM twice
+  // Panels are force-mounted for SEO, so the calculator is in the DOM twice
   // (desktop tab + mobile accordion) without any tab switching.
-  assert.equal(screen.getAllByTestId("calculator-placeholder").length, 2)
-  assert.ok(screen.getAllByText("5mg vial").length > 0)
+  assert.equal(screen.getAllByTestId("reconstitution-calculator").length, 2)
 })
 
-test("no variant with reconstitution.enabled means no Calculator tab", () => {
+test("no product-level reconstitution means no Calculator tab", () => {
   render(
     <ProductContent
       product={product({
         content: peptideContent,
         categories: [category({ handle: "gh-axis", parentHandle: "peptides" })],
-        variants: [{ id: "variant_1", title: "5mg vial", metadata: {} }],
       })}
     />
   )

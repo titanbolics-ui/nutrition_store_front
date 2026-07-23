@@ -1,7 +1,7 @@
 "use client"
 
 import { RadioGroup } from "@headlessui/react"
-import { isPaypal, isStripeLike, paymentInfoMap } from "@lib/constants"
+import { isStripeLike, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
 import {
   trackCheckoutStepCompleted,
@@ -26,14 +26,6 @@ const Payment = ({
 }) => {
   const activeSession = cart.payment_collection?.payment_sessions?.find(
     (paymentSession: any) => paymentSession.status === "pending"
-  )
-
-  const warehouseItems = (cart.metadata?.warehouse_items ?? {}) as Record<
-    string,
-    { locationName: string }
-  >
-  const hasXTLabsItems = Object.values(warehouseItems).some((w) =>
-    w.locationName.toLowerCase().includes("xt-labs")
   )
 
   const [isLoading, setIsLoading] = useState(false)
@@ -174,14 +166,6 @@ const Payment = ({
                         paymentInfoMap={paymentInfoMap}
                         paymentProviderId={paymentMethod.id}
                         selectedPaymentOptionId={selectedPaymentMethod}
-                        disabled={
-                          isPaypal(paymentMethod.id) && hasXTLabsItems
-                        }
-                        disabledReason={
-                          isPaypal(paymentMethod.id) && hasXTLabsItems
-                            ? "PayPal is not available for orders containing items from US Domestic [XT-Labs]. Please choose another payment method."
-                            : undefined
-                        }
                       />
                     )}
                   </div>

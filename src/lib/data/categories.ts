@@ -14,8 +14,12 @@ export const listCategories = async (query?: Record<string, any>) => {
       "/store/product-categories",
       {
         query: {
+          // No *products here: the categories land in client-component props
+          // (RefinementList/CategoryChips), and Medusa's category expansion
+          // includes DRAFT products — expanding them would serialize
+          // unpublished listings into the page payload.
           fields:
-            "*category_children, *products, *parent_category, *parent_category.parent_category",
+            "*category_children, *parent_category, *parent_category.parent_category",
           limit,
           ...query,
         },
@@ -38,7 +42,9 @@ export const getCategoryByHandle = async (categoryHandle: string[]) => {
       `/store/product-categories`,
       {
         query: {
-          fields: "*category_children, *products",
+          // *products deliberately omitted — draft products leak through the
+          // expansion (see listCategories above).
+          fields: "*category_children",
           handle,
         },
         next,
