@@ -5,6 +5,7 @@ import React, { useContext, useMemo, type JSX } from "react"
 import Radio from "@modules/common/components/radio"
 
 import { isCardManual, isCashApp, isManual } from "@lib/constants"
+import { convertToLocale } from "@lib/util/money"
 import SkeletonCardDetails from "@modules/skeletons/components/skeleton-card-details"
 import { CardElement } from "@stripe/react-stripe-js"
 import { StripeCardElementOptions } from "@stripe/stripe-js"
@@ -17,6 +18,7 @@ type PaymentContainerProps = {
   disabled?: boolean
   disabledReason?: string
   paymentInfoMap: Record<string, { title: string; icon: JSX.Element }>
+  surcharge?: { percent: number; amount: number; currencyCode: string }
   children?: React.ReactNode
 }
 
@@ -26,6 +28,7 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
   paymentInfoMap,
   disabled = false,
   disabledReason,
+  surcharge,
   children,
 }) => {
   const isDevelopment = process.env.NODE_ENV === "development"
@@ -93,6 +96,19 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
               {isCardManualProvider && !disabled && (
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500 text-white uppercase tracking-wide">
                   Secure Bridge
+                </span>
+              )}
+
+              {surcharge && !disabled && (
+                <span
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-[#b8ff2b]/40 bg-[#b8ff2b]/10 text-[#b8ff2b] uppercase tracking-wide whitespace-nowrap"
+                  data-testid="paypal-surcharge-badge"
+                >
+                  +{surcharge.percent}% · +
+                  {convertToLocale({
+                    amount: surcharge.amount,
+                    currency_code: surcharge.currencyCode,
+                  })}
                 </span>
               )}
             </div>

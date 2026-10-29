@@ -1,4 +1,5 @@
 import { convertToLocale } from "@lib/util/money"
+import { splitShippingMethods } from "@lib/util/payment-surcharge"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
 
@@ -9,6 +10,10 @@ type ShippingDetailsProps = {
 }
 
 const ShippingDetails = ({ order }: ShippingDetailsProps) => {
+  // Skip the PayPal fee (stored as a shipping method) — show the delivery.
+  const deliveryMethod = splitShippingMethods<any>(
+    (order as any).shipping_methods
+  ).delivery[0]
   return (
     <div>
       <Heading level="h2" className="flex flex-row text-3xl-regular my-6 text-[#b8ff2b]">
@@ -56,9 +61,9 @@ const ShippingDetails = ({ order }: ShippingDetailsProps) => {
         >
           <Text className="txt-medium-plus text-gray-500 mb-1">Method</Text>
           <Text className="txt-medium text-gray-400">
-            {(order as any).shipping_methods?.[0]?.name} (
+            {deliveryMethod?.name} (
             {convertToLocale({
-              amount: order.shipping_methods?.[0]?.total ?? 0,
+              amount: deliveryMethod?.total ?? 0,
               currency_code: order.currency_code,
             })}
             )

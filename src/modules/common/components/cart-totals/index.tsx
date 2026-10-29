@@ -1,6 +1,7 @@
 "use client"
 
 import { convertToLocale } from "@lib/util/money"
+import { surchargeName, surchargeTotal } from "@lib/util/payment-surcharge"
 import React from "react"
 
 type CartTotalsProps = {
@@ -13,6 +14,7 @@ type CartTotalsProps = {
     shipping_subtotal?: number | null
     discount_subtotal?: number | null
     credit_lines?: { reference?: string; amount?: number }[] | null
+    shipping_methods?: any[] | null
   }
 }
 
@@ -25,7 +27,13 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
     shipping_subtotal,
     discount_subtotal,
     credit_lines,
+    shipping_methods,
   } = totals
+
+  // The PayPal fee is stored as a shipping method — show it as its own row
+  // and keep "Shipping" delivery-only.
+  const surcharge = surchargeTotal(shipping_methods)
+  const deliverySubtotal = (shipping_subtotal ?? 0) - surcharge
 
   const storeCreditApplied = (credit_lines ?? [])
     .filter((l) => l.reference === "store-credit")
@@ -46,10 +54,18 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
         </div>
         <div className="flex items-center justify-between">
           <span>Shipping</span>
-          <span data-testid="cart-shipping" data-value={shipping_subtotal || 0}>
-            {convertToLocale({ amount: shipping_subtotal ?? 0, currency_code })}
+          <span data-testid="cart-shipping" data-value={deliverySubtotal || 0}>
+            {convertToLocale({ amount: deliverySubtotal, currency_code })}
           </span>
         </div>
+        {surcharge > 0 && (
+          <div className="flex items-center justify-between">
+            <span>{surchargeName(shipping_methods)}</span>
+            <span data-testid="cart-payment-surcharge" data-value={surcharge}>
+              {convertToLocale({ amount: surcharge, currency_code })}
+            </span>
+          </div>
+        )}
         {!!discount_subtotal && (
           <div className="flex items-center justify-between">
             <span>Discount</span>

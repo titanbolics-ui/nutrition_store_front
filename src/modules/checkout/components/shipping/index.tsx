@@ -16,6 +16,7 @@ import Divider from "@modules/common/components/divider"
 import MedusaRadio from "@modules/common/components/radio"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
+import { splitShippingMethods } from "@lib/util/payment-surcharge"
 
 type WarehouseItemsMetadata = Record<
   string,
@@ -568,7 +569,7 @@ const Shipping: React.FC<ShippingProps> = ({
             {cart && (cart.shipping_methods?.length ?? 0) > 0 && (
               <div className="flex flex-col gap-y-2 w-1/2">
                 <Text className="txt-medium-plus text-white mb-1">Method</Text>
-                {cart.shipping_methods!.map((method) => (
+                {splitShippingMethods(cart.shipping_methods).delivery.map((method) => (
                   <Text key={method.id} className="txt-medium text-gray-400">
                     {method.name}{" "}
                     {convertToLocale({

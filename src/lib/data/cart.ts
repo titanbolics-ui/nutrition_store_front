@@ -14,6 +14,7 @@ import {
   setCartId,
 } from "./cookies"
 import { getRegion } from "./regions"
+import type { SurchargeQuote } from "@lib/util/payment-surcharge"
 
 // Helper function to check if cart meets minimum requirements for applied promo codes
 async function checkAndRemoveInvalidPromotions(cartId: string) {
@@ -149,7 +150,7 @@ async function checkAndRemoveInvalidPromotions(cartId: string) {
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +metadata, *credit_lines, *gift_cards"
+    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name, +shipping_methods.data, +shipping_methods.metadata, +metadata, *credit_lines, *gift_cards"
 
   if (!id) {
     return null
@@ -374,6 +375,9 @@ export async function initiatePaymentSession(
   const headers = {
     ...(await getAuthHeaders()),
   }
+
+  // Surcharge first: the session amount must already include the PayPal fee.
+  await syncPaymentSurcharge(data.provider_id, cart.id)
 
   return sdk.store.payment
     .initiatePaymentSession(cart, data, {}, headers)
@@ -743,6 +747,47 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
   redirect(
     `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
   )
+}
+
+/**
+ * PayPal surcharge quote for the payment option badge (backend computes the
+ * percent and amount). Null on failure — the badge just doesn't render.
+ */
+export async function getPaymentSurchargeQuote(
+  cartId?: string
+): Promise<SurchargeQuote | null> {
+  const id = cartId || (await getCartId())
+  if (!id) return null
+
+  return sdk.client
+    .fetch<SurchargeQuote>(`/store/carts/${id}/payment-surcharge`, {
+      method: "GET",
+      cache: "no-store",
+    })
+    .catch(() => null)
+}
+
+/**
+ * Make the cart's PayPal surcharge match the chosen payment provider
+ * (PayPal → fee added, anything else / null → fee removed). Idempotent.
+ */
+export async function syncPaymentSurcharge(
+  providerId: string | null,
+  cartId?: string
+): Promise<void> {
+  const id = cartId || (await getCartId())
+  if (!id) return
+
+  await sdk.client
+    .fetch(`/store/carts/${id}/payment-surcharge`, {
+      method: "POST",
+      body: { provider_id: providerId },
+    })
+    .then(async () => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+    })
+    .catch(medusaError)
 }
 
 export type OrderMinimum = {

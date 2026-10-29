@@ -828,3 +828,18 @@ Backend contract: `GET /store/carts/:id/order-minimum` (see backend HANDOFF).
 - Cart summary: notice + disabled "Go to checkout" while below minimum (logged-in / known email).
 - Checkout page: notice above the form at every step; final backend hook error surfaces via the
   existing payment error message.
+
+## 2026-10-29 — PayPal surcharge (5%) badge + separate fee row
+
+Backend contract: `GET|POST /store/carts/:id/payment-surcharge` (see backend HANDOFF). The fee
+is a shipping method without an option, marked `data/metadata.payment_surcharge` (guest order
+payload: `payment_surcharge: true`).
+- `lib/util/payment-surcharge.ts`: `isSurchargeMethod`, `splitShippingMethods`, `surchargeTotal`.
+- `lib/data/cart.ts`: `getPaymentSurchargeQuote`, `syncPaymentSurcharge`;
+  `initiatePaymentSession` syncs the fee first; cart fields include shipping method data/metadata.
+- Payment step: selecting a method syncs the fee immediately; PayPal option shows
+  "+5% · +$X.XX" badge (quote from backend, refreshed on total change).
+- `cart-totals` / `order-summary`: "Shipping" = delivery only, separate "PayPal fee (5%)" row.
+- `shipping` step + `shipping-details`: show the delivery method, never the fee.
+- `lib/data/orders.ts`: `*shipping_methods` in order fields.
+- Test: `lib/util/payment-surcharge.test.ts`.

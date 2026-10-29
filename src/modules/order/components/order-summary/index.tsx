@@ -1,5 +1,6 @@
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
+import { surchargeName, surchargeTotal } from "@lib/util/payment-surcharge"
 
 type OrderSummaryProps = {
   order: HttpTypes.StoreOrder
@@ -21,6 +22,10 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
   const itemSubtotal =
     (order as any).item_subtotal ??
     Number(order.subtotal ?? 0) - Number(order.shipping_total ?? 0)
+
+  // PayPal fee is stored as a shipping method — own row, Shipping delivery-only
+  const surcharge = surchargeTotal((order as any).shipping_methods)
+  const deliveryTotal = Number(order.shipping_total ?? 0) - surcharge
 
   // credit lines split by reference — store credit and gift cards are both
   // credit lines in the loyalty plugin
@@ -63,8 +68,14 @@ const OrderSummary = ({ order }: OrderSummaryProps) => {
           )}
           <div className="flex items-center justify-between">
             <span>Shipping</span>
-            <span>{getAmount(order.shipping_total)}</span>
+            <span>{getAmount(deliveryTotal)}</span>
           </div>
+          {surcharge > 0 && (
+            <div className="flex items-center justify-between">
+              <span>{surchargeName((order as any).shipping_methods)}</span>
+              <span>{getAmount(surcharge)}</span>
+            </div>
+          )}
           {storeCreditTotal > 0 && (
             <div className="flex items-center justify-between text-green-400">
               <span>Store credit</span>

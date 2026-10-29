@@ -2,7 +2,15 @@
 
 import { RadioGroup } from "@headlessui/react"
 import { isStripeLike, paymentInfoMap } from "@lib/constants"
-import { initiatePaymentSession } from "@lib/data/cart"
+import {
+  getPaymentSurchargeQuote,
+  initiatePaymentSession,
+  syncPaymentSurcharge,
+} from "@lib/data/cart"
+import {
+  PAYPAL_PROVIDER_ID,
+  type SurchargeQuote,
+} from "@lib/util/payment-surcharge"
 import {
   trackCheckoutStepCompleted,
   trackPaymentMethodSelected,
@@ -42,6 +50,10 @@ const Payment = ({
 
   const isOpen = searchParams.get("step") === "payment"
 
+  const [surchargeQuote, setSurchargeQuote] = useState<SurchargeQuote | null>(
+    null
+  )
+
   const setPaymentMethod = async (method: string) => {
     setError(null)
     setSelectedPaymentMethod(method)
@@ -49,6 +61,11 @@ const Payment = ({
       await initiatePaymentSession(cart, {
         provider_id: method,
       })
+    } else {
+      // Show/remove the PayPal fee in the summary right on selection.
+      await syncPaymentSurcharge(method, cart.id).catch((e) =>
+        setError(e.message)
+      )
     }
 
     // Tracking selection of the payment method
@@ -114,6 +131,18 @@ const Payment = ({
     setError(null)
   }, [isOpen])
 
+  // Quote for the PayPal badge; refreshed whenever the cart total moves.
+  useEffect(() => {
+    if (!isOpen) return
+    let cancelled = false
+    getPaymentSurchargeQuote(cart.id).then((quote) => {
+      if (!cancelled) setSurchargeQuote(quote)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen, cart.id, cart.total])
+
   return (
     <div className="bg-black">
       <div className="flex flex-row items-center justify-between mb-6">
@@ -166,6 +195,16 @@ const Payment = ({
                         paymentInfoMap={paymentInfoMap}
                         paymentProviderId={paymentMethod.id}
                         selectedPaymentOptionId={selectedPaymentMethod}
+                        surcharge={
+                          paymentMethod.id === PAYPAL_PROVIDER_ID &&
+                          surchargeQuote?.amount
+                            ? {
+                                percent: surchargeQuote.percent,
+                                amount: surchargeQuote.amount,
+                                currencyCode: cart.currency_code,
+                              }
+                            : undefined
+                        }
                       />
                     )}
                   </div>
