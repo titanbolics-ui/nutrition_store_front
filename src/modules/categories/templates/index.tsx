@@ -4,14 +4,11 @@ import { Suspense } from "react"
 import InteractiveLink from "@modules/common/components/interactive-link"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
 import RefinementList from "@modules/store/components/refinement-list"
-import CategoryChips from "@modules/store/components/category-chips"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
 import { listCategories } from "@lib/data/categories"
-import { listBrandTypes } from "@lib/data/product-types"
-import BrandFilter from "@modules/store/components/brand-filter"
 
 export default async function CategoryTemplate({
   category,
@@ -38,7 +35,6 @@ export default async function CategoryTemplate({
   const allCategories = await listCategories()
   const rootCategories =
     allCategories?.filter((category) => !category.parent_category) || []
-  const brands = await listBrandTypes()
 
   const parents = [] as HttpTypes.StoreProductCategory[]
 
@@ -51,27 +47,6 @@ export default async function CategoryTemplate({
 
   getParents(category)
 
-  // Determine subcategories to show:
-  // - If current category has children, show them
-  // - If current category is a child (has parent), show siblings (parent's children)
-  let subcategoriesToShow: HttpTypes.StoreProductCategory[] = []
-  let parentCategoryHandle: string | undefined = undefined
-
-  if (category.category_children && category.category_children.length > 0) {
-    // We're on a parent category - show its children
-    subcategoriesToShow = category.category_children
-  } else if (category.parent_category) {
-    // We're on a subcategory - find the parent and show siblings
-    parentCategoryHandle = category.parent_category.handle
-    // Find the parent in allCategories to get full children list
-    const parentWithChildren = allCategories?.find(
-      (c) => c.id === category.parent_category?.id
-    )
-    if (parentWithChildren?.category_children) {
-      subcategoriesToShow = parentWithChildren.category_children
-    }
-  }
-
   return (
     <>
       <div
@@ -79,27 +54,13 @@ export default async function CategoryTemplate({
         data-testid="category-container"
       >
         <RefinementList
-          sortBy={sort}
           categories={rootCategories}
-          brands={brands}
           data-testid="sort-by-container"
         />
         <div className="w-full">
-          {/* Mobile Category Chips with Subcategories */}
-          <CategoryChips
-            categories={rootCategories}
-            subcategories={subcategoriesToShow}
-            activeParentHandle={parentCategoryHandle}
-          />
-
-          {/* Mobile brand / stock filters */}
-          <div className="md:hidden mb-4">
-            <BrandFilter brands={brands} />
-          </div>
-
           {/* Breadcrumbs - small gray text */}
           {parents && parents.length > 0 && (
-            <nav className="mb-2 text-xs text-gray-500 uppercase tracking-wider">
+            <nav className="page-fade-in mb-2 text-xs text-gray-500 uppercase tracking-wider">
               <LocalizedClientLink
                 href="/store"
                 className="hover:text-[#ccff00] transition-colors"
@@ -122,15 +83,16 @@ export default async function CategoryTemplate({
 
           {/* H1 Title - large white text */}
           <h1
-            className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-6"
+            className="page-fade-in text-2xl md:text-3xl font-black text-white uppercase tracking-tight mb-6"
             data-testid="category-page-title"
           >
             {category.name}
           </h1>
 
-          {/* Description - hidden on mobile, shown on desktop */}
+          {/* Description: quiet SEO intro — small, muted, clamped on mobile
+              (Gymshark-style), never competing with the H1 */}
           {category.description && (
-            <div className="hidden md:block mb-8 text-base-regular text-gray-400 max-w-2xl">
+            <div className="page-fade-in mb-6 md:mb-8 text-xs md:text-sm text-gray-500 leading-relaxed max-w-2xl border-l-2 border-[#ccff00]/25 pl-4 line-clamp-2 md:line-clamp-3">
               <p>{category.description}</p>
             </div>
           )}
@@ -150,11 +112,7 @@ export default async function CategoryTemplate({
                 </ul>
               </div>
             )}
-          <Suspense
-            fallback={
-              <SkeletonProductGrid />
-            }
-          >
+          <Suspense fallback={<SkeletonProductGrid />}>
             <PaginatedProducts
               sortBy={sort}
               page={pageNumber}
@@ -164,13 +122,6 @@ export default async function CategoryTemplate({
               inStockOnly={inStockOnly}
             />
           </Suspense>
-
-          {/* SEO Description - mobile only, at the bottom */}
-          {category.description && (
-            <div className="md:hidden mt-12 pt-8 border-t border-white/10 text-sm text-gray-500">
-              <p>{category.description}</p>
-            </div>
-          )}
         </div>
       </div>
     </>

@@ -2,6 +2,7 @@ import { listProductsWithSort } from "@lib/data/products"
 import { listBrandTypes } from "@lib/data/product-types"
 import { getRegion } from "@lib/data/regions"
 import ProductPreview from "@modules/products/components/product-preview"
+import CatalogToolbar from "@modules/store/components/catalog-toolbar"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 
@@ -60,11 +61,12 @@ export default async function PaginatedProducts({
     return null
   }
 
+  const brands = await listBrandTypes()
+
   // An unknown ?brand= slug (typo, stale link) filters to nothing rather
   // than silently showing the full unfiltered catalog.
   const brandTypeId = brandSlug
-    ? (await listBrandTypes()).find((b) => b.slug === brandSlug)?.id ??
-      "unknown-brand"
+    ? brands.find((b) => b.slug === brandSlug)?.id ?? "unknown-brand"
     : undefined
 
   let {
@@ -82,13 +84,22 @@ export default async function PaginatedProducts({
 
   return (
     <>
+      <CatalogToolbar
+        brands={brands}
+        count={count}
+        sortBy={sortBy ?? "featured"}
+      />
       <ul
         className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-2 sm:gap-4 md:gap-6"
         data-testid="products-list"
       >
-        {products.map((p) => {
+        {products.map((p, i) => {
           return (
-            <li key={p.id}>
+            <li
+              key={p.id}
+              className="product-grid-item"
+              style={{ "--i": i } as React.CSSProperties}
+            >
               <ProductPreview product={p} region={region} />
             </li>
           )

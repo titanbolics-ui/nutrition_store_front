@@ -15,8 +15,8 @@ export const listCategories = async (query?: Record<string, any>) => {
       {
         query: {
           // No *products here: the categories land in client-component props
-          // (RefinementList/CategoryChips), and Medusa's category expansion
-          // includes DRAFT products — expanding them would serialize
+          // (sidebar CategoryMenu / burger SideMenu), and Medusa's category
+          // expansion includes DRAFT products — expanding them would serialize
           // unpublished listings into the page payload.
           fields:
             "*category_children, *parent_category, *parent_category.parent_category",

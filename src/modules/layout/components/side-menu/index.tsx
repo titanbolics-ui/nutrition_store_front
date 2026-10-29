@@ -3,21 +3,12 @@
 import { Dialog, Transition } from "@headlessui/react"
 import { XMark } from "@medusajs/icons"
 import { Text, useToggleState } from "@medusajs/ui"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Fragment, useState } from "react"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CountrySelect from "../country-select"
 import { HttpTypes } from "@medusajs/types"
-
-// Main product categories
-const ProductCategories = [
-  { name: "INJECTABLES", href: "/categories/injectable-steroids" },
-  { name: "ORAL STEROIDS", href: "/categories/oral-steroids" },
-  { name: "PEPTIDES", href: "/categories/peptides" },
-  { name: "HGH", href: "/categories/hgh" },
-  { name: "PCT", href: "/categories/post-cycle-therapy" },
-  { name: "ALL PRODUCTS", href: "/store" },
-]
 
 // Service links
 const ServiceLinks = [
@@ -28,12 +19,41 @@ const ServiceLinks = [
   { name: "Contact", href: "/contact" },
 ]
 
-const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
+const SideMenu = ({
+  regions,
+  categories,
+}: {
+  regions: HttpTypes.StoreRegion[] | null
+  categories: HttpTypes.StoreProductCategory[]
+}) => {
   const [isOpen, setIsOpen] = useState(false)
+  // Drill-down path through the category tree; empty = root level.
+  const [stack, setStack] = useState<HttpTypes.StoreProductCategory[]>([])
   const toggleState = useToggleState()
 
-  const openMenu = () => setIsOpen(true)
+  const rootCategories = categories.filter((c) => !c.parent_category)
+
+  // The flat list carries every category with its own expanded children;
+  // nested `category_children` objects don't. Resolve through the flat list
+  // so drilling works at any depth.
+  const childrenOf = (category: HttpTypes.StoreProductCategory) => {
+    const full = categories.find((c) => c.id === category.id)
+    return full?.category_children ?? category.category_children ?? []
+  }
+
+  const currentCategory = stack[stack.length - 1]
+  const currentLevel = currentCategory
+    ? childrenOf(currentCategory)
+    : rootCategories
+
+  const openMenu = () => {
+    setStack([])
+    setIsOpen(true)
+  }
   const closeMenu = () => setIsOpen(false)
+  const drillInto = (category: HttpTypes.StoreProductCategory) =>
+    setStack((prev) => [...prev, category])
+  const goBack = () => setStack((prev) => prev.slice(0, -1))
 
   return (
     <div className="h-full">
@@ -58,10 +78,10 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
             {/* Backdrop */}
             <Transition.Child
               as={Fragment}
-              enter="ease-out duration-300"
+              enter="ease-out duration-300 motion-reduce:duration-0"
               enterFrom="opacity-0"
               enterTo="opacity-100"
-              leave="ease-in duration-200"
+              leave="ease-in duration-200 motion-reduce:duration-0"
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
@@ -72,10 +92,10 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
             <div className="fixed inset-0 overflow-y-auto">
               <Transition.Child
                 as={Fragment}
-                enter="ease-out duration-300"
+                enter="ease-out duration-300 motion-reduce:duration-0"
                 enterFrom="-translate-x-full"
                 enterTo="translate-x-0"
-                leave="ease-in duration-200"
+                leave="ease-in duration-200 motion-reduce:duration-0"
                 leaveFrom="translate-x-0"
                 leaveTo="-translate-x-full"
               >
@@ -85,9 +105,20 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
                 >
                   {/* Header */}
                   <div className="flex items-center justify-between p-5 border-b border-gray-800">
-                    <span className="text-[#ccff00] font-bold text-xl">
-                      MENU
-                    </span>
+                    {currentCategory ? (
+                      <button
+                        data-testid="menu-back-button"
+                        onClick={goBack}
+                        className="flex items-center gap-2 min-h-[44px] text-white font-bold text-lg uppercase hover:text-[#ccff00] transition-colors"
+                      >
+                        <ChevronLeft className="w-5 h-5" aria-hidden="true" />
+                        {currentCategory.name}
+                      </button>
+                    ) : (
+                      <span className="text-[#ccff00] font-bold text-xl">
+                        MENU
+                      </span>
+                    )}
                     <button
                       data-testid="close-menu-button"
                       onClick={closeMenu}
@@ -99,48 +130,97 @@ const SideMenu = ({ regions }: { regions: HttpTypes.StoreRegion[] | null }) => {
 
                   {/* Main Content */}
                   <div className="flex-1 overflow-y-auto py-4">
-                    {/* Product Categories */}
+                    {/* Categories (drill-down) */}
                     <div className="px-5 mb-6">
-                      <h3 className="text-gray-500 text-xs font-semibold tracking-widest mb-4 uppercase">
-                        Shop
-                      </h3>
-                      <ul className="space-y-2">
-                        {ProductCategories.map((item) => (
-                          <li key={item.name}>
+                      {!currentCategory && (
+                        <h3 className="text-gray-500 text-xs font-semibold tracking-widest mb-4 uppercase">
+                          Shop
+                        </h3>
+                      )}
+                      <ul className="space-y-1">
+                        {/* Inside a category: link to the category itself */}
+                        {currentCategory && (
+                          <li>
                             <LocalizedClientLink
-                              href={item.href}
+                              href={`/categories/${currentCategory.handle}`}
                               onClick={closeMenu}
-                              className="block py-2 text-xl font-bold text-white hover:text-[#ccff00] transition-colors"
+                              className="flex items-center min-h-[44px] py-2 text-lg font-bold text-[#ccff00] hover:text-white transition-colors uppercase"
                             >
-                              {item.name}
+                              View all {currentCategory.name}
                             </LocalizedClientLink>
                           </li>
-                        ))}
+                        )}
+
+                        {currentLevel.map((category) => {
+                          const hasChildren = childrenOf(category).length > 0
+                          return (
+                            <li key={category.id}>
+                              {hasChildren ? (
+                                <button
+                                  data-testid="menu-category-drill"
+                                  onClick={() => drillInto(category)}
+                                  className="flex items-center justify-between w-full min-h-[44px] py-2 text-xl font-bold text-white hover:text-[#ccff00] transition-colors uppercase text-left"
+                                >
+                                  {category.name}
+                                  <ChevronRight
+                                    className="w-5 h-5 text-gray-500"
+                                    aria-hidden="true"
+                                  />
+                                </button>
+                              ) : (
+                                <LocalizedClientLink
+                                  href={`/categories/${category.handle}`}
+                                  onClick={closeMenu}
+                                  className="flex items-center min-h-[44px] py-2 text-xl font-bold text-white hover:text-[#ccff00] transition-colors uppercase"
+                                >
+                                  {category.name}
+                                </LocalizedClientLink>
+                              )}
+                            </li>
+                          )
+                        })}
+
+                        {/* Root level: all-products entry */}
+                        {!currentCategory && (
+                          <li>
+                            <LocalizedClientLink
+                              href="/store"
+                              onClick={closeMenu}
+                              className="flex items-center min-h-[44px] py-2 text-xl font-bold text-white hover:text-[#ccff00] transition-colors uppercase"
+                            >
+                              All Products
+                            </LocalizedClientLink>
+                          </li>
+                        )}
                       </ul>
                     </div>
 
-                    {/* Divider */}
-                    <div className="mx-5 border-t border-gray-800 my-4" />
+                    {/* Service links only at root level — drilled views stay focused */}
+                    {!currentCategory && (
+                      <>
+                        {/* Divider */}
+                        <div className="mx-5 border-t border-gray-800 my-4" />
 
-                    {/* Service Links */}
-                    <div className="px-5">
-                      <h3 className="text-gray-500 text-xs font-semibold tracking-widest mb-4 uppercase">
-                        Help & Info
-                      </h3>
-                      <ul className="space-y-2">
-                        {ServiceLinks.map((item) => (
-                          <li key={item.name}>
-                            <LocalizedClientLink
-                              href={item.href}
-                              onClick={closeMenu}
-                              className="block py-1 text-sm text-gray-400 hover:text-white transition-colors"
-                            >
-                              {item.name}
-                            </LocalizedClientLink>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                        <div className="px-5">
+                          <h3 className="text-gray-500 text-xs font-semibold tracking-widest mb-4 uppercase">
+                            Help & Info
+                          </h3>
+                          <ul className="space-y-2">
+                            {ServiceLinks.map((item) => (
+                              <li key={item.name}>
+                                <LocalizedClientLink
+                                  href={item.href}
+                                  onClick={closeMenu}
+                                  className="block py-1 text-sm text-gray-400 hover:text-white transition-colors"
+                                >
+                                  {item.name}
+                                </LocalizedClientLink>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Footer */}

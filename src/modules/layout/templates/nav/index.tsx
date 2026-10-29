@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 
 import { listRegions, getRegion } from "@lib/data/regions"
+import { listCategories } from "@lib/data/categories"
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
@@ -13,6 +14,10 @@ import HeaderWrapper from "@modules/layout/components/header-wrapper"
 export default async function Nav() {
   const regions = await listRegions().then((regions: StoreRegion[]) => regions)
 
+  // Full category list (not just roots): the burger menu drills down and needs
+  // each category's own expanded children, which only the full list carries.
+  const categories = await listCategories().catch(() => [])
+
   // Використовуємо US як дефолтний регіон для пошуку
   // Оскільки пошук показує всі продукти, регіон потрібен тільки для форматування цін
   const region = await getRegion("us").catch(() => regions?.[0] || null)
@@ -23,7 +28,7 @@ export default async function Nav() {
         <nav className="content-container txt-xsmall-plus text-gray-300 flex items-center justify-between w-full h-full text-small-regular">
           <div className="flex-1 basis-0 h-full flex items-center gap-6">
             <div className="h-full flex items-center small:hidden">
-              <SideMenu regions={regions} />
+              <SideMenu regions={regions} categories={categories} />
             </div>
 
             {/* CUSTOM BIO-HACKING LINKS (Desktop) */}
