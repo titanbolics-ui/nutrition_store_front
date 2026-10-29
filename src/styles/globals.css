@@ -177,6 +177,36 @@
   }
 }
 
+/* Catalog grid stagger: SSR-safe reveal, no client JS. `--i` is set inline per
+   card; capped by the page size (12), so the last card starts at ~440ms. */
+@keyframes grid-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-grid-item {
+  animation: grid-fade-up 0.4s ease-out both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+/* Page header (breadcrumb + H1) entrance on catalog pages. */
+.page-fade-in {
+  animation: grid-fade-up 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-grid-item,
+  .page-fade-in {
+    animation: none;
+  }
+}
+
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -186,6 +216,20 @@
   display: flex;
   width: max-content;
   animation: marquee 25s linear infinite;
+}
+
+/* Slower ribbon for reading-length content (review cards). */
+.animate-marquee-slow {
+  display: flex;
+  width: max-content;
+  animation: marquee 45s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-slow {
+    animation: none;
+  }
 }
 
 /* Зупинка при наведенні (опціонально, для десктопа) */

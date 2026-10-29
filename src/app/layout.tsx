@@ -1,6 +1,7 @@
 import { getBaseURL } from "@lib/util/env"
 import { Metadata } from "next"
 import { PostHogProvider } from "./providers/posthog-provider"
+import { MotionProvider } from "./providers/motion-provider"
 import { PostHogIdentifier } from "./providers/posthog-identifier"
 import { FlyToCartWrapper } from "./providers/fly-to-cart-wrapper"
 import NextTopLoader from "nextjs-toploader"
@@ -39,9 +40,11 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <ScrollToTop />
         </Suspense>
-          <FlyToCartWrapper>
-            <main className="relative min-h-screen">{children}</main>
-          </FlyToCartWrapper>
+          <MotionProvider>
+            <FlyToCartWrapper>
+              <main className="relative min-h-screen">{children}</main>
+            </FlyToCartWrapper>
+          </MotionProvider>
         </PostHogProvider>
       </body>
     </html>
