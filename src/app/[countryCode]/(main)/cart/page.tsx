@@ -1,4 +1,4 @@
-import { retrieveCart } from "@lib/data/cart"
+import { getOrderMinimum, retrieveCart } from "@lib/data/cart"
 import { retrieveCustomer } from "@lib/data/customer"
 import CartTemplate from "@modules/cart/templates"
 import { Metadata } from "next"
@@ -16,6 +16,9 @@ export default async function Cart() {
   })
 
   const customer = await retrieveCustomer()
+  const orderMinimum = cart ? await getOrderMinimum(cart.id) : null
 
-  return <CartTemplate cart={cart} customer={customer} />
+  return (
+    <CartTemplate cart={cart} customer={customer} orderMinimum={orderMinimum} />
+  )
 }

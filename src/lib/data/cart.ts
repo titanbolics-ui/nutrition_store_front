@@ -711,6 +711,14 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
       }
     await updateCart(data)
 
+    // Email + phone are known only now — stop a returning customer below the
+    // repeat-order minimum here, before delivery/payment. The backend
+    // complete-cart hook is the real gate; this is just the early, friendly one.
+    const minimum = await getOrderMinimum()
+    if (minimum?.applies && minimum.remaining > 0) {
+      return `Minimum order for returning customers is $${minimum.minimum}. Add $${minimum.remaining.toFixed(2)} more to your cart to continue.`
+    }
+
     // Save address to customer's address book if requested
     if (formData.get("save_address") === "on") {
       try {
@@ -735,6 +743,32 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
   redirect(
     `/${formData.get("shipping_address.country_code")}/checkout?step=delivery`
   )
+}
+
+export type OrderMinimum = {
+  applies: boolean
+  minimum: number
+  subtotal: number
+  remaining: number
+}
+
+/**
+ * Repeat-customer order minimum for a cart (see backend
+ * GET /store/carts/:id/order-minimum). Returns null on any failure — the
+ * notice is UX only; the backend complete-cart hook still enforces it.
+ */
+export async function getOrderMinimum(
+  cartId?: string
+): Promise<OrderMinimum | null> {
+  const id = cartId || (await getCartId())
+  if (!id) return null
+
+  return sdk.client
+    .fetch<OrderMinimum>(`/store/carts/${id}/order-minimum`, {
+      method: "GET",
+      cache: "no-store",
+    })
+    .catch(() => null)
 }
 
 /**

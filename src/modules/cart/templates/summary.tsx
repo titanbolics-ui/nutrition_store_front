@@ -7,11 +7,14 @@ import Divider from "@modules/common/components/divider"
 import DiscountCode from "@modules/checkout/components/discount-code"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { HttpTypes } from "@medusajs/types"
+import type { OrderMinimum } from "@lib/data/cart"
+import OrderMinimumNotice from "@modules/cart/components/order-minimum-notice"
 
 type SummaryProps = {
   cart: HttpTypes.StoreCart & {
     promotions: HttpTypes.StorePromotion[]
   }
+  orderMinimum?: OrderMinimum | null
 }
 
 function getCheckoutStep(cart: HttpTypes.StoreCart) {
@@ -24,8 +27,9 @@ function getCheckoutStep(cart: HttpTypes.StoreCart) {
   }
 }
 
-const Summary = ({ cart }: SummaryProps) => {
+const Summary = ({ cart, orderMinimum }: SummaryProps) => {
   const step = getCheckoutStep(cart)
+  const belowMinimum = !!orderMinimum?.applies && orderMinimum.remaining > 0
 
   return (
     <div className="flex flex-col gap-y-4">
@@ -35,12 +39,29 @@ const Summary = ({ cart }: SummaryProps) => {
       <DiscountCode cart={cart} />
       <Divider />
       <CartTotals totals={cart} />
-      <LocalizedClientLink
-        href={"/checkout?step=" + step}
-        data-testid="checkout-button"
-      >
-        <Button className="w-full h-10 bg-[#b8ff2b] text-black hover:bg-[#a8ef1b] font-semibold">Go to checkout</Button>
-      </LocalizedClientLink>
+      {belowMinimum && orderMinimum && (
+        <OrderMinimumNotice
+          minimum={orderMinimum.minimum}
+          subtotal={orderMinimum.subtotal}
+          remaining={orderMinimum.remaining}
+        />
+      )}
+      {belowMinimum ? (
+        <Button
+          disabled
+          className="w-full h-10 font-semibold"
+          data-testid="checkout-button"
+        >
+          Go to checkout
+        </Button>
+      ) : (
+        <LocalizedClientLink
+          href={"/checkout?step=" + step}
+          data-testid="checkout-button"
+        >
+          <Button className="w-full h-10 bg-[#b8ff2b] text-black hover:bg-[#a8ef1b] font-semibold">Go to checkout</Button>
+        </LocalizedClientLink>
+      )}
     </div>
   )
 }

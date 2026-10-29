@@ -4,6 +4,7 @@ import EmptyCartMessage from "../components/empty-cart-message"
 import SignInPrompt from "../components/sign-in-prompt"
 import Divider from "@modules/common/components/divider"
 import { HttpTypes } from "@medusajs/types"
+import type { OrderMinimum } from "@lib/data/cart"
 
 type WarehouseItem = {
   locationName: string
@@ -13,9 +14,11 @@ type WarehouseItem = {
 const CartTemplate = ({
   cart,
   customer,
+  orderMinimum,
 }: {
   cart: HttpTypes.StoreCart | null
   customer: HttpTypes.StoreCustomer | null
+  orderMinimum?: OrderMinimum | null
 }) => {
   const warehouseItems =
     ((cart?.metadata?.warehouse_items ?? {}) as Record<string, WarehouseItem>)
@@ -39,7 +42,7 @@ const CartTemplate = ({
                 {cart && cart.region && (
                   <>
                     <div className="bg-gray-900 border border-gray-800 rounded-xl py-6 px-6">
-                      <Summary cart={cart as any} />
+                      <Summary cart={cart as any} orderMinimum={orderMinimum} />
                     </div>
                   </>
                 )}

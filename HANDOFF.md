@@ -816,3 +816,15 @@ the reintroduce-only-with-dark/transparent-render condition. Tests 167/167, buil
 - Verified: tests 167/167, build clean; live SSR — hero ticker with 6 category
   links, TP block = 5 rating tiles + 1 tiny logo star (no "Excellent"), bento
   zero thumbnails, muted tint rgba present, 11 tiles. No new dependencies.
+
+## 2026-10-29 — Repeat-customer order minimum ($150) notice + gating
+
+Backend contract: `GET /store/carts/:id/order-minimum` (see backend HANDOFF).
+- `lib/data/cart.ts`: `getOrderMinimum(cartId?)` (no-store, null on failure — UX only);
+  `setAddresses` re-checks after `updateCart` (email/phone known only now) and returns an
+  error message instead of redirecting to delivery.
+- `cart/components/order-minimum-notice`: progress bar toward the minimum, brand green only
+  (not amber — not a stock warning), optional "Back to cart" link.
+- Cart summary: notice + disabled "Go to checkout" while below minimum (logged-in / known email).
+- Checkout page: notice above the form at every step; final backend hook error surfaces via the
+  existing payment error message.
