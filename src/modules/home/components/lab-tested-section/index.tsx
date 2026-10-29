@@ -12,6 +12,13 @@ import {
   Download,
 } from "lucide-react" // Додав іконки Eye, X
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import CountUp from "@modules/common/components/count-up"
+
+// "242.53mg/ml" -> animated number + unit suffix; falls back to raw text.
+const parsePurity = (purity: string) => {
+  const match = purity.match(/^([\d.]+)(.*)$/)
+  return match ? { value: parseFloat(match[1]), suffix: match[2] } : null
+}
 
 // Дані (Додав поле 'imageSrc' - поки поставимо заглушки, заміниш на реальні посилання на скріншоти тестів)
 const LATEST_RESULTS = [
@@ -76,8 +83,8 @@ const LabResults = () => {
               transition={{ duration: 0.6 }}
             >
               <div className="flex items-center gap-2 mb-4">
-                <span className="h-px w-8 bg-emerald-500"></span>
-                <span className="text-emerald-500 font-mono text-xs uppercase tracking-widest">
+                <span className="h-px w-8 bg-[#ccff00]/60"></span>
+                <span className="text-[#ccff00] font-mono text-xs uppercase tracking-widest">
                   Transparency First
                 </span>
               </div>
@@ -88,8 +95,9 @@ const LabResults = () => {
                 Independently <span className="text-gray-500">Verified.</span>
               </Heading>
               <Text className="text-gray-400 text-lg font-light leading-relaxed">
-                We don't just claim purity; we prove it. Click on any report
-                below to view the full HPLC chromatogram instantly.
+                Random batches go to Janoshik Analytics for independent HPLC
+                verification — on top of the factories' own GMP quality
+                control. Click any report to view the full chromatogram.
               </Text>
             </motion.div>
           </div>
@@ -116,17 +124,17 @@ const LabResults = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="group relative bg-gray-900/40 border border-white/10 p-6 hover:border-emerald-500/50 transition-colors duration-300 backdrop-blur-sm flex flex-col justify-between text-left cursor-pointer"
+              className="group relative bg-gray-900/40 border border-white/10 p-6 hover:border-[#ccff00]/40 transition-colors duration-300 backdrop-blur-sm flex flex-col justify-between text-left cursor-pointer"
             >
               <div>
                 {/* Card Header */}
                 <div className="flex justify-between items-start mb-6">
                   <div className="p-3 bg-gray-800/50 rounded-sm">
-                    <FileText className="w-6 h-6 text-gray-400 group-hover:text-emerald-400 transition-colors" />
+                    <FileText className="w-6 h-6 text-gray-400 group-hover:text-[#ccff00] transition-colors" />
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                    <span className="text-[10px] font-mono font-bold text-emerald-500 tracking-wider">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-[#ccff00]/10 border border-[#ccff00]/25 rounded-full">
+                    <CheckCircle2 className="w-3 h-3 text-[#ccff00]" />
+                    <span className="text-[10px] font-mono font-bold text-[#ccff00] tracking-wider">
                       {item.status}
                     </span>
                   </div>
@@ -142,8 +150,19 @@ const LabResults = () => {
                   </div>
 
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-white group-hover:text-emerald-400 transition-colors">
-                      {item.purity}
+                    <span className="text-4xl font-black text-white group-hover:text-[#ccff00] transition-colors">
+                      {(() => {
+                        const parsed = parsePurity(item.purity)
+                        return parsed ? (
+                          <CountUp
+                            value={parsed.value}
+                            decimals={2}
+                            suffix={parsed.suffix}
+                          />
+                        ) : (
+                          item.purity
+                        )
+                      })()}
                     </span>
                     <span className="text-sm text-gray-400 font-medium">
                       Purity
@@ -159,13 +178,13 @@ const LabResults = () => {
                 </div>
 
                 {/* View Report indicator */}
-                <span className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider group-hover:text-emerald-400 transition-colors">
+                <span className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider group-hover:text-[#ccff00] transition-colors">
                   View Report <Eye className="w-4 h-4" />
                 </span>
               </div>
 
               {/* Hover Glow */}
-              <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#ccff00]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             </motion.button>
           ))}
         </div>
@@ -194,7 +213,7 @@ const LabResults = () => {
                     <h3 className="text-white font-bold text-lg">
                       {selectedResult.name}
                     </h3>
-                    <p className="text-xs text-emerald-500 font-mono mt-1">
+                    <p className="text-xs text-[#ccff00] font-mono mt-1">
                       Batch: {selectedResult.batch} // Purity:{" "}
                       {selectedResult.purity}
                     </p>
