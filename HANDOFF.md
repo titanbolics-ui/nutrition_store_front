@@ -585,3 +585,234 @@ card image-badges, PDP badge near price, restock_eta plumbing) — re-verified, 
   now (mechanism tested in unit tests only). 15 unpublished handles are dead URLs;
   redirect entries prepared but NOT enabled — the `next.config.js` redirects block is
   deliberately commented out (user, Stage D.2); user decides.
+
+## 2026-07-23 — Catalog filters UX redesign (Gymshark pattern mobile + toolbar desktop)
+
+User reviewed Stage E filters on screenshots and requested a UX rework: navigation and
+filters looked identical (pills everywhere), mobile had 3 stacked chip rows before content.
+Reference chosen by user: **Gymshark mobile** (no chips at top at all).
+
+- **Burger menu (`layout/components/side-menu`)**: hardcoded 6-item category list replaced
+  with live categories (Nav fetches `listCategories()`, passes the FULL flat list — nested
+  `category_children` objects don't carry their own children, so drill-down resolves each
+  level through the flat list). Drill-down stack UI: tap category with children → panel
+  header becomes `‹ <Name>` back button + "View all <Name>" link + children rows; leaf
+  categories link directly. Service links/account/region footer only at root level.
+  This also fixed the menu missing SARMS/Weight Loss/Sexual Health/etc.
+- **New `store/components/catalog-toolbar`** (client), rendered from `paginated-products`
+  above the grid (so the product count is always the post-filter `count`):
+  - Desktop row: `[All][ZPHC][Spectrum Pharma][CanadaBioLabs] | In Stock switch | N products | Sort ▾`
+    (headlessui Menu dropdown). Sidebar (`refinement-list`) now holds ONLY CategoryMenu.
+  - Mobile row: `[Filter (n)] — N products — [Sort]`; both open headlessui bottom sheets
+    (slide-up, drag handle, 44px rows). Filters apply IMMEDIATELY on tap (URL push with
+    `scroll: false`); the sheet's "Show N products" footer stays live via SSR re-render
+    and just closes the sheet. "Clear all" resets brand+stock.
+  - URL contract unchanged: `?brand=<slug>&stock=in&sortBy=…`, filter changes drop `page`.
+- **Deleted:** `category-chips`, `brand-filter` (+ its tests — logic and tests moved to
+  catalog-toolbar), `filter-radio-group` (only consumer was the old sort radio group).
+  `refinement-list/sort-products` is now a types/constants module (`SortOptions`,
+  `sortOptions`) — the type is imported from ~10 places, so the path stays.
+- **Category template:** description now shows on mobile above the toolbar
+  (`line-clamp-2`), bottom mobile SEO duplicate removed. Mobile subcategory navigation
+  moved entirely into the burger drill-down (per Gymshark reference).
+- **Tests:** `catalog-toolbar/index.test.tsx` 9 cases (chips/switch/sort push URLs,
+  page-param drop, sheet open, immediate apply, clear-all, active-filter badge) using the
+  router-context recipe. SideMenu is NOT render-testable (CountrySelect → `lib/data/cart`
+  → server-only), same class as ProductPreview. `npm run test` 159/159, build clean.
+- **Live SSR verified:** store 141 products + toolbar markup, no old chip rows;
+  `?brand=zphc&stock=in` → "70 products", 12 ZPHC cards, zero OOS; category page shows
+  clamped description, no bottom dup; flight data carries all root categories for the
+  burger; no draft/domestic leaks (804 KB page).
+- No new dependencies (headlessui + lucide already in use). Backend untouched.
+
+## 2026-07-23 — Homepage + category redesign (trust/Hormozi structure, motion 2026)
+
+User verdict on screenshots: site felt templated (stock athlete hero, "UNLOCK YOUR
+POTENTIAL"), strongest offer (seizure insurance) buried, claims without proof
+("5-STAR REVIEWS" with zero reviews shown), inconsistent numbers (>98% vs >99%),
+palette violations (cyan/pink/orange/purple in goals carousel, emerald in lab section).
+
+**CRITICAL trust-copy rule (user correction):** only 3 Janoshik reports exist; there
+will never be per-batch testing. Products are pharma-grade from GMP-certified factories
+with in-house QC labs. NEVER write "every batch tested" or invent purity percentages.
+Framing everywhere: "GMP-certified factories + independent spot-checks by Janoshik".
+
+- **Motion foundation:** `app/providers/motion-provider.tsx` (`MotionConfig
+  reducedMotion="user"` in root layout), `lib/util/motion.ts` (shared fadeUp/
+  stagger/EASE_OUT), `common/components/count-up` (SSR renders final value; counts up
+  once in view; safe without IntersectionObserver).
+- **Hero rewrite** (`home/components/hero`): type-led, no people photos. Parallax
+  layers (grid/glow/content at different scroll speeds), H1 "PROOF. NOT PROMISES."
+  word reveal (typewriter gimmick removed), GMP+spot-check subline, CTAs "Shop
+  Compounds" + "See Lab Reports", trust stat ticker (10,000+/99.8%/HPLC) with CountUp.
+  Top-2 ranked products (page.tsx → `getHeroSpecimens`, reuses `sortByRank`) render as
+  "lab specimen" glass tiles — white packshots framed deliberately, linked to PDPs.
+- **New `guarantee-strip`**: acid-green marquee right under hero (risk reversal first).
+  Reuses existing `.animate-marquee` CSS; static + centered under reduced motion.
+- **Section order** (`page.tsx`): Hero → GuaranteeStrip → LabResults (proof before
+  claims) → goals carousel → BestSellers → OnyxStandard → ReviewsSection. Homepage
+  meta description fixed (was "genetics and breeding solutions").
+- **Repaints:** lab section emerald→#ccff00 everywhere + spot-check header copy +
+  purity CountUp; goals carousel — all 5 card accents → #ccff00, images `grayscale`
+  (duotone with existing green overlay), mobile auto-snap scrollIntoView hijack
+  REMOVED (kept swipe-hint observer), "NOT SURE?" → "FULL CATALOG"; onyx-standard —
+  bento grid (Seizure Insurance = large 2-col "Our guarantee" card, Pharmaceutical
+  Grade = wide card with honest GMP copy + "See the reports" link), "5-Star Reviews" →
+  "Independently verified by Janoshik Analytics", counters CountUp.
+- **New `reviews-section`**: renders null while `reviews-data.ts` is empty — REAL
+  reviews only (user will supply; never seed fakes). Test enforces non-empty
+  author/text on any future entry.
+- **Category polish:** product grid CSS stagger (`.product-grid-item`, `--i` delay,
+  reduced-motion guarded), `page-fade-in` on breadcrumb/H1, category description
+  restyled quiet (xs/sm, gray-500, green left border, clamped) so SEO text stops
+  screaming under the H1. Description TEXTS in Medusa are a separate content task.
+- **docs/frontend-design.md** updated: animation "middle"→"confident" (subtle
+  multi-layer parallax, CountUp, slow marquees allowed; scroll-hijack/typewriter
+  banned; ≤600ms; global MotionConfig noted), hero canon + trust-copy rule recorded.
+- Tests: count-up 2, reviews-section 3 (incl. IntersectionObserver stub pattern for
+  framer-motion whileInView in jsdom). `npm run test` 164/164, build clean. Live SSR
+  verified: no old slogan/cyan/emerald/"5-Star"/"every batch"; specimens =
+  oxandrolone-zphc + anavar-spectrum-pharma; reviews section absent; category stagger
+  vars present. No new dependencies.
+- Known leftover: goals-carousel "FULL CATALOG" card still uses old hero.webp athlete
+  image (muted by grayscale) — replace when a better asset exists.
+
+## 2026-07-23 — Homepage v2: specimen deck, scroll-storytelling, real reviews
+
+Iteration on the same-day redesign, per user feedback ("де паралакси", weak hero
+showcase, merge goals with top products, real reviews supplied).
+
+- **Hero specimen deck** (`home/components/hero`): 2 static tiles → rotating deck of 4
+  glass slides. Flagships pinned first by handle (user's picks):
+  `testosterone-enanthate-250mgml-10ml-zphc`, `zptrop-hgh-72iu-pen-2-chamber-cartridge`;
+  top-rank products fill to 4 (`page.tsx getHeroSpecimens`: handle-fetch + rank-fetch,
+  dedupe). Auto-cycles 4.5s (pause on hover/drag), front card links to PDP, back cards
+  click-to-front, drag/swipe advances, progress dots, acid glow on active card.
+  Reduced motion = static fan, dots still work.
+- **`goals-showcase/` (NEW)** replaces `horizontal-scroll-section/` (869 lines,
+  DELETED with its swipe-hint gimmick). Server `index.tsx` builds 4 chapters
+  (collections bulking/cutting/longevity + category peptides) with **top-5 ranked
+  products each** (`sortByRank`, min variant `calculated_price` via `convertToLocale`).
+  Client `scroll-story.tsx`: pinned sticky chapters — image-into-image crossfade +
+  Ken Burns + parallax, light scene interpolates green-glow position/intensity and
+  base near-black tone per chapter (one accent preserved), giant stroked chapter
+  numbers on a faster parallax layer, product mini-card rail (5/panel, links to PDPs)
+  + Explore CTA, right-side progress rail. Invisible chapters get pointer-events:none
+  (else they'd swallow clicks). Reduced motion → plain stacked blocks (StaticStory).
+- **Reviews live** (`reviews-section`): 7 real Trustpilot-style reviews supplied by
+  the operator, typo-cleaned only. Shown WITHOUT names/dates — stars + title + text +
+  "Verified customer · <country>" (user decision). Masonry columns, acid-green stars.
+  Test enforces: no author/date fields, valid rating/country/text on every entry.
+- **Honest 10k label**: hero + Onyx Standard "Orders shipped" → "Warehouse shipments"
+  (the 10,000+ figure is warehouse-wide, not site-only — user clarification).
+- Design doc: specimen-deck canon; pinning sanctioned ONLY for chapter storytelling
+  (1:1 scroll speed, no scrollIntoView); reduced-motion degradation mandatory.
+- Verified: tests 164/164, build clean; live SSR — 4 specimen tiles (flagships
+  present), 20 story product cards (4×5) with prices, 7 review cards, zero personal
+  names in HTML, "Warehouse shipments" ×2, old section gone. No new dependencies.
+
+## 2026-07-23 — Homepage v3: pinned storytelling scrapped → per-section parallax
+
+User screenshot showed the pinned crossfade broken: neighbouring chapters' texts
+overlapping, photos buried (full grayscale + opacity-40 + chin-crop). Lesson recorded
+in docs/frontend-design.md: NO pinned crossfade chapters; per-section parallax instead.
+
+- **goals-showcase v3**: `scroll-story.tsx` deleted. Each goal is now its own
+  normal-flow section (`goal-section.tsx`): background image parallax ±6% per section,
+  `saturate-[0.35] opacity-55` (visible, not buried), per-photo `object-position`
+  (faces in frame — tune with the user visually), alternating side gradients (text on
+  the dark half), giant stroked number on a faster layer, green glow position varies
+  per section. Server part unchanged in shape but products now carry `stockState`
+  (`resolveProductStockState`, inventory fields added to the fetch).
+- **New shared `store/components/product-rail`**: catalog-grade cards (dark surface,
+  white photo window, 2-line title, mono acid price, stock dot with amber-only-low
+  rule), `snap-x` scrolling with mobile peek (~2.2 cards), desktop arrow buttons
+  (hide at edges, `scrollBy` guarded for jsdom), used by all 4 goal sections.
+  3 unit tests (note: next/image in node:test validates against DEFAULT config —
+  use relative `/x.png` fixture paths, remote hosts fail).
+- **Hero hybrid** (user choice): athlete returns as a cinematic layer — R2
+  `Esthetic.jpg`, right side, grayscale + low opacity + acid wash + fade gradients,
+  own parallax speed between grid and deck. Type-led copy + specimen deck unchanged.
+  Photo is a placeholder-quality stock — user will supply a better one eventually.
+- **Reviews → Trustpilot ribbon**: masonry wall replaced with a slow marquee
+  (`animate-marquee-slow`, 45s, pause on hover; reduced-motion → static scroll row,
+  duplicate sequence is aria-hidden and testid-less). Header has a Trustpilot
+  attribution block (TP-green #00B67A star tiles + wordmark + "Reviews from
+  Trustpilot") — deliberately NOT a link, per user ("нехай самі шукають").
+- **New `category-bento`** under reviews: typographic bento of real root categories
+  (first two tiles large, subcategory count in mono, acid "All products" tile
+  → /store). Server component, no photos needed.
+- Verified: tests 167/167, build clean; live SSR — 4 goal sections (zero pinned
+  `height:*vh` containers), 4 rails × 5 cards with stock labels, TP mark with zero
+  trustpilot hrefs, 7 visible review cards, 11 bento tiles + all-tile, athlete layer
+  present. No new dependencies.
+
+## 2026-07-23 — Homepage v4: Big Split hero, visible parallax, bento upgrade
+
+User verdict on v3: specimen deck "убого і жалюгідно" (matches 2026 research: hero
+carousels/decks are an anti-pattern; oversized type + ONE object + one CTA wins);
+"parallax absent again" — diagnosis via AskUserQuestion confirmed animations DO run
+(reduce-motion not the cause) → amplitudes were just too subtle. Bento approved,
+wanted icons/colors/category backgrounds.
+
+- **Hero v4 "Big Split"** (user-picked from ASCII previews): SpecimenDeck deleted
+  (state, auto-cycle, dots). Left: oversized stacked type (~7.5rem) + primary CTA
+  ("See lab reports" demoted to text link). Right: athlete PRESENT (Esthetic.jpg,
+  grayscale-[0.6], opacity-80 desktop / 40 mobile, acid rim glow). ONE flagship
+  packshot (Test E 10ml ZPHC, `specimens[0]`) straddles the split at md:left-[46%],
+  rotate -4°→-9°, and travels AGAINST the scroll (y 0→-140) — the unmissable depth
+  cue. Layer speeds: grid 120 / athlete 70 / glow 190 / flagship -140.
+  `getHeroSpecimens` simplified to the two flagship handles (second = fallback).
+- **Goal sections parallax amplified**: image ±12% + scale 1.05→1.15 (inset -14%),
+  number ±220 counter-direction, content drifts ±30 (third speed).
+- **Bento upgrade**: lucide icon per category (handle-keyword map: oral→Pill,
+  injectable→Syringe, peptide→Dna, hgh→Activity, pct→ShieldCheck, weight→Flame,
+  sexual→HeartPulse, sarm→FlaskConical, mix→Layers, additional→Package,
+  advanced→Zap, default FlaskConical), faint top-product photo per tile
+  (1-product fetch per root category, grayscale opacity-[0.10] → color 0.22 on
+  hover), acid-wash gradient varying by tile index (4 corner/intensity variants,
+  palette-safe). CategoryBento now takes optional `region` for priced-free fetch.
+- Design doc: hero canon v4 (decks/carousels in heroes BANNED), parallax minimums
+  ("background travel 10-12%, at least one counter-scroll layer").
+- Verified: 167/167, build clean; SSR — zero specimen-deck, one hero-specimen
+  linking to the Test E PDP, athlete layer, 11 bento tiles all with icons+thumbs,
+  4 goal sections. No new dependencies.
+
+## 2026-07-23 — Hero: flagship packshot removed (white-bg cards read cheap)
+
+User: the hero product card looks "ridiculous/funny". Root cause: product thumbnails
+are white-background packshots — floated on the dark cinematic hero they become a big
+white rectangle with a tiny product and dead space (worse on mobile). This can't be
+fixed while the assets are white-bg. Decision: remove the flagship card from the hero
+entirely. Big Split now = oversized type + athlete only (stronger single-subject
+composition); products keep their showcase in goal rails / best-sellers / bento below.
+`page.tsx` dropped `getHeroSpecimens`/`FEATURED_SPECIMEN_HANDLES`/`listProducts` import
+and `<Hero />` takes no props; `HeroSpecimen` type removed. Athlete bumped to opacity-90
++ counter-scroll drift/scale so the hero still has depth. Design doc records the ban and
+the reintroduce-only-with-dark/transparent-render condition. Tests 167/167, build clean.
+
+## 2026-07-23 — Homepage v5: hero "what/for whom", pointer parallax, TP fix, bento tones
+
+- **Hero category ticker** (`hero/index.tsx`): full-width marquee of real root
+  categories between CTA and stats — instant "what we sell" + quick-nav (links to
+  /categories/<handle>), acid on hover, pause on hover, static row under reduced
+  motion. `page.tsx` fetches `listCategories()` → root → `categories` prop
+  (`HeroCategory{name,handle}`).
+- **Hero pointer parallax** (desktop): cursor shifts athlete (+20px) and glow
+  (−34px, opposite) via spring-smoothed motion values; disabled on
+  `(pointer: coarse)` and reduced motion. Scroll parallax unchanged. Design doc
+  updated to allow subtle pointer parallax in the hero.
+- **Trustpilot mark fixed** (`reviews-section`): previously a big logo star stacked
+  above 5 rating stars read as "6 stars". Now: "Great" label + ONE row of 5 green
+  star tiles (the score); a small inline logo star sits with the "Reviews from
+  Trustpilot" wordmark below as attribution — unmistakably 5. Label is "Great"
+  (user, not "Excellent"). Still not a link. No aggregate number invented.
+- **Bento** (`category-bento`): removed the faint product-photo backdrops
+  (dropped `getCategoryThumb`, `listProducts` import, `region` prop — `page.tsx`
+  calls `<CategoryBento />`). Kept icons; added `MUTED_TINTS` — muted analogous
+  lab tones (lime/teal/olive/emerald/moss/cyan-green) as a faint per-tile glow
+  (alpha 0.07) + ~0.35 icon-border tint, cycling by index. Acid-green stays the
+  one bright accent; design doc records this as a sanctioned palette exception.
+- Verified: tests 167/167, build clean; live SSR — hero ticker with 6 category
+  links, TP block = 5 rating tiles + 1 tiny logo star (no "Excellent"), bento
+  zero thumbnails, muted tint rgba present, 11 tiles. No new dependencies.

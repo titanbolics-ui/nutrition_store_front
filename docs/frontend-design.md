@@ -32,7 +32,13 @@ text. Never a carnival of animations. The middle.
 | Text-secondary | muted gray `#8A9199` | labels, descriptions |
 | Border | `#252A31` | dividers, card outlines |
 
-Rule: **one accent (green)**. Amber only for stock warnings. No third color.
+Rule: **one accent (green)**. Amber only for stock warnings. No third BRIGHT
+color. Sanctioned exception (user 2026-07-23): the category-bento tiles may
+carry MUTED analogous "lab tones" — dark, low-saturation neighbours of
+acid-green (lime/teal/olive/emerald/moss/cyan-green) used ONLY as a faint tile
+glow at alpha ≤0.08 and a ~0.35-alpha icon border. Acid-green stays the one
+BRIGHT accent (icons on hover, CTAs, key numbers). Saturated/bright per-tile
+colors remain banned.
 Red only for genuine errors, never for out-of-stock.
 
 ---
@@ -106,25 +112,82 @@ these — they're indicators, not dashboards.
 
 ---
 
-## Animation (middle setting — present, smooth, restrained)
+## Animation (confident setting — updated 2026-07-23, user decision)
+
+Shared vocabulary lives in `src/lib/util/motion.ts` (fadeUp / staggerContainer /
+fadeUpChild / EASE_OUT) — use those, don't invent per-section values.
+`prefers-reduced-motion` is enforced globally via `MotionConfig reducedMotion="user"`
+(`app/providers/motion-provider.tsx`); CSS animations must add their own
+`@media (prefers-reduced-motion: reduce)` guard.
 
 Do:
 - Tab switch: content cross-fades / slides in subtly (~150–200ms ease-out).
-- Section reveal on scroll: gentle fade-up (opacity + 8px translate), once, not
-  on every re-scroll. Respect `prefers-reduced-motion` — disable there.
-- Rating bars: fill animates from 0 to value when scrolled into view (the
-  "scientific gauge" feel). ~400ms ease-out. Once.
-- Hover: cards lift slightly (`transl-y-[-2px]` + subtle green glow/border),
+- Section reveal on scroll: gentle fade-up (opacity + ~24px translate), once, not
+  on every re-scroll. Stagger children ~80ms.
+- **Subtle multi-layer parallax** (hero, section backgrounds): layers drift at
+  different scroll speeds via `useScroll`+`useTransform`. Depth, not carnival —
+  offsets under ~150px.
+- **Pointer parallax** (hero, desktop only — user asked for "coolest
+  animations" 2026-07-23): cursor shifts hero layers a few px via
+  spring-smoothed motion values. MUST be disabled on `(pointer: coarse)` and
+  under reduced motion. Keep it subtle (single-digit → ~30px max).
+- **Category ticker** (hero): a marquee of real category names ("what we
+  sell") that doubles as quick-nav; pause on hover, static scroll row under
+  reduced motion.
+- Numbers count up once in view (`CountUp` in `modules/common/components/count-up` —
+  SSR renders the final value; animation is progressive enhancement).
+- Slow marquee strips (e.g. guarantee band): linear, ≥20s per loop, pause on
+  hover, static under reduced motion.
+- Rating bars: fill animates from 0 to value when scrolled into view. ~400ms. Once.
+- Hover: cards lift slightly (`-translate-y-1` + subtle green glow/border),
   buttons have a tactile press state. Fast (~120ms).
 - Accordion (mobile): smooth height expand, chevron rotate.
+- Product grid: CSS stagger reveal (`.product-grid-item`, `--i` delay) — SSR-safe.
 
 Don't:
-- No parallax, no auto-playing loops, no bouncing, no attention-seeking motion.
-- Nothing that delays the user reading the data.
-- No animation longer than ~400ms.
+- No scroll hijacking (auto `scrollIntoView`, forced snap on entry) — removed
+  deliberately, it reads as broken.
+- No typewriter/typing gimmicks.
+- No bouncing, no attention-seeking loops, nothing that delays reading the data.
+- No single transition longer than ~600ms.
 
 The test: motion should feel like the interface is *responsive and alive*, not
-like it's *performing*. Middle setting.
+like it's *performing*.
+
+Hero canon (v4 "Big Split", user-approved 2026-07-23): left — oversized type
+(one line per word, ~7.5rem desktop) + ONE primary CTA (secondary is a quiet
+text link); right — the athlete PRESENT (duotone ~90% opacity + acid rim glow,
+masked only where it meets the copy). NO product packshot in the hero: the
+white-background thumbnails float as a big white rectangle over the dark hero
+and read cheap ("смішно", user 2026-07-23) — products get their showcase in
+the sections below instead. Reintroduce a hero product only with a
+dark/transparent-background render. Also BANNED in heroes: card decks,
+carousels, auto-cycling anything (2026 research + failed iterations). Parallax
+must be VISIBLE: layers at clearly different speeds and at least one
+counter-scroll layer; background travel ~10-12% of viewport, not 5%. Trust
+copy: GMP factories + independent Janoshik spot-checks — NEVER "every batch
+tested" (only 3 reports exist), no invented percentages. "10,000+" is
+WAREHOUSE shipments — label it so.
+
+Goal sections (goals-showcase): NO pinning — the pinned crossfade experiment
+shipped 2026-07-23 and was scrapped the same day after user testing (chapter
+texts overlapped, photos buried). The pattern is: each goal is a normal-flow
+full-height section with its OWN parallax (background image drifts ±6% via
+useScroll on the section; giant stroked chapter number drifts faster on its
+own layer). Photos stay VISIBLE: `saturate-[0.35] opacity-55` (never full
+grayscale-to-black), per-photo `object-position` tuned so faces are in frame,
+side gradient alternates left/right so text always sits on the darkened half.
+Light scene = green glow position varies per section; no new hues.
+
+Product rails (`store/components/product-rail`): catalog-grade cards (dark
+surface, white photo window, title, mono acid price, stock dot — amber only
+for low stock), scroll-snap with next-card peek on mobile, 44px arrow buttons
+on desktop that hide at the edges, edge behavior native (no drag hijack).
+
+Trustpilot mark (reviews): attribution only — TP-green (#00B67A) star tiles +
+wordmark + "Reviews from Trustpilot". Deliberately NOT a link. External brand
+colors are allowed for recognized trust marks (precedent: PayPal/CashApp in
+the footer); they don't count against the one-accent rule.
 
 ---
 
